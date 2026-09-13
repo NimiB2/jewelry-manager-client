@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
+import { SignIn } from './auth/SignIn'
+import { useAuth } from './auth/useAuth'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
@@ -6,9 +9,29 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+  const { user, loading, signInWithGoogle, signOutUser } = useAuth()
+  const [serverUser, setServerUser] = useState<string>('...loading')
+
+  useEffect(() => {
+    if (!user) return
+    apiFetch('/me')
+      .then((res) => res.json())
+      .then((data) => setServerUser(JSON.stringify(data)))
+      .catch(() => setServerUser('failed to reach server'))
+  }, [user])
+
+  if (loading) return null
+  if (!user) return <SignIn onSignIn={signInWithGoogle} />
 
   return (
     <>
+      <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+        מחוברת כ-{user.email}{' '}
+        <button type="button" onClick={signOutUser}>
+          התנתק
+        </button>
+        <p>השרת מזהה אותך כ: {serverUser}</p>
+      </div>
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
