@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { apiFetch } from '../api'
-import { TrashIcon } from '../icons/TrashIcon'
-import { nameInputStyle, iconButtonStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
+import { nameInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
 import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
+import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
 function isValid(stages: string[]): boolean {
   const trimmed = stages.map((s) => s.trim())
@@ -133,14 +133,7 @@ export function PreparationStagesForm({ initialStages }: PreparationStagesFormPr
               aria-label="שם שלב ההכנה"
               style={nameInputStyle}
             />
-            <button
-              type="button"
-              onClick={() => removeStage(index)}
-              aria-label={`הסר את ${stage || 'השלב'}`}
-              style={{ ...iconButtonStyle, width: 28, height: 28 }}
-            >
-              <TrashIcon />
-            </button>
+            <ConfirmDeleteButton onConfirm={() => removeStage(index)} ariaLabel={`הסר את ${stage || 'השלב'}`} />
           </div>
         ))}
       </div>

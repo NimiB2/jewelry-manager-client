@@ -1,8 +1,8 @@
 import { apiFetch } from '../api'
-import { TrashIcon } from '../icons/TrashIcon'
-import { nameInputStyle, cellInputStyle, iconButtonStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
+import { nameInputStyle, cellInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
 import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
+import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
 type Item = { name: string; price: string }
 type Category = { id: string; name: string; basePrice: string; items: Item[] }
@@ -121,14 +121,10 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
                 aria-label="שם הקטגוריה"
                 style={{ ...nameInputStyle, fontWeight: 600, flex: 1 }}
               />
-              <button
-                type="button"
-                onClick={() => removeCategory(category.id)}
-                aria-label={`הסר את ${category.name || 'הקטגוריה'}`}
-                style={{ ...iconButtonStyle, width: 28, height: 28 }}
-              >
-                <TrashIcon />
-              </button>
+              <ConfirmDeleteButton
+                onConfirm={() => removeCategory(category.id)}
+                ariaLabel={`הסר את ${category.name || 'הקטגוריה'}`}
+              />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
@@ -137,7 +133,7 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
                 type="number"
                 inputMode="decimal"
                 min={0}
-                step="0.01"
+                step="1"
                 value={category.basePrice}
                 onChange={(e) => updateBasePrice(category.id, e.target.value)}
                 placeholder="0"
@@ -180,14 +176,10 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
                     aria-label="מחיר הפריט"
                     style={cellInputStyle}
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeItem(category.id, index)}
-                    aria-label={`הסר את ${item.name || 'הפריט'}`}
-                    style={{ ...iconButtonStyle, width: 28, height: 28 }}
-                  >
-                    <TrashIcon />
-                  </button>
+                  <ConfirmDeleteButton
+                    onConfirm={() => removeItem(category.id, index)}
+                    ariaLabel={`הסר את ${item.name || 'הפריט'}`}
+                  />
                 </div>
               ))}
             </div>

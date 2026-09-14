@@ -27,7 +27,7 @@ export function PricingSettingsPage({
 
       <NumberFieldsForm
         title="תעריף שעתי"
-        fields={[{ key: 'laborHourRate', label: 'תעריף שעתי (₪)' }]}
+        fields={[{ key: 'laborHourRate', label: 'תעריף שעתי (₪)', step: '1' }]}
         initialData={{ laborHourRate }}
       />
 

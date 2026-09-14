@@ -1,8 +1,8 @@
 import { apiFetch } from '../api'
-import { TrashIcon } from '../icons/TrashIcon'
-import { nameInputStyle, cellInputStyle, iconButtonStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
+import { nameInputStyle, cellInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
 import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
+import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
 type Material = {
   name: string
@@ -97,7 +97,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
               type="number"
               inputMode="decimal"
               min={0}
-              step="0.01"
+              step="1"
               value={row.pricePerGram}
               onChange={(e) => updateRow(index, 'pricePerGram', e.target.value)}
               aria-label="מחיר לגרם"
@@ -107,7 +107,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
               type="number"
               inputMode="decimal"
               min={0}
-              step="0.01"
+              step="1"
               value={row.laborHoursPerGram}
               onChange={(e) => updateRow(index, 'laborHoursPerGram', e.target.value)}
               aria-label="שעות עבודה לגרם"
@@ -124,14 +124,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
               style={{ ...cellInputStyle, borderBottom: '1px solid var(--border)' }}
             />
             <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={() => removeRow(index)}
-                aria-label={`הסר את ${row.name || 'החומר'}`}
-                style={{ ...iconButtonStyle, width: 28, height: 28 }}
-              >
-                <TrashIcon />
-              </button>
+              <ConfirmDeleteButton onConfirm={() => removeRow(index)} ariaLabel={`הסר את ${row.name || 'החומר'}`} />
             </div>
           </div>
         ))}

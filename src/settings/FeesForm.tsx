@@ -1,8 +1,8 @@
 import { apiFetch } from '../api'
-import { TrashIcon } from '../icons/TrashIcon'
-import { nameInputStyle, cellInputStyle, iconButtonStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
+import { nameInputStyle, cellInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
 import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
+import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
 type FeeItem = { name: string; percent: string }
 
@@ -98,14 +98,7 @@ export function FeesForm({ initialItems }: FeesFormProps) {
               />
               <span style={{ fontSize: 14, color: 'var(--accent)' }}>%</span>
             </div>
-            <button
-              type="button"
-              onClick={() => removeRow(index)}
-              aria-label={`הסר את ${row.name || 'העמלה'}`}
-              style={{ ...iconButtonStyle, width: 28, height: 28 }}
-            >
-              <TrashIcon />
-            </button>
+            <ConfirmDeleteButton onConfirm={() => removeRow(index)} ariaLabel={`הסר את ${row.name || 'העמלה'}`} />
           </div>
         ))}
       </div>

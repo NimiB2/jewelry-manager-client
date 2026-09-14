@@ -54,6 +54,8 @@ export const iconButtonStyle: CSSProperties = {
   cursor: 'pointer',
 }
 
+export const rowDeleteButtonStyle: CSSProperties = { ...iconButtonStyle, width: 28, height: 28 }
+
 export const addRowButtonStyle: CSSProperties = {
   minHeight: 44,
   width: '100%',

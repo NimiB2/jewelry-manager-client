@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '../api'
-import { TrashIcon } from '../icons/TrashIcon'
 import { statusTextStyle } from './formStyles'
 import { Section } from './Section'
+import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
 type Collection = {
   id: string
@@ -83,15 +83,12 @@ export function CollectionsForm() {
           <span key={collection.id} style={chipStyle}>
             {collection.name}
             {!collection.isPermanent && (
-              <button
-                type="button"
-                onClick={() => handleRemove(collection.id)}
+              <ConfirmDeleteButton
+                onConfirm={() => handleRemove(collection.id)}
+                ariaLabel={`הסר את ${collection.name}`}
+                triggerStyle={chipRemoveButtonStyle}
                 disabled={busy}
-                aria-label={`הסר את ${collection.name}`}
-                style={chipRemoveButtonStyle}
-              >
-                <TrashIcon />
-              </button>
+              />
             )}
           </span>
         ))}
