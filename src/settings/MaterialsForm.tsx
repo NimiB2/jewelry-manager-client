@@ -80,7 +80,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
         <span style={{ ...headerStyle, textAlign: 'right' }}>שם</span>
         <span style={headerStyle}>מחיר</span>
         <span style={headerStyle}>שעות</span>
-        <span style={headerStyle}>מכפיל</span>
+        <span style={headerStyle}>מקדם רווח</span>
         <span />
 
         {rows.map((row, index) => (
@@ -120,7 +120,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
               step="0.1"
               value={row.profitMultiplier}
               onChange={(e) => updateRow(index, 'profitMultiplier', e.target.value)}
-              aria-label="מכפיל רווח"
+              aria-label="מקדם רווח"
               style={{ ...cellInputStyle, borderBottom: '1px solid var(--border)' }}
             />
             <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>

@@ -2,7 +2,7 @@ import { MaterialsForm, type MaterialsRecord } from './MaterialsForm'
 import { PricingAdditionsForm, type PricingAdditionsRecord } from './PricingAdditionsForm'
 import { FeesForm, type FeesItemsRecord } from './FeesForm'
 import { NumberFieldsForm } from './NumberFieldsForm'
-import { PricingFormulaEditor } from './PricingFormulaEditor'
+import { PricingFormulaDisplay } from './PricingFormulaDisplay'
 
 type PricingSettingsPageProps = {
   materials: MaterialsRecord
@@ -23,6 +23,12 @@ export function PricingSettingsPage({
     <>
       <FeesForm initialItems={feesItems} />
 
+      <NumberFieldsForm
+        title="רצפת רווח"
+        fields={[{ key: 'profitFloorPercent', label: 'רצפת רווח מינימלית (%)', step: '1' }]}
+        initialData={{ profitFloorPercent }}
+      />
+
       <MaterialsForm initialMaterials={materials} />
 
       <NumberFieldsForm
@@ -33,13 +39,7 @@ export function PricingSettingsPage({
 
       <PricingAdditionsForm initialAdditions={pricingAdditions} />
 
-      <NumberFieldsForm
-        title="רצפת רווח"
-        fields={[{ key: 'profitFloorPercent', label: 'רצפת רווח מינימלית (%)', step: '1' }]}
-        initialData={{ profitFloorPercent }}
-      />
-
-      <PricingFormulaEditor />
+      <PricingFormulaDisplay />
     </>
   )
 }

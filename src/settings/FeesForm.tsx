@@ -4,16 +4,16 @@ import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
 import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
-type FeeItem = { name: string; percent: string }
+type FeeItem = { name: string; percent: string; isPermanent: boolean }
 
-export type FeesItemsRecord = { name: string; percent: number }[]
+export type FeesItemsRecord = { name: string; percent: number; isPermanent?: boolean }[]
 
 function toRows(items: FeesItemsRecord): FeeItem[] {
-  return items.map((item) => ({ name: item.name, percent: String(item.percent) }))
+  return items.map((item) => ({ name: item.name, percent: String(item.percent), isPermanent: item.isPermanent ?? false }))
 }
 
 function rowsToRecord(rows: FeeItem[]): FeesItemsRecord {
-  return rows.map((row) => ({ name: row.name.trim(), percent: Number(row.percent) || 0 }))
+  return rows.map((row) => ({ name: row.name.trim(), percent: Number(row.percent) || 0, isPermanent: row.isPermanent }))
 }
 
 function isValid(rows: FeeItem[]): boolean {
@@ -41,7 +41,7 @@ export function FeesForm({ initialItems }: FeesFormProps) {
     isValid,
   )
 
-  function updateRow(index: number, field: keyof FeeItem, value: string) {
+  function updateRow(index: number, field: 'name' | 'percent', value: string) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
   }
 
@@ -50,20 +50,11 @@ export function FeesForm({ initialItems }: FeesFormProps) {
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { name: '', percent: '' }])
+    setRows((prev) => [...prev, { name: '', percent: '', isPermanent: false }])
   }
-
-  const combinedFactor = 1 + rows.reduce((sum, row) => sum + (Number(row.percent) || 0), 0) / 100
 
   return (
     <Section title="עמלות" action={<UndoButton hasChanges={hasChanges} onUndo={undo} />}>
-      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
-        כל עמלה היא אחוז מהעלות (בדומה למע"מ) — לדוגמה 17%.
-      </p>
-      <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 10 }}>
-        מקדם כולל: <span style={{ color: 'var(--accent)' }}>×{combinedFactor.toFixed(2)}</span>
-      </p>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {rows.map((row, index) => (
           <div
@@ -98,7 +89,9 @@ export function FeesForm({ initialItems }: FeesFormProps) {
               />
               <span style={{ fontSize: 14, color: 'var(--accent)' }}>%</span>
             </div>
-            <ConfirmDeleteButton onConfirm={() => removeRow(index)} ariaLabel={`הסר את ${row.name || 'העמלה'}`} />
+            {!row.isPermanent && (
+              <ConfirmDeleteButton onConfirm={() => removeRow(index)} ariaLabel={`הסר את ${row.name || 'העמלה'}`} />
+            )}
           </div>
         ))}
       </div>

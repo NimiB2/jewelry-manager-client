@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { apiFetch } from '../api'
 import { nameInputStyle, cellInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
 import { Section, UndoButton } from './Section'
@@ -62,6 +63,18 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
     save,
     isValid,
   )
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(
+    () => new Set(initialCategories.map((c) => c.id)),
+  )
+
+  function toggleCollapsed(id: string) {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   function updateCategoryName(id: string, name: string) {
     setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
@@ -110,9 +123,20 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {categories.map((category) => (
+        {categories.map((category) => {
+          const isCollapsed = collapsedIds.has(category.id)
+          return (
           <div key={category.id} style={categoryCardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <button
+                type="button"
+                onClick={() => toggleCollapsed(category.id)}
+                aria-label={isCollapsed ? 'הרחב פריטים' : 'צמצם פריטים'}
+                aria-expanded={!isCollapsed}
+                style={collapseButtonStyle}
+              >
+                {isCollapsed ? '▸' : '▾'}
+              </button>
               <input
                 type="text"
                 value={category.name}
@@ -145,50 +169,59 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
               </span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {category.items.map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 70px 32px',
-                    gap: 6,
-                    alignItems: 'start',
-                    borderBottom: '1px solid var(--border)',
-                    paddingBottom: 4,
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={item.name}
-                    onChange={(e) => updateItem(category.id, index, 'name', e.target.value)}
-                    placeholder="שם הפריט"
-                    aria-label="שם הפריט"
-                    style={nameInputStyle}
-                  />
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    step="0.01"
-                    value={item.price}
-                    onChange={(e) => updateItem(category.id, index, 'price', e.target.value)}
-                    aria-label="מחיר הפריט"
-                    style={cellInputStyle}
-                  />
-                  <ConfirmDeleteButton
-                    onConfirm={() => removeItem(category.id, index)}
-                    ariaLabel={`הסר את ${item.name || 'הפריט'}`}
-                  />
+            {!isCollapsed && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {category.items.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 70px 32px',
+                        gap: 6,
+                        alignItems: 'start',
+                        borderBottom: '1px solid var(--border)',
+                        paddingBottom: 4,
+                      }}
+                    >
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => updateItem(category.id, index, 'name', e.target.value)}
+                        placeholder="שם הפריט"
+                        aria-label="שם הפריט"
+                        style={nameInputStyle}
+                      />
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        value={item.price}
+                        onChange={(e) => updateItem(category.id, index, 'price', e.target.value)}
+                        aria-label="מחיר הפריט"
+                        style={cellInputStyle}
+                      />
+                      <ConfirmDeleteButton
+                        onConfirm={() => removeItem(category.id, index)}
+                        ariaLabel={`הסר את ${item.name || 'הפריט'}`}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            <button type="button" onClick={() => addItem(category.id)} style={{ ...addRowButtonStyle, marginTop: 6 }}>
-              + הוספת פריט
-            </button>
+                <button
+                  type="button"
+                  onClick={() => addItem(category.id)}
+                  style={{ ...addRowButtonStyle, marginTop: 6 }}
+                >
+                  + הוספת פריט
+                </button>
+              </>
+            )}
           </div>
-        ))}
+          )
+        })}
       </div>
 
       <button type="button" onClick={addCategory} style={addRowButtonStyle}>
@@ -214,4 +247,17 @@ const categoryCardStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 10,
   padding: 10,
+}
+
+const collapseButtonStyle: React.CSSProperties = {
+  width: 28,
+  height: 28,
+  border: 'none',
+  borderRadius: 8,
+  background: 'var(--border)',
+  color: 'var(--text)',
+  fontSize: 16,
+  fontWeight: 700,
+  cursor: 'pointer',
+  flexShrink: 0,
 }
