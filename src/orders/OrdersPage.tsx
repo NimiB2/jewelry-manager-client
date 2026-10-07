@@ -5,7 +5,9 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
 import { navigate } from '../shell/useRoute'
 import { monthName, periodRange } from './dates'
+import { completionMessage } from './celebrate'
 import { OrderCard } from './OrderCard'
+import { Toast } from './Toast'
 import type { OrdersList } from './types'
 
 type StatusFilter = 'active' | 'completed' | 'all'
@@ -20,6 +22,7 @@ export function OrdersPage() {
   const [data, setData] = useState<OrdersList | null>(null)
   const [years, setYears] = useState<number[]>([])
   const [stages, setStages] = useState<string[]>([])
+  const [celebration, setCelebration] = useState<string[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [status, setStatus] = useState<StatusFilter>('active')
@@ -188,10 +191,13 @@ export function OrdersPage() {
               stages={stages}
               onOpen={() => navigate(`/orders/${order.id}`)}
               onChanged={load}
+              onCompleted={async (done) => setCelebration(await completionMessage(done))}
             />
           ))}
         </div>
       )}
+
+      {celebration && <Toast lines={celebration} onDone={() => setCelebration(null)} />}
 
       <button type="button" className="fab" onClick={() => navigate('/orders/new')} aria-label="הזמנה חדשה">
         <PlusIcon />

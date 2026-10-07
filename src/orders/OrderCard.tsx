@@ -16,6 +16,8 @@ type OrderCardProps = {
   onOpen: () => void
   // Called after a change made from the card, so the list can reload.
   onChanged: () => void
+  // Called once an order was completed, so the screen can celebrate.
+  onCompleted: (order: Order) => void
 }
 
 const NEEDS_RECEIPT = 'יש לשלוח קבלה לפני סיום ההזמנה'
@@ -27,31 +29,34 @@ const NEXT_STATUS: Partial<Record<OrderStatus, { status: OrderStatus; label: str
   READY: { status: 'COMPLETED', label: 'סיום ההזמנה ✓' },
 }
 
-// Customer and amount first; below, small marks: status, source, and whether the receipt was sent.
-// Moving the order forward (status, stage) and the receipt all work right from the card.
-export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) {
+// Kept as small as possible: customer and amount, one line of marks, and at most one action row.
+// Notes and the list of items are shown but stay small; the items open with one tap.
+export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: OrderCardProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [choosingStatus, setChoosingStatus] = useState(false)
   const [confirmingComplete, setConfirmingComplete] = useState(false)
+  const [showItems, setShowItems] = useState(false)
 
-  async function run(action: () => Promise<unknown>) {
+  async function run<T>(action: () => Promise<T>): Promise<T | null> {
     setBusy(true)
     setError(null)
     try {
-      await action()
+      const result = await action()
       onChanged()
+      return result
     } catch (err) {
       setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
+      return null
     } finally {
       setBusy(false)
     }
   }
 
   const setStatus = (status: OrderStatus) =>
-    run(() => apiJson(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }))
+    run(() => apiJson<Order>(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }))
 
-  // Completing locks the order, so it always asks first; every other move happens at once.
+  // Completing locks the order, so it needs the receipt and a "sure?"; every other move is at once.
   function requestStatus(status: OrderStatus) {
     setChoosingStatus(false)
     if (status === order.status) return
@@ -65,7 +70,8 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
 
   async function confirmComplete() {
     setConfirmingComplete(false)
-    await setStatus('COMPLETED')
+    const done = await setStatus('COMPLETED')
+    if (done) onCompleted(done)
   }
 
   const advanceStage = () => run(() => apiJson(`/orders/${order.id}/advance-stage`, { method: 'POST' }))
@@ -82,22 +88,36 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
   const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0)
   const next = NEXT_STATUS[order.status]
   const hasStages = stages.length > 0
+  const completed = order.status === 'COMPLETED'
+  const receiptBlocksEnd = order.status === 'READY' && !order.receiptSent
+  const receiptLocked = order.isCompleted && order.receiptSent
 
   return (
-    <article style={cardStyle}>
+    <article style={{ ...cardStyle, ...(completed ? completedCardStyle : null) }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <button type="button" onClick={onOpen} style={openButtonStyle} aria-label={`פתיחת הזמנה ${order.number}`}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
-            {order.customer ?? 'ללא שם לקוחה'}
-            {order.isTest && <span style={demoNoteStyle}> (הזמנת דמו)</span>}
-          </span>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span>
-              #{order.number} · {formatOrderDate(order.date)} · {itemsCount} {itemsCount === 1 ? 'פריט' : 'פריטים'}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <button type="button" onClick={onOpen} style={openButtonStyle} aria-label={`פתיחת הזמנה ${order.number}`}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
+              {order.customer ?? 'ללא שם לקוחה'}
+              {order.isTest && <span style={demoNoteStyle}> (הזמנת דמו)</span>}
             </span>
+          </button>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span>
+              #{order.number} · {formatOrderDate(order.date)} ·
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowItems((v) => !v)}
+              aria-expanded={showItems}
+              title={order.items.map((i) => `${i.name} × ${i.quantity}`).join('\n')}
+              style={itemsButtonStyle}
+            >
+              {itemsCount} {itemsCount === 1 ? 'פריט' : 'פריטים'} {showItems ? '▴' : '▾'}
+            </button>
             <SourceBadge source={order.source} />
-          </span>
-        </button>
+          </div>
+        </div>
 
         <div style={{ textAlign: 'left', flexShrink: 0 }}>
           <div style={{ fontSize: 20, fontWeight: 700 }}>{formatMoney(order.finalAmount)}</div>
@@ -109,6 +129,25 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
         </div>
       </div>
 
+      {showItems && (
+        <ul style={itemsListStyle}>
+          {order.items.map((item) => (
+            <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+              <span>
+                {item.name} <span style={{ color: 'var(--text-muted)' }}>· {item.material} × {item.quantity}</span>
+              </span>
+              <span>{formatMoney(item.lineTotal)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {order.notes && (
+        <p style={notesStyle} title={order.notes}>
+          <b style={{ fontWeight: 600 }}>הערה:</b> {order.notes}
+        </p>
+      )}
+
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 8 }}>
         <button
           type="button"
@@ -118,17 +157,25 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
           title="בחירת סטטוס אחר"
           style={{ ...statusPillStyle(order.status), border: '1px solid transparent', minHeight: 26, cursor: 'pointer' }}
         >
+          {completed ? '✓ ' : ''}
           {STATUS_LABELS[order.status]} ▾
         </button>
         <button
           type="button"
           onClick={toggleReceipt}
-          disabled={busy || (order.isCompleted && order.receiptSent)}
+          disabled={busy || receiptLocked}
           aria-pressed={order.receiptSent}
-          title={order.isCompleted ? 'הזמנה שהושלמה חייבת קבלה' : 'לחיצה משנה את הסימון'}
+          title={
+            receiptLocked
+              ? 'הזמנה שהושלמה חייבת קבלה'
+              : order.receiptSent
+                ? 'הקבלה נשלחה. לחיצה מבטלת את הסימון'
+                : 'לחיצה מסמנת שהקבלה נשלחה'
+          }
           style={order.receiptSent ? receiptSentStyle : receiptMissingStyle}
         >
-          {order.receiptSent ? '✓ קבלה נשלחה' : 'קבלה לא נשלחה'}
+          {order.receiptSent ? '☑ קבלה נשלחה' : '☐ קבלה לא נשלחה'}
+          {receiptBlocksEnd ? ' · חובה לסיום' : ''}
         </button>
       </div>
 
@@ -145,7 +192,7 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
                 onClick={() => requestStatus(status)}
                 style={{
                   flex: 1,
-                  minHeight: 38,
+                  minHeight: 36,
                   borderRadius: 8,
                   fontSize: 13,
                   cursor: 'pointer',
@@ -173,48 +220,79 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
       )}
 
       {order.status === 'IN_PROGRESS' && hasStages && (
-        <div style={{ ...footerStyle, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <StageChips stages={stages} current={order.preparationStage} disabled={busy} onPick={pickStage} />
-          <button type="button" onClick={advanceStage} disabled={busy} style={nextButtonStyle}>
-            לשלב הבא ←
+        <div style={actionRowStyle}>
+          <StageChips stages={stages} current={order.preparationStage} disabled={busy} compact onPick={pickStage} />
+          <button type="button" onClick={advanceStage} disabled={busy} style={smallNextStyle}>
+            הבא ←
           </button>
         </div>
       )}
 
       {next && !(order.status === 'IN_PROGRESS' && hasStages) && !confirmingComplete && (
-        <div style={footerStyle}>
+        <div style={actionRowStyle}>
           <button
             type="button"
             onClick={() => requestStatus(next.status)}
             disabled={busy || (next.status === 'COMPLETED' && !order.receiptSent)}
+            title={next.status === 'COMPLETED' && !order.receiptSent ? NEEDS_RECEIPT : undefined}
             style={{ ...nextButtonStyle, ...(next.status === 'COMPLETED' && !order.receiptSent ? disabledNextStyle : null) }}
           >
             {next.label}
           </button>
-          {next.status === 'COMPLETED' && !order.receiptSent && <p style={warningTextStyle}>{NEEDS_RECEIPT}</p>}
         </div>
       )}
 
-      {/* The receipt hint under the "complete" button already says the same thing. */}
-      {error && !(error === NEEDS_RECEIPT && next?.status === 'COMPLETED' && !order.receiptSent) && (
+      {error && (
         <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>
       )}
     </article>
   )
 }
 
+const completedCardStyle: React.CSSProperties = {
+  borderInlineStart: '4px solid var(--success)',
+}
+
 const openButtonStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  gap: 2,
+  display: 'block',
   border: 'none',
   background: 'transparent',
   padding: 0,
   textAlign: 'right',
   cursor: 'pointer',
-  flex: 1,
-  minWidth: 0,
+  maxWidth: '100%',
+}
+
+const itemsButtonStyle: React.CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  fontSize: 13,
+  color: 'var(--accent)',
+  cursor: 'pointer',
+}
+
+const itemsListStyle: React.CSSProperties = {
+  listStyle: 'none',
+  margin: '8px 0 0',
+  padding: '6px 10px',
+  borderRadius: 8,
+  background: 'var(--bg)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 3,
+  fontSize: 13,
+}
+
+// Notes stay to two short lines so a long note can't blow up the card; the full text is in the order.
+const notesStyle: React.CSSProperties = {
+  margin: '6px 0 0',
+  fontSize: 12,
+  color: 'var(--text-muted)',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
 }
 
 const pillButton: React.CSSProperties = {
@@ -233,11 +311,13 @@ const receiptSentStyle: React.CSSProperties = {
   color: 'var(--success)',
 }
 
+// A quiet warning: small red text on a faint tint, with a dashed edge that says "tap me".
 const receiptMissingStyle: React.CSSProperties = {
   ...pillButton,
   fontWeight: 500,
   background: 'var(--danger-bg)',
   color: 'var(--danger)',
+  border: '1px dashed var(--danger)',
 }
 
 // Small and gray on purpose: a note, not a label.
@@ -247,23 +327,17 @@ const demoNoteStyle: React.CSSProperties = {
   color: 'var(--text-muted)',
 }
 
-// A quiet warning: red text on a faint tint, not a bright block.
-const warningTextStyle: React.CSSProperties = {
-  margin: '4px 0 0',
-  fontSize: 12,
-  color: 'var(--danger)',
-}
-
 const statusChoiceStyle: React.CSSProperties = {
   display: 'flex',
   gap: 6,
   marginTop: 8,
 }
 
-const footerStyle: React.CSSProperties = {
+const actionRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
   marginTop: 8,
-  paddingTop: 8,
-  borderTop: '1px solid var(--border)',
 }
 
 const disabledNextStyle: React.CSSProperties = {
@@ -273,13 +347,22 @@ const disabledNextStyle: React.CSSProperties = {
 
 const nextButtonStyle: React.CSSProperties = {
   width: '100%',
-  minHeight: 42,
+  minHeight: 36,
   padding: '0 14px',
   border: '1px solid var(--accent)',
   borderRadius: 8,
   background: 'var(--accent-bg)',
   color: 'var(--accent)',
-  fontSize: 15,
+  fontSize: 14,
   fontWeight: 600,
   cursor: 'pointer',
+}
+
+const smallNextStyle: React.CSSProperties = {
+  ...nextButtonStyle,
+  width: 'auto',
+  flexShrink: 0,
+  minHeight: 32,
+  padding: '0 12px',
+  fontSize: 13,
 }

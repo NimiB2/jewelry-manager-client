@@ -16,10 +16,12 @@ import type { Product } from '../products/types'
 import { ConfirmDeleteButton } from '../settings/ConfirmDeleteButton'
 import { navigate, replaceRoute } from '../shell/useRoute'
 import { todayIso } from './dates'
+import { completionMessage } from './celebrate'
 import { ConfirmInline } from './ConfirmInline'
 import { ProductPicker } from './ProductPicker'
 import { SourceBadge } from './SourceBadge'
 import { StageChips } from './StageChips'
+import { Toast } from './Toast'
 import { STATUS_LABELS, STATUS_ORDER, statusColors } from './status'
 import type { Order, OrderStatus, SaveOrderBody } from './types'
 
@@ -107,6 +109,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
   const [actionBusy, setActionBusy] = useState(false)
   const [stages, setStages] = useState<string[]>([])
   const [confirmingComplete, setConfirmingComplete] = useState(false)
+  const [celebration, setCelebration] = useState<string[] | null>(null)
 
   const baseline = useRef(snapshot(emptyState()))
   const initialized = useRef(false)
@@ -270,13 +273,16 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
 
   // Status, stage and receipt save on their own, right away, so they are blocked while there are
   // unsaved edits (otherwise the edits could be lost, e.g. when completing locks the order).
-  async function act(request: () => Promise<Order>) {
+  async function act(request: () => Promise<Order>): Promise<Order | null> {
     setActionBusy(true)
     setError(null)
     try {
-      setOrder(await request())
+      const updated = await request()
+      setOrder(updated)
+      return updated
     } catch (err) {
       setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
+      return null
     } finally {
       setActionBusy(false)
     }
@@ -296,7 +302,8 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
 
   async function confirmComplete() {
     setConfirmingComplete(false)
-    await setStatus('COMPLETED')
+    const done = await setStatus('COMPLETED')
+    if (done) setCelebration(await completionMessage(done))
   }
 
   const pickStage = (stage: string) =>
@@ -355,7 +362,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
       </header>
 
       {locked && (
-        <p style={lockedStyle}>ההזמנה הושלמה ונעולה לעריכה. כדי לערוך אותה, החזירי אותה לסטטוס קודם.</p>
+        <p style={lockedStyle}>✓ ההזמנה הושלמה. היא נעולה לעריכה; כדי לערוך אותה, החזירי אותה לסטטוס קודם.</p>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
@@ -601,6 +608,8 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
         )}
       </div>
 
+      {celebration && <Toast lines={celebration} onDone={() => setCelebration(null)} />}
+
       {picking && <ProductPicker onPick={addProduct} onClose={() => setPicking(false)} />}
     </div>
   )
@@ -650,9 +659,10 @@ const lockedStyle: React.CSSProperties = {
   margin: '0 0 12px',
   padding: '8px 12px',
   borderRadius: 8,
-  background: 'var(--warning-bg)',
-  color: 'var(--warning)',
+  background: 'var(--success-bg)',
+  color: 'var(--success)',
   fontSize: 14,
+  fontWeight: 600,
 }
 
 const lineStyle: React.CSSProperties = {

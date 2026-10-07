@@ -14,8 +14,9 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 const STATUS_COLORS: Record<OrderStatus, { background: string; color: string }> = {
   NEW: { background: 'var(--accent-bg)', color: 'var(--accent)' },
   IN_PROGRESS: { background: 'var(--warning-bg)', color: 'var(--warning)' },
-  READY: { background: 'var(--success-bg)', color: 'var(--success)' },
-  COMPLETED: { background: 'var(--border)', color: 'var(--text-muted)' },
+  READY: { background: 'var(--ready-bg)', color: 'var(--ready)' },
+  // Finished orders are a success: green, like the check mark that goes with them.
+  COMPLETED: { background: 'var(--success-bg)', color: 'var(--success)' },
 }
 
 export function statusPillStyle(status: OrderStatus): CSSProperties {
