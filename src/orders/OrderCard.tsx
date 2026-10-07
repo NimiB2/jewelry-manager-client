@@ -135,6 +135,11 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
             <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span>
                 {item.name} <span style={{ color: 'var(--text-muted)' }}>· {item.material} × {item.quantity}</span>
+                {item.note && (
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)' }}>
+                    <b style={{ fontWeight: 600 }}>הערה:</b> {item.note}
+                  </span>
+                )}
               </span>
               <span>{formatMoney(item.lineTotal)}</span>
             </li>

@@ -13,6 +13,7 @@ export type OrderItem = {
   quantity: number
   lineTotal: number
   workHours: number
+  note: string | null
 }
 
 export type Order = {
@@ -47,6 +48,7 @@ export type OrderItemInput = {
   productId: string | null
   quantity: number
   unitPrice: number | null
+  note: string | null
 }
 
 export type SaveOrderBody = {

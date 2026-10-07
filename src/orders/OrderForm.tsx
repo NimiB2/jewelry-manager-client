@@ -33,6 +33,8 @@ type Line = {
   material: string
   unitPrice: string
   quantity: string
+  // A free note about this item (engraving, size...).
+  note: string
 }
 
 type FormState = {
@@ -77,6 +79,7 @@ function stateFromOrder(order: Order): FormState {
       material: item.material,
       unitPrice: String(item.unitPrice),
       quantity: String(item.quantity),
+      note: item.note ?? '',
     })),
     // The saved order only knows the result, so the discount reopens as a final amount.
     discountMode: 'FINAL_AMOUNT',
@@ -110,6 +113,8 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
   const [stages, setStages] = useState<string[]>([])
   const [confirmingComplete, setConfirmingComplete] = useState(false)
   const [celebration, setCelebration] = useState<string[] | null>(null)
+  // Lines whose note field was opened by tapping "+ הערה לפריט" (lines that already have a note always show it).
+  const [openNotes, setOpenNotes] = useState<Set<string>>(new Set())
 
   const baseline = useRef(snapshot(emptyState()))
   const initialized = useRef(false)
@@ -183,6 +188,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
       material: product.material,
       unitPrice: String(product.sitePrice),
       quantity: '1',
+      note: '',
     }
   }
 
@@ -249,6 +255,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
         productId: l.lineId ? null : l.productId,
         quantity: Number(l.quantity),
         unitPrice: Number(l.unitPrice),
+        note: (l.note ?? '').trim() || null,
       })),
       discount:
         state.discountValue.trim() === ''
@@ -449,6 +456,29 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 600, paddingBottom: 10 }}>{formatMoney(lineTotal(line))}</div>
                 </div>
+
+                {(line.note ?? '') !== '' || openNotes.has(line.key) ? (
+                  <input
+                    value={line.note ?? ''}
+                    disabled={locked}
+                    maxLength={500}
+                    autoFocus={openNotes.has(line.key) && (line.note ?? '') === ''}
+                    onChange={(e) => patchLine(line.key, { note: e.target.value })}
+                    placeholder="הערה לפריט (למשל חריטה או מידה)"
+                    aria-label={`הערה ל${line.name}`}
+                    style={{ ...smallInputStyle, textAlign: 'right', marginTop: 6, fontSize: 14 }}
+                  />
+                ) : (
+                  !locked && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenNotes((prev) => new Set(prev).add(line.key))}
+                      style={linkButtonStyle}
+                    >
+                      + הערה לפריט
+                    </button>
+                  )
+                )}
               </div>
             ))}
           </div>
