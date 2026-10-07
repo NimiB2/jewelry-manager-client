@@ -61,38 +61,33 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
     <article style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 17, fontWeight: 600 }}>{product.name}</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>{product.name}</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
             {product.type} · {product.material} · {product.weight} גרם
           </div>
+          {belowFloor && <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>מתחת לרצפת הרווח</div>}
+          {product.priceError && <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>{product.priceError}</div>}
         </div>
 
+        {/* The site price is the main number; the recommended price is a small tag under it. */}
         <div style={{ textAlign: 'left', flexShrink: 0 }}>
-          <div style={{ fontSize: 20, fontWeight: 700, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>מחיר באתר</div>
+          <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>
             {formatMoney(shownPrice)}
           </div>
           {discounted && (
             <div style={{ ...mutedTextStyle, textDecoration: 'line-through' }}>{formatMoney(product.sitePrice)}</div>
           )}
-          <div style={mutedTextStyle}>מחיר באתר</div>
+          {recommended !== undefined && (
+            <span
+              title={gap === 0 ? undefined : gap > 0 ? `המחיר באתר נמוך מהמומלץ ב-${formatMoney(gap)}` : `המחיר באתר גבוה מהמומלץ ב-${formatMoney(-gap)}`}
+              style={{ ...recommendedTagStyle, ...(gap > 0 ? recommendedLowStyle : null) }}
+            >
+              מומלץ {formatMoney(recommended)}
+            </span>
+          )}
         </div>
       </div>
-
-      {belowFloor && <p style={{ ...errorTextStyle, marginTop: 6 }}>מתחת לרצפת הרווח</p>}
-      {product.priceError && <p style={{ ...errorTextStyle, marginTop: 6 }}>{product.priceError}</p>}
-
-      {recommended !== undefined && (
-        <div style={recommendedBoxStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>מחיר מומלץ</span>
-            <span style={{ fontSize: 19, fontWeight: 700 }}>{formatMoney(recommended)}</span>
-          </div>
-          {gap > 0 && (
-            <div style={{ fontSize: 12, color: 'var(--danger)' }}>המחיר באתר נמוך ב-{formatMoney(gap)}</div>
-          )}
-          {gap < 0 && <div style={{ fontSize: 12 }}>המחיר באתר גבוה ב-{formatMoney(-gap)}</div>}
-        </div>
-      )}
 
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
         {product.price && (
@@ -151,24 +146,33 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
   )
 }
 
-// Tinted so the recommended price stands out from the (neutral) site price above it.
-const recommendedBoxStyle: React.CSSProperties = {
-  marginTop: 8,
-  padding: '6px 10px',
-  borderRadius: 8,
+// Small tag: colored enough to notice, but clearly secondary to the site price. Red when the
+// site price is below the recommendation.
+const recommendedTagStyle: React.CSSProperties = {
+  display: 'inline-block',
+  marginTop: 2,
+  padding: '1px 8px',
+  borderRadius: 10,
   background: 'var(--accent-bg)',
   color: 'var(--accent)',
+  fontSize: 12,
+  fontWeight: 600,
+}
+
+const recommendedLowStyle: React.CSSProperties = {
+  background: 'var(--danger-bg)',
+  color: 'var(--danger)',
 }
 
 const actionButtonStyle: React.CSSProperties = {
   flex: 1,
-  minHeight: 40,
+  minHeight: 36,
   padding: '0 6px',
   border: '1px solid var(--border)',
   borderRadius: 8,
   background: 'var(--surface)',
   color: 'var(--accent)',
-  fontSize: 14,
+  fontSize: 13,
   cursor: 'pointer',
 }
 
