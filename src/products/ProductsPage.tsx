@@ -8,9 +8,13 @@ import type { Collection, Product, ProductsList } from './types'
 
 const CUSTOM_ORDER_KEY = 'customOrder'
 
+// Material filter values: a material name to show only it, or "not:<name>" to show everything except it.
+const EXCLUDE_PREFIX = 'not:'
+
 export function ProductsPage() {
   const [data, setData] = useState<ProductsList | null>(null)
   const [collections, setCollections] = useState<Collection[]>([])
+  const [discountPresets, setDiscountPresets] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const [search, setSearch] = useState('')
@@ -20,10 +24,15 @@ export function ProductsPage() {
   const [discount, setDiscount] = useState('')
 
   useEffect(() => {
-    Promise.all([apiJson<ProductsList>('/products'), apiJson<Collection[]>('/collections')])
-      .then(([list, cols]) => {
+    Promise.all([
+      apiJson<ProductsList>('/products'),
+      apiJson<Collection[]>('/collections'),
+      apiJson<{ data: { discountPresets?: number[] } }>('/settings').catch(() => null),
+    ])
+      .then(([list, cols, settings]) => {
         setData(list)
         setCollections(cols)
+        setDiscountPresets(settings?.data.discountPresets ?? [])
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
   }, [])
@@ -41,7 +50,9 @@ export function ProductsPage() {
 
       if (query && !p.name.toLowerCase().includes(query)) return false
       if (typeFilter && p.type !== typeFilter) return false
-      if (materialFilter && p.material !== materialFilter) return false
+      if (materialFilter.startsWith(EXCLUDE_PREFIX)) {
+        if (p.material === materialFilter.slice(EXCLUDE_PREFIX.length)) return false
+      } else if (materialFilter && p.material !== materialFilter) return false
       if (collectionFilter && !p.collectionIds.includes(collectionFilter)) return false
       return true
     })
@@ -77,7 +88,12 @@ export function ProductsPage() {
 
   return (
     <div className="screen">
-      <h1>מוצרים</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>מוצרים</h1>
+        <button type="button" onClick={() => navigate('/products/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+          + הוספת מוצר
+        </button>
+      </div>
 
       <div style={{ position: 'relative', marginBottom: 8 }}>
         <span style={searchIconStyle}>
@@ -114,6 +130,13 @@ export function ProductsPage() {
               {m}
             </option>
           ))}
+          <optgroup label="הכל חוץ מ...">
+            {materials.map((m) => (
+              <option key={`not-${m}`} value={EXCLUDE_PREFIX + m}>
+                בלי {m}
+              </option>
+            ))}
+          </optgroup>
         </select>
         <select
           value={collectionFilter}
@@ -131,23 +154,44 @@ export function ProductsPage() {
       </div>
 
       {data.products.length > 0 && (
-        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <label htmlFor="discount" style={{ fontSize: 14, flex: 1 }}>
-            סימולטור הנחה
-            <span style={{ ...mutedTextStyle, display: 'block' }}>לתצוגה בלבד, המחירים האמיתיים לא משתנים</span>
-          </label>
-          <input
-            id="discount"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            max={100}
-            value={discount}
-            onChange={(e) => setDiscount(e.target.value)}
-            placeholder="0"
-            style={{ ...fieldInputStyle, width: 80, textAlign: 'center' }}
-          />
-          <span style={{ fontSize: 15 }}>%</span>
+        <div style={{ ...cardStyle, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <label htmlFor="discount" style={{ fontSize: 14, flex: 1 }}>
+              סימולטור הנחה
+              <span style={{ ...mutedTextStyle, display: 'block' }}>לתצוגה בלבד, המחירים האמיתיים לא משתנים</span>
+            </label>
+            <input
+              id="discount"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={100}
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              placeholder="0"
+              style={{ ...fieldInputStyle, width: 80, textAlign: 'center' }}
+            />
+            <span style={{ fontSize: 15 }}>%</span>
+          </div>
+
+          {discountPresets.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+              <button type="button" onClick={() => setDiscount('')} aria-pressed={discountPercent === 0} style={chipStyle(discountPercent === 0)}>
+                ללא
+              </button>
+              {discountPresets.map((percent) => (
+                <button
+                  key={percent}
+                  type="button"
+                  onClick={() => setDiscount(discountPercent === percent ? '' : String(percent))}
+                  aria-pressed={discountPercent === percent}
+                  style={chipStyle(discountPercent === percent)}
+                >
+                  {percent}%
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -181,6 +225,20 @@ export function ProductsPage() {
       </button>
     </div>
   )
+}
+
+function chipStyle(active: boolean): React.CSSProperties {
+  return {
+    minHeight: 36,
+    minWidth: 56,
+    padding: '0 14px',
+    borderRadius: 18,
+    border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+    background: active ? 'var(--accent-bg)' : 'var(--surface)',
+    color: active ? 'var(--accent)' : 'var(--text)',
+    fontSize: 15,
+    cursor: 'pointer',
+  }
 }
 
 const searchIconStyle: React.CSSProperties = {

@@ -129,3 +129,10 @@
     inset-inline-end: 24px;
   }
 }
+
+/* On a wide screen the header button is enough; the floating one belongs to the phone layout. */
+@media (min-width: 900px) {
+  .fab {
+    display: none;
+  }
+}
