@@ -22,8 +22,9 @@ const tabs = [
 // Bottom tab bar on a phone, sidebar on a wide screen. The product calculator is a separate
 // full screen (it has its own sticky price bar), so the navigation is hidden there.
 export function AppShell({ route, userEmail, onSignOut, children }: AppShellProps) {
-  const fullScreen = route.page === 'product-form'
-  const activePage = route.page === 'product-form' ? 'products' : route.page
+  const fullScreen = route.page === 'product-form' || route.page === 'order-form'
+  const activePage =
+    route.page === 'product-form' ? (route.custom ? 'orders' : 'products') : route.page === 'order-form' ? 'orders' : route.page
 
   return (
     <>

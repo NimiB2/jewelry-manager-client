@@ -29,11 +29,15 @@ const DEFAULT_TYPES = ['טבעת', 'שרשרת', 'עגילים', 'צמיד', 'ת
 
 type ProductCalculatorProps = {
   productId: string | null
+  // Opened from an order to make a one-off item: starts in the "custom order" collection and goes
+  // back to that order afterwards.
+  custom: boolean
+  returnTo: string | null
 }
 
 // The only way to create or edit a product. The price shown comes from the server on every
 // change (the formula lives in one place), so what she sees is exactly what gets calculated.
-export function ProductCalculator({ productId }: ProductCalculatorProps) {
+export function ProductCalculator({ productId, custom, returnTo }: ProductCalculatorProps) {
   const isNew = productId === null
 
   const [settings, setSettings] = useState<SettingsForCalculator | null>(null)
@@ -83,8 +87,8 @@ export function ProductCalculator({ productId }: ProductCalculatorProps) {
           setRows(rowsFromProduct(types, product.additions))
         } else {
           setRows(types.map((t) => newRow(t.name)))
-          const general = loadedCollections.find((c) => c.key === 'general')
-          setCollectionIds(general ? [general.id] : [])
+          const start = loadedCollections.find((c) => c.key === (custom ? 'customOrder' : 'general'))
+          setCollectionIds(start ? [start.id] : [])
         }
         setReady(true)
       })
@@ -175,11 +179,11 @@ export function ProductCalculator({ productId }: ProductCalculatorProps) {
     setSaving(true)
     setSaveError(null)
     try {
-      await apiJson<Product>(isNew ? '/products' : `/products/${productId}`, {
+      const saved = await apiJson<Product>(isNew ? '/products' : `/products/${productId}`, {
         method: isNew ? 'POST' : 'PUT',
         body: JSON.stringify(body),
       })
-      navigate('/products')
+      navigate(returnTo ? `${returnTo}?restore=1&addProduct=${saved.id}` : '/products')
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'השמירה נכשלה')
       setSaving(false)
@@ -218,10 +222,15 @@ export function ProductCalculator({ productId }: ProductCalculatorProps) {
   return (
     <div className="screen" style={{ paddingBottom: 0, display: 'flex', flexDirection: 'column' }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <button type="button" onClick={() => navigate('/products')} aria-label="חזרה למוצרים" style={backButtonStyle}>
+        <button
+          type="button"
+          onClick={() => navigate(returnTo ? `${returnTo}?restore=1` : '/products')}
+          aria-label={returnTo ? 'חזרה להזמנה' : 'חזרה למוצרים'}
+          style={backButtonStyle}
+        >
           <BackIcon />
         </button>
-        <h1 style={{ flex: 1, margin: 0 }}>{isNew ? 'מוצר חדש' : name || 'עריכת מוצר'}</h1>
+        <h1 style={{ flex: 1, margin: 0 }}>{isNew ? (custom ? 'פריט אישי להזמנה' : 'מוצר חדש') : name || 'עריכת מוצר'}</h1>
         {!isNew && <ConfirmDeleteButton onConfirm={remove} ariaLabel="מחיקת המוצר" />}
       </header>
 

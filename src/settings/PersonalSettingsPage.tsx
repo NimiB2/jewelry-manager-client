@@ -4,17 +4,20 @@ import { PreparationStagesForm } from './PreparationStagesForm'
 import { EmployeesTable } from './EmployeesTable'
 import { DiscountPresetsForm } from './DiscountPresetsForm'
 import { ProductAdditionsForm, type ProductAdditionType } from './ProductAdditionsForm'
+import { TestOrderPrefixForm } from './TestOrderPrefixForm'
 
 type PersonalSettingsPageProps = {
   preparationStages: string[]
   productAdditionTypes: ProductAdditionType[]
   discountPresets: number[]
+  testOrderPrefix: string
 }
 
 export function PersonalSettingsPage({
   preparationStages,
   productAdditionTypes,
   discountPresets,
+  testOrderPrefix,
 }: PersonalSettingsPageProps) {
   return (
     <>
@@ -23,6 +26,7 @@ export function PersonalSettingsPage({
       <PreparationStagesForm initialStages={preparationStages} />
       <ProductAdditionsForm initialTypes={productAdditionTypes} />
       <DiscountPresetsForm initialPercents={discountPresets} />
+      <TestOrderPrefixForm initialPrefix={testOrderPrefix} />
       <EmployeesTable />
     </>
   )

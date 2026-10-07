@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { apiJson } from '../api'
 import { BreakdownList } from './BreakdownList'
-import { discountedPrice, isBelowProfitFloor } from './discount'
-import { formatMoney } from './format'
+import { discountedPrice, isBelowProfitFloor, profitAt } from './discount'
+import { formatMoney, formatPercent } from './format'
 import { cardStyle, errorTextStyle, mutedTextStyle } from './productStyles'
 import type { PricingMeta, Product } from './types'
 
@@ -26,6 +26,7 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
   const shownPrice = discountedPrice(product.sitePrice, discountPercent)
   const discounted = discountPercent > 0
   const belowFloor = isBelowProfitFloor(product, meta, shownPrice)
+  const profit = meta ? profitAt(product, meta, shownPrice) : null
   const recommended = product.price?.recommendedPrice
   // The recommended price follows the settings; the site price only changes when she changes it.
   const gap = recommended === undefined ? 0 : Math.round(recommended - product.sitePrice)
@@ -65,7 +66,14 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
             {product.type} · {product.material} · {product.weight} גרם
           </div>
-          {belowFloor && <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>מתחת לרצפת הרווח</div>}
+          {profit && (
+            <div
+              style={{ fontSize: 13, fontWeight: 600, marginTop: 2, color: belowFloor ? 'var(--danger)' : 'var(--success)' }}
+            >
+              רווח {formatMoney(Math.round(profit.amount))} · {formatPercent(profit.rate)}
+              {belowFloor && <span style={{ fontWeight: 400 }}> · מתחת לרצפה</span>}
+            </div>
+          )}
           {product.priceError && <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>{product.priceError}</div>}
         </div>
 

@@ -3,6 +3,8 @@ import { useAuth } from './auth/useAuth'
 import { ComingSoonPage } from './shell/ComingSoonPage'
 import { AppShell } from './shell/AppShell'
 import { useRoute } from './shell/useRoute'
+import { OrderForm } from './orders/OrderForm'
+import { OrdersPage } from './orders/OrdersPage'
 import { ProductCalculator } from './products/ProductCalculator'
 import { ProductsPage } from './products/ProductsPage'
 import { SettingsPage } from './settings/SettingsPage'
@@ -18,9 +20,24 @@ function App() {
   return (
     <AppShell route={route} userEmail={user.email} onSignOut={signOutUser}>
       {route.page === 'products' && <ProductsPage />}
-      {route.page === 'product-form' && <ProductCalculator key={route.productId ?? 'new'} productId={route.productId} />}
+      {route.page === 'product-form' && (
+        <ProductCalculator
+          key={route.productId ?? 'new'}
+          productId={route.productId}
+          custom={route.custom}
+          returnTo={route.returnTo}
+        />
+      )}
       {route.page === 'settings' && <SettingsPage />}
-      {route.page === 'orders' && <ComingSoonPage title="הזמנות" />}
+      {route.page === 'orders' && <OrdersPage />}
+      {route.page === 'order-form' && (
+        <OrderForm
+          key={route.orderId ?? 'new'}
+          orderId={route.orderId}
+          addProductId={route.addProductId}
+          restoreDraft={route.restoreDraft}
+        />
+      )}
       {route.page === 'finances' && <ComingSoonPage title="כספים" />}
       {route.page === 'tasks' && <ComingSoonPage title="משימות" />}
     </AppShell>

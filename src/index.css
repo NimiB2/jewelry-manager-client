@@ -15,6 +15,9 @@
   --accent-contrast: #ffffff;
   --accent-bg: rgba(0, 122, 255, 0.1);
   --success: #248a3d;
+  --success-bg: rgba(52, 199, 89, 0.15);
+  --warning: #9a5b00;
+  --warning-bg: rgba(255, 149, 0, 0.16);
   --danger: #ff3b30;
   --danger-bg: rgba(255, 59, 48, 0.08);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
