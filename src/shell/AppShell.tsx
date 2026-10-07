@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { FinancesIcon, OrdersIcon, ProductsIcon, SettingsIcon } from '../icons/NavIcons'
+import { FinancesIcon, OrdersIcon, ProductsIcon, SettingsIcon, TasksIcon } from '../icons/NavIcons'
 import type { Route } from './useRoute'
 import './shell.css'
 
@@ -14,6 +14,7 @@ const tabs = [
   { page: 'orders', href: '#/orders', label: 'הזמנות', icon: <OrdersIcon /> },
   { page: 'products', href: '#/products', label: 'מוצרים', icon: <ProductsIcon /> },
   { page: 'finances', href: '#/finances', label: 'כספים', icon: <FinancesIcon /> },
+  { page: 'tasks', href: '#/tasks', label: 'משימות', icon: <TasksIcon /> },
   { page: 'settings', href: '#/settings', label: 'הגדרות', icon: <SettingsIcon /> },
 ] as const
 

@@ -45,6 +45,14 @@ export function FinancesIcon() {
   )
 }
 
+export function TasksIcon() {
+  return (
+    <Icon>
+      <path d="M4 6l2 2 3-3M4 14l2 2 3-3M13 7h7M13 15h7" />
+    </Icon>
+  )
+}
+
 export function SettingsIcon() {
   return (
     <Icon>

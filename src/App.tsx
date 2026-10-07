@@ -22,6 +22,7 @@ function App() {
       {route.page === 'settings' && <SettingsPage />}
       {route.page === 'orders' && <ComingSoonPage title="הזמנות" />}
       {route.page === 'finances' && <ComingSoonPage title="כספים" />}
+      {route.page === 'tasks' && <ComingSoonPage title="משימות" />}
     </AppShell>
   )
 }

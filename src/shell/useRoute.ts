@@ -5,6 +5,7 @@ export type Route =
   | { page: 'products' }
   | { page: 'product-form'; productId: string | null }
   | { page: 'finances' }
+  | { page: 'tasks' }
   | { page: 'settings' }
 
 // The route lives in the URL hash (#/products/new), so refresh and the browser's back button keep working.
@@ -15,6 +16,8 @@ function parse(hash: string): Route {
       return { page: 'orders' }
     case 'finances':
       return { page: 'finances' }
+    case 'tasks':
+      return { page: 'tasks' }
     case 'settings':
       return { page: 'settings' }
     case 'products':
