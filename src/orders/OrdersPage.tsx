@@ -19,6 +19,7 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
 export function OrdersPage() {
   const [data, setData] = useState<OrdersList | null>(null)
   const [years, setYears] = useState<number[]>([])
+  const [stages, setStages] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const [status, setStatus] = useState<StatusFilter>('active')
@@ -58,6 +59,9 @@ export function OrdersPage() {
 
   useEffect(() => {
     apiJson<number[]>('/orders/years').then(setYears).catch(() => setYears([]))
+    apiJson<{ data: { preparationStages?: string[] } }>('/settings')
+      .then((s) => setStages(s.data.preparationStages ?? []))
+      .catch(() => setStages([]))
 
     // She may have changed things elsewhere (another tab, another device): refresh on return.
     const onVisible = () => document.visibilityState === 'visible' && load()
@@ -178,7 +182,13 @@ export function OrdersPage() {
       {data && data.orders.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
           {data.orders.map((order) => (
-            <OrderCard key={order.id} order={order} onOpen={() => navigate(`/orders/${order.id}`)} onChanged={load} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              stages={stages}
+              onOpen={() => navigate(`/orders/${order.id}`)}
+              onChanged={load}
+            />
           ))}
         </div>
       )}

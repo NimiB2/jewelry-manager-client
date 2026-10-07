@@ -16,8 +16,10 @@ import type { Product } from '../products/types'
 import { ConfirmDeleteButton } from '../settings/ConfirmDeleteButton'
 import { navigate, replaceRoute } from '../shell/useRoute'
 import { todayIso } from './dates'
+import { ConfirmInline } from './ConfirmInline'
 import { ProductPicker } from './ProductPicker'
 import { SourceBadge } from './SourceBadge'
+import { StageChips } from './StageChips'
 import { STATUS_LABELS, STATUS_ORDER, statusColors } from './status'
 import type { Order, OrderStatus, SaveOrderBody } from './types'
 
@@ -103,6 +105,8 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [actionBusy, setActionBusy] = useState(false)
+  const [stages, setStages] = useState<string[]>([])
+  const [confirmingComplete, setConfirmingComplete] = useState(false)
 
   const baseline = useRef(snapshot(emptyState()))
   const initialized = useRef(false)
@@ -120,6 +124,11 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
           base = stateFromOrder(loaded)
         }
         baseline.current = snapshot(base)
+
+        // The stages come from settings; without them the stage chips just stay empty.
+        apiJson<{ data: { preparationStages?: string[] } }>('/settings')
+          .then((s) => setStages(s.data.preparationStages ?? []))
+          .catch(() => setStages([]))
 
         let next = base
         // Coming back from the calculator ("custom item"): bring back what she had typed.
@@ -273,8 +282,25 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
     }
   }
 
-  const changeStatus = (status: OrderStatus) =>
+  const setStatus = (status: OrderStatus) =>
     act(() => apiJson<Order>(`/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }))
+
+  // Completing locks the order, so it asks first; every other status changes at once.
+  function changeStatus(status: OrderStatus) {
+    if (status === 'COMPLETED') {
+      setConfirmingComplete(true)
+      return
+    }
+    void setStatus(status)
+  }
+
+  async function confirmComplete() {
+    setConfirmingComplete(false)
+    await setStatus('COMPLETED')
+  }
+
+  const pickStage = (stage: string) =>
+    act(() => apiJson<Order>(`/orders/${orderId}/stage`, { method: 'PATCH', body: JSON.stringify({ stage }) }))
   const advanceStage = () => act(() => apiJson<Order>(`/orders/${orderId}/advance-stage`, { method: 'POST' }))
   const toggleReceipt = () =>
     act(() =>
@@ -508,11 +534,20 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
               })}
             </div>
 
+            {confirmingComplete && (
+              <ConfirmInline
+                message="לסמן את ההזמנה כהושלמה? היא תינעל לעריכה."
+                confirmLabel="כן, להשלים"
+                busy={actionBusy}
+                onConfirm={confirmComplete}
+                onCancel={() => setConfirmingComplete(false)}
+              />
+            )}
+
             {order.status === 'IN_PROGRESS' && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                <span style={{ fontSize: 14 }}>
-                  שלב נוכחי: <b style={{ fontWeight: 600 }}>{order.preparationStage ?? 'לא נבחר'}</b>
-                </span>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: 14 }}>שלב הכנה</span>
+                <StageChips stages={stages} current={order.preparationStage} disabled={actionsDisabled} onPick={pickStage} />
                 <button type="button" onClick={advanceStage} disabled={actionsDisabled} style={secondaryButtonStyle}>
                   לשלב הבא ←
                 </button>

@@ -2,24 +2,36 @@ import { useState } from 'react'
 import { apiJson } from '../api'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle } from '../products/productStyles'
+import { ConfirmInline } from './ConfirmInline'
 import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
+import { StageChips } from './StageChips'
 import { STATUS_LABELS, STATUS_ORDER, statusColors, statusPillStyle } from './status'
 import type { Order, OrderStatus } from './types'
 
 type OrderCardProps = {
   order: Order
+  // The preparation stages from settings, for jumping straight to one.
+  stages: string[]
   onOpen: () => void
-  // Called after a change made from the card (stage or receipt), so the list can reload.
+  // Called after a change made from the card, so the list can reload.
   onChanged: () => void
 }
 
+// What one tap on the main button does: move the order to the next status.
+const NEXT_STATUS: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> = {
+  NEW: { status: 'IN_PROGRESS', label: 'התחלת הכנה ←' },
+  IN_PROGRESS: { status: 'READY', label: 'סימון כמוכנה ←' },
+  READY: { status: 'COMPLETED', label: 'סיום ההזמנה ✓' },
+}
+
 // Customer and amount first; below, small marks: status, source, and whether the receipt was sent.
-// The two things she touches most (next stage, receipt) work right from the card.
-export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
+// Moving the order forward (status, stage) and the receipt all work right from the card.
+export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [choosingStatus, setChoosingStatus] = useState(false)
+  const [confirmingComplete, setConfirmingComplete] = useState(false)
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true)
@@ -34,14 +46,28 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
     }
   }
 
-  const advance = () => run(() => apiJson(`/orders/${order.id}/advance-stage`, { method: 'POST' }))
-  const changeStatus = (status: OrderStatus) => {
+  const setStatus = (status: OrderStatus) =>
+    run(() => apiJson(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }))
+
+  // Completing locks the order, so it always asks first; every other move happens at once.
+  function requestStatus(status: OrderStatus) {
     setChoosingStatus(false)
-    if (status === order.status) return Promise.resolve()
-    return run(() =>
-      apiJson(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
-    )
+    if (status === order.status) return
+    if (status === 'COMPLETED') {
+      setConfirmingComplete(true)
+      return
+    }
+    void setStatus(status)
   }
+
+  async function confirmComplete() {
+    setConfirmingComplete(false)
+    await setStatus('COMPLETED')
+  }
+
+  const advanceStage = () => run(() => apiJson(`/orders/${order.id}/advance-stage`, { method: 'POST' }))
+  const pickStage = (stage: string) =>
+    run(() => apiJson(`/orders/${order.id}/stage`, { method: 'PATCH', body: JSON.stringify({ stage }) }))
   const toggleReceipt = () =>
     run(() =>
       apiJson(`/orders/${order.id}/receipt-sent`, {
@@ -51,6 +77,8 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
     )
 
   const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0)
+  const next = NEXT_STATUS[order.status]
+  const hasStages = stages.length > 0
 
   return (
     <article style={cardStyle}>
@@ -78,7 +106,7 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
           onClick={() => setChoosingStatus((v) => !v)}
           disabled={busy}
           aria-expanded={choosingStatus}
-          title="שינוי סטטוס"
+          title="בחירת סטטוס אחר"
           style={{ ...statusPillStyle(order.status), border: '1px solid transparent', minHeight: 26, cursor: 'pointer' }}
         >
           {STATUS_LABELS[order.status]} ▾
@@ -98,7 +126,7 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
       </div>
 
       {choosingStatus && (
-        <div style={statusChoiceStyle} role="group" aria-label="שינוי סטטוס">
+        <div style={statusChoiceStyle} role="group" aria-label="בחירת סטטוס">
           {STATUS_ORDER.map((status) => {
             const active = order.status === status
             const colors = statusColors(status)
@@ -107,7 +135,7 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
                 key={status}
                 type="button"
                 aria-pressed={active}
-                onClick={() => changeStatus(status)}
+                onClick={() => requestStatus(status)}
                 style={{
                   flex: 1,
                   minHeight: 38,
@@ -127,13 +155,29 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
         </div>
       )}
 
-      {order.status === 'IN_PROGRESS' && (
-        <div style={stageRowStyle}>
-          <span style={{ fontSize: 13 }}>
-            שלב: <b style={{ fontWeight: 600 }}>{order.preparationStage ?? 'לא נבחר'}</b>
-          </span>
-          <button type="button" onClick={advance} disabled={busy} style={advanceButtonStyle}>
+      {confirmingComplete && (
+        <ConfirmInline
+          message="לסמן את ההזמנה כהושלמה? היא תינעל לעריכה."
+          confirmLabel="כן, להשלים"
+          busy={busy}
+          onConfirm={confirmComplete}
+          onCancel={() => setConfirmingComplete(false)}
+        />
+      )}
+
+      {order.status === 'IN_PROGRESS' && hasStages && (
+        <div style={{ ...footerStyle, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <StageChips stages={stages} current={order.preparationStage} disabled={busy} onPick={pickStage} />
+          <button type="button" onClick={advanceStage} disabled={busy} style={nextButtonStyle}>
             לשלב הבא ←
+          </button>
+        </div>
+      )}
+
+      {next && !(order.status === 'IN_PROGRESS' && hasStages) && !confirmingComplete && (
+        <div style={footerStyle}>
+          <button type="button" onClick={() => requestStatus(next.status)} disabled={busy} style={nextButtonStyle}>
+            {next.label}
           </button>
         </div>
       )}
@@ -193,23 +237,21 @@ const statusChoiceStyle: React.CSSProperties = {
   marginTop: 8,
 }
 
-const stageRowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+const footerStyle: React.CSSProperties = {
   marginTop: 8,
   paddingTop: 8,
   borderTop: '1px solid var(--border)',
 }
 
-const advanceButtonStyle: React.CSSProperties = {
-  minHeight: 36,
+const nextButtonStyle: React.CSSProperties = {
+  width: '100%',
+  minHeight: 42,
   padding: '0 14px',
-  border: '1px solid var(--border)',
+  border: '1px solid var(--accent)',
   borderRadius: 8,
-  background: 'var(--surface)',
+  background: 'var(--accent-bg)',
   color: 'var(--accent)',
-  fontSize: 14,
+  fontSize: 15,
   fontWeight: 600,
   cursor: 'pointer',
 }
