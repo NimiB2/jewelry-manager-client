@@ -4,8 +4,8 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle } from '../products/productStyles'
 import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
-import { STATUS_LABELS, statusPillStyle } from './status'
-import type { Order } from './types'
+import { STATUS_LABELS, STATUS_ORDER, statusColors, statusPillStyle } from './status'
+import type { Order, OrderStatus } from './types'
 
 type OrderCardProps = {
   order: Order
@@ -19,6 +19,7 @@ type OrderCardProps = {
 export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [choosingStatus, setChoosingStatus] = useState(false)
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true)
@@ -34,6 +35,13 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
   }
 
   const advance = () => run(() => apiJson(`/orders/${order.id}/advance-stage`, { method: 'POST' }))
+  const changeStatus = (status: OrderStatus) => {
+    setChoosingStatus(false)
+    if (status === order.status) return Promise.resolve()
+    return run(() =>
+      apiJson(`/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+    )
+  }
   const toggleReceipt = () =>
     run(() =>
       apiJson(`/orders/${order.id}/receipt-sent`, {
@@ -65,7 +73,16 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 8 }}>
-        <span style={statusPillStyle(order.status)}>{STATUS_LABELS[order.status]}</span>
+        <button
+          type="button"
+          onClick={() => setChoosingStatus((v) => !v)}
+          disabled={busy}
+          aria-expanded={choosingStatus}
+          title="שינוי סטטוס"
+          style={{ ...statusPillStyle(order.status), border: '1px solid transparent', minHeight: 26, cursor: 'pointer' }}
+        >
+          {STATUS_LABELS[order.status]} ▾
+        </button>
         <SourceBadge source={order.source} />
         {order.isTest && <span style={testTagStyle}>בדיקה</span>}
         <button
@@ -79,6 +96,36 @@ export function OrderCard({ order, onOpen, onChanged }: OrderCardProps) {
           {order.receiptSent ? '✓ קבלה נשלחה' : 'קבלה לא נשלחה'}
         </button>
       </div>
+
+      {choosingStatus && (
+        <div style={statusChoiceStyle} role="group" aria-label="שינוי סטטוס">
+          {STATUS_ORDER.map((status) => {
+            const active = order.status === status
+            const colors = statusColors(status)
+            return (
+              <button
+                key={status}
+                type="button"
+                aria-pressed={active}
+                onClick={() => changeStatus(status)}
+                style={{
+                  flex: 1,
+                  minHeight: 38,
+                  borderRadius: 8,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontWeight: active ? 700 : 400,
+                  border: `1px solid ${active ? colors.color : 'var(--border)'}`,
+                  background: active ? colors.background : 'var(--surface)',
+                  color: active ? colors.color : 'var(--text)',
+                }}
+              >
+                {STATUS_LABELS[status]}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {order.status === 'IN_PROGRESS' && (
         <div style={stageRowStyle}>
@@ -138,6 +185,12 @@ const testTagStyle: React.CSSProperties = {
   background: 'var(--border)',
   color: 'var(--text-muted)',
   fontSize: 12,
+}
+
+const statusChoiceStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 6,
+  marginTop: 8,
 }
 
 const stageRowStyle: React.CSSProperties = {
