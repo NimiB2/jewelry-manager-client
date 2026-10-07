@@ -5,6 +5,7 @@ import { type PricingAdditionsRecord } from './PricingAdditionsForm'
 import { type FeesItemsRecord } from './FeesForm'
 import { PricingSettingsPage } from './PricingSettingsPage'
 import { PersonalSettingsPage } from './PersonalSettingsPage'
+import { type ProductAdditionType } from './ProductAdditionsForm'
 
 type SettingsData = {
   materials?: MaterialsRecord
@@ -13,6 +14,7 @@ type SettingsData = {
   profitFloorPercent?: number
   pricingAdditions?: PricingAdditionsRecord
   preparationStages?: string[]
+  productAdditionTypes?: ProductAdditionType[]
 }
 
 type SettingsRow = {
@@ -74,7 +76,10 @@ export function SettingsPage() {
         />
       </div>
       <div hidden={tab !== 'personal'}>
-        <PersonalSettingsPage preparationStages={settings.data.preparationStages ?? []} />
+        <PersonalSettingsPage
+          preparationStages={settings.data.preparationStages ?? []}
+          productAdditionTypes={settings.data.productAdditionTypes ?? []}
+        />
       </div>
     </div>
   )

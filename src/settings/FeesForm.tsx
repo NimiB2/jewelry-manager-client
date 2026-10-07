@@ -4,16 +4,28 @@ import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
 import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 
-type FeeItem = { name: string; percent: string; isPermanent: boolean }
+// key marks the fees the pricing formula reads (card fee, VAT, fixed expenses). It must travel
+// back to the server unchanged, even if the fee is renamed here.
+type FeeItem = { name: string; percent: string; isPermanent: boolean; key?: string }
 
-export type FeesItemsRecord = { name: string; percent: number; isPermanent?: boolean }[]
+export type FeesItemsRecord = { name: string; percent: number; isPermanent?: boolean; key?: string | null }[]
 
 function toRows(items: FeesItemsRecord): FeeItem[] {
-  return items.map((item) => ({ name: item.name, percent: String(item.percent), isPermanent: item.isPermanent ?? false }))
+  return items.map((item) => ({
+    name: item.name,
+    percent: String(item.percent),
+    isPermanent: item.isPermanent ?? false,
+    key: item.key ?? undefined,
+  }))
 }
 
 function rowsToRecord(rows: FeeItem[]): FeesItemsRecord {
-  return rows.map((row) => ({ name: row.name.trim(), percent: Number(row.percent) || 0, isPermanent: row.isPermanent }))
+  return rows.map((row) => ({
+    name: row.name.trim(),
+    percent: Number(row.percent) || 0,
+    isPermanent: row.isPermanent,
+    key: row.key,
+  }))
 }
 
 function isValid(rows: FeeItem[]): boolean {

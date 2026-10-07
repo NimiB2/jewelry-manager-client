@@ -21,3 +21,24 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
 
   return response
 }
+
+// Same as apiFetch, but parses JSON and turns a failed response into an Error carrying the
+// server's message, so screens can just try/catch.
+export async function apiJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers: HeadersInit = init.body ? { 'Content-Type': 'application/json', ...init.headers } : (init.headers ?? {})
+  const response = await apiFetch(path, { ...init, headers })
+
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`
+    try {
+      const body = await response.json()
+      message = body?.error ?? body?.title ?? message
+    } catch {
+      // keep the status-code message
+    }
+    throw new Error(message)
+  }
+
+  if (response.status === 204) return undefined as T
+  return response.json()
+}
