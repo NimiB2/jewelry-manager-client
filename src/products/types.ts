@@ -18,6 +18,14 @@ export type PriceBreakdown = {
   cardFeeCost: number
   profit: number
   profitRate: number
+  // The inputs behind the numbers, used to show each formula with its real values.
+  weight: number
+  pricePerGram: number
+  laborHourRate: number
+  fixedExpenseRate: number
+  profitMultiplier: number
+  cardFeeRate: number
+  vatRate: number
 }
 
 export type Product = {

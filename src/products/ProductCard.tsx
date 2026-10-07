@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { apiJson } from '../api'
+import { BreakdownList } from './BreakdownList'
 import { discountedPrice, isBelowProfitFloor } from './discount'
 import { formatMoney } from './format'
 import { cardStyle, errorTextStyle, linkButtonStyle, mutedTextStyle } from './productStyles'
@@ -18,6 +19,7 @@ type ProductCardProps = {
 export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated }: ProductCardProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const [showCalc, setShowCalc] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -78,12 +80,25 @@ export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated 
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
         <span style={mutedTextStyle}>{recommended !== undefined ? `מחיר מומלץ ${formatMoney(recommended)}` : ''}</span>
-        {!editing && (
-          <button type="button" onClick={startEdit} style={linkButtonStyle}>
-            עריכת מחיר
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 14 }}>
+          {product.price && (
+            <button type="button" onClick={() => setShowCalc((v) => !v)} aria-expanded={showCalc} style={linkButtonStyle}>
+              {showCalc ? 'הסתרת חישוב' : 'חישוב'}
+            </button>
+          )}
+          {!editing && (
+            <button type="button" onClick={startEdit} style={linkButtonStyle}>
+              עריכת מחיר
+            </button>
+          )}
+        </div>
       </div>
+
+      {showCalc && product.price && (
+        <div style={{ marginTop: 8 }}>
+          <BreakdownList breakdown={product.price} />
+        </div>
+      )}
 
       {editing && (
         <div style={{ marginTop: 8 }}>

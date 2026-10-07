@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { formatMoney, formatPercent } from './format'
-import { errorTextStyle, linkButtonStyle, mutedTextStyle, primaryButtonStyle } from './productStyles'
+import { BreakdownList } from './BreakdownList'
+import { formatMoney } from './format'
+import { errorTextStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from './productStyles'
 import type { PriceBreakdown } from './types'
 
 type PriceBarProps = {
@@ -13,46 +14,17 @@ type PriceBarProps = {
 }
 
 // Sticks to the bottom of the calculator: the live recommended price, an optional cost
-// breakdown, and the save button.
+// breakdown with its formulas, and the save button.
 export function PriceBar({ preview, hasInputs, canSave, saving, saveError, onSave }: PriceBarProps) {
   const [showBreakdown, setShowBreakdown] = useState(false)
   const b = preview.breakdown
 
-  const lines: [string, string][] = b
-    ? [
-        ['עלות מתכת', formatMoney(b.metalCost)],
-        [`עבודה (${b.laborHours} שעות)`, formatMoney(b.laborCost)],
-        ['תוספות', formatMoney(b.additionsCost)],
-        ['אריזה ומשלוח', formatMoney(b.packagingAndShippingCost)],
-        ['סה"כ עלות ישירה', formatMoney(b.directCosts)],
-        ['כולל הוצאות קבועות', formatMoney(b.costWithFixedExpenses)],
-        ['מחיר לפני מע"מ', formatMoney(b.priceExclVat)],
-        ['עמלת סליקה', formatMoney(b.cardFeeCost)],
-        [`רווח (${formatPercent(b.profitRate)})`, formatMoney(b.profit)],
-      ]
-    : []
-
   return (
     <div style={barStyle}>
       {showBreakdown && b && (
-        <dl
-          style={{
-            margin: '0 0 8px',
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            gap: '2px 12px',
-            fontSize: 13,
-            maxHeight: '32dvh',
-            overflowY: 'auto',
-          }}
-        >
-          {lines.map(([label, value]) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <dt style={{ color: 'var(--text-muted)' }}>{label}</dt>
-              <dd style={{ margin: 0, textAlign: 'left' }}>{value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div style={{ marginBottom: 8 }}>
+          <BreakdownList breakdown={b} maxHeight="30dvh" />
+        </div>
       )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
@@ -65,22 +37,28 @@ export function PriceBar({ preview, hasInputs, canSave, saving, saveError, onSav
       {preview.error && <p style={{ ...errorTextStyle, margin: '2px 0' }}>{preview.error}</p>}
       {!preview.error && !hasInputs && <p style={{ ...mutedTextStyle, margin: '2px 0' }}>בחרי חומר והזיני משקל כדי לראות מחיר.</p>}
 
-      {b && (
-        <button type="button" onClick={() => setShowBreakdown((v) => !v)} style={linkButtonStyle}>
-          {showBreakdown ? 'הסתרת פירוט' : 'הצגת פירוט'}
-        </button>
-      )}
-
       {saveError && <p style={{ ...errorTextStyle, margin: '4px 0' }}>{saveError}</p>}
 
-      <button
-        type="button"
-        onClick={onSave}
-        disabled={saving || !canSave}
-        style={{ ...primaryButtonStyle, width: '100%', marginTop: 6, opacity: saving || !canSave ? 0.6 : 1 }}
-      >
-        {saving ? 'שומר...' : 'שמירת מוצר'}
-      </button>
+      <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+        {b && (
+          <button
+            type="button"
+            onClick={() => setShowBreakdown((v) => !v)}
+            aria-expanded={showBreakdown}
+            style={{ ...secondaryButtonStyle, flex: 1, fontSize: 16, fontWeight: 600 }}
+          >
+            {showBreakdown ? 'הסתרת פירוט' : 'הצגת פירוט'}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || !canSave}
+          style={{ ...primaryButtonStyle, flex: 1, opacity: saving || !canSave ? 0.6 : 1 }}
+        >
+          {saving ? 'שומר...' : 'שמירת מוצר'}
+        </button>
+      </div>
     </div>
   )
 }

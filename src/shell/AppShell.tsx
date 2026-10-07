@@ -10,10 +10,11 @@ type AppShellProps = {
   children: ReactNode
 }
 
+// Top to bottom in the sidebar (right to left in the phone tab bar): Settings sits at the bottom.
 const tabs = [
+  { page: 'finances', href: '#/finances', label: 'כספים', icon: <FinancesIcon /> },
   { page: 'orders', href: '#/orders', label: 'הזמנות', icon: <OrdersIcon /> },
   { page: 'products', href: '#/products', label: 'מוצרים', icon: <ProductsIcon /> },
-  { page: 'finances', href: '#/finances', label: 'כספים', icon: <FinancesIcon /> },
   { page: 'tasks', href: '#/tasks', label: 'משימות', icon: <TasksIcon /> },
   { page: 'settings', href: '#/settings', label: 'הגדרות', icon: <SettingsIcon /> },
 ] as const
