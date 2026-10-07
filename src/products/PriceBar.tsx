@@ -29,7 +29,7 @@ export function PriceBar({ preview, hasInputs, canSave, saving, saveError, onSav
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>מחיר מומלץ (כולל מע"מ)</span>
-        <span style={{ fontSize: 24, fontWeight: 700, opacity: preview.loading ? 0.5 : 1 }}>
+        <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--accent)', opacity: preview.loading ? 0.5 : 1 }}>
           {b ? formatMoney(b.recommendedPrice) : '—'}
         </span>
       </div>

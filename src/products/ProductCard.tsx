@@ -82,11 +82,16 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
       {product.priceError && <p style={{ ...errorTextStyle, marginTop: 6 }}>{product.priceError}</p>}
 
       {recommended !== undefined && (
-        <p style={{ ...mutedTextStyle, marginTop: 6 }}>
-          מחיר מומלץ {formatMoney(recommended)}
-          {gap > 0 && <span style={{ color: 'var(--danger)' }}> · המחיר באתר נמוך ב-{formatMoney(gap)}</span>}
-          {gap < 0 && <span> · המחיר באתר גבוה ב-{formatMoney(-gap)}</span>}
-        </p>
+        <div style={recommendedBoxStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>מחיר מומלץ</span>
+            <span style={{ fontSize: 19, fontWeight: 700 }}>{formatMoney(recommended)}</span>
+          </div>
+          {gap > 0 && (
+            <div style={{ fontSize: 12, color: 'var(--danger)' }}>המחיר באתר נמוך ב-{formatMoney(gap)}</div>
+          )}
+          {gap < 0 && <div style={{ fontSize: 12 }}>המחיר באתר גבוה ב-{formatMoney(-gap)}</div>}
+        </div>
       )}
 
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -144,6 +149,15 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
       )}
     </article>
   )
+}
+
+// Tinted so the recommended price stands out from the (neutral) site price above it.
+const recommendedBoxStyle: React.CSSProperties = {
+  marginTop: 8,
+  padding: '6px 10px',
+  borderRadius: 8,
+  background: 'var(--accent-bg)',
+  color: 'var(--accent)',
 }
 
 const actionButtonStyle: React.CSSProperties = {
