@@ -102,7 +102,7 @@ export function ProductCalculator({ productId }: ProductCalculatorProps) {
   const requestCounter = useRef(0)
   useEffect(() => {
     if (!ready) return
-    if (!material || !(weightNumber > 0)) {
+    if (!material || weight === '' || !(weightNumber >= 0)) {
       setPreview({ breakdown: null, error: null, loading: false })
       return
     }
@@ -142,7 +142,7 @@ export function ProductCalculator({ productId }: ProductCalculatorProps) {
     if (!type.trim()) return 'בחרי או הזיני סוג מוצר'
     if (!name.trim()) return 'הזיני שם למוצר'
     if (!material) return 'בחרי חומר'
-    if (!(weightNumber > 0)) return 'הזיני משקל'
+    if (weight === '' || !(weightNumber >= 0)) return 'הזיני משקל (אפשר 0)'
     const price = Number(sitePrice)
     if (sitePrice === '' || !Number.isFinite(price) || price < 0) return 'הזיני מחיר באתר'
     if (rows.some((r) => r.unknownType)) return 'יש תוספת שכבר לא קיימת בהגדרות — הסירי אותה כדי לשמור'
@@ -381,7 +381,7 @@ export function ProductCalculator({ productId }: ProductCalculatorProps) {
         saving={saving}
         saveError={saveError}
         onSave={save}
-        hasInputs={Boolean(material) && weightNumber > 0}
+        hasInputs={Boolean(material) && weight !== '' && weightNumber >= 0}
       />
     </div>
   )
