@@ -1,6 +1,6 @@
 import { SignIn } from './auth/SignIn'
 import { useAuth } from './auth/useAuth'
-import { ComingSoonPage } from './shell/ComingSoonPage'
+import { FinancesPage } from './finances/FinancesPage'
 import { AppShell } from './shell/AppShell'
 import { useRoute } from './shell/useRoute'
 import { OrderForm } from './orders/OrderForm'
@@ -8,6 +8,7 @@ import { OrdersPage } from './orders/OrdersPage'
 import { ProductCalculator } from './products/ProductCalculator'
 import { ProductsPage } from './products/ProductsPage'
 import { SettingsPage } from './settings/SettingsPage'
+import { TasksPage } from './tasks/TasksPage'
 import './App.css'
 
 function App() {
@@ -38,8 +39,8 @@ function App() {
           restoreDraft={route.restoreDraft}
         />
       )}
-      {route.page === 'finances' && <ComingSoonPage title="כספים" />}
-      {route.page === 'tasks' && <ComingSoonPage title="משימות" />}
+      {route.page === 'finances' && <FinancesPage />}
+      {route.page === 'tasks' && <TasksPage />}
     </AppShell>
   )
 }
