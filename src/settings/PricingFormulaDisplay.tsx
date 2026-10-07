@@ -1,7 +1,7 @@
 import { Section } from './Section'
 import { statusTextStyle } from './formStyles'
 
-// Read-only — mirrors server/src/pricing/pricing-formula.ts exactly. The
+// Read-only — mirrors server-dotnet/JewelryManager.Api/Features/Pricing/PricingFormula.cs exactly. The
 // formula itself is fixed in code (not user-editable); this is just so she
 // can see how the price is derived without opening the codebase.
 const steps: { label: string; formula: string }[] = [

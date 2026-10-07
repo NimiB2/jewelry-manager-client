@@ -62,7 +62,9 @@ export function SettingsPage() {
         </button>
       </div>
 
-      {tab === 'pricing' ? (
+      {/* Both tabs stay mounted and are only hidden: unmounting would rebuild the forms from
+          the settings fetched at page load, hiding anything edited since. */}
+      <div hidden={tab !== 'pricing'}>
         <PricingSettingsPage
           materials={settings.data.materials ?? {}}
           laborHourRate={settings.data.laborHourRate ?? 0}
@@ -70,9 +72,10 @@ export function SettingsPage() {
           profitFloorPercent={settings.data.profitFloorPercent ?? 0}
           pricingAdditions={settings.data.pricingAdditions ?? []}
         />
-      ) : (
+      </div>
+      <div hidden={tab !== 'personal'}>
         <PersonalSettingsPage preparationStages={settings.data.preparationStages ?? []} />
-      )}
+      </div>
     </div>
   )
 }
