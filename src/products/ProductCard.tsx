@@ -71,9 +71,9 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
 
         {/* The site price is the main number; the recommended price is a small tag under it. */}
         <div style={{ textAlign: 'left', flexShrink: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>מחיר באתר</div>
-          {/* Always neutral: red is reserved for warnings and for the recommended tag when it is higher. */}
-          <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--text)' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)' }}>מחיר באתר</div>
+          {/* Green on purpose: red is for warnings, blue for the recommended tag. */}
+          <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--success)' }}>
             {formatMoney(shownPrice)}
           </div>
           {discounted && (
