@@ -18,6 +18,8 @@ type OrderCardProps = {
   onChanged: () => void
 }
 
+const NEEDS_RECEIPT = 'יש לשלוח קבלה לפני סיום ההזמנה'
+
 // What one tap on the main button does: move the order to the next status.
 const NEXT_STATUS: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> = {
   NEW: { status: 'IN_PROGRESS', label: 'התחלת הכנה ←' },
@@ -54,7 +56,8 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
     setChoosingStatus(false)
     if (status === order.status) return
     if (status === 'COMPLETED') {
-      setConfirmingComplete(true)
+      if (order.receiptSent) setConfirmingComplete(true)
+      else setError(NEEDS_RECEIPT)
       return
     }
     void setStatus(status)
@@ -84,9 +87,15 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
     <article style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <button type="button" onClick={onOpen} style={openButtonStyle} aria-label={`פתיחת הזמנה ${order.number}`}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>{order.customer ?? 'ללא שם לקוחה'}</span>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            #{order.number} · {formatOrderDate(order.date)} · {itemsCount} {itemsCount === 1 ? 'פריט' : 'פריטים'}
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
+            {order.customer ?? 'ללא שם לקוחה'}
+            {order.isTest && <span style={demoNoteStyle}> (הזמנת דמו)</span>}
+          </span>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span>
+              #{order.number} · {formatOrderDate(order.date)} · {itemsCount} {itemsCount === 1 ? 'פריט' : 'פריטים'}
+            </span>
+            <SourceBadge source={order.source} />
           </span>
         </button>
 
@@ -111,14 +120,12 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
         >
           {STATUS_LABELS[order.status]} ▾
         </button>
-        <SourceBadge source={order.source} />
-        {order.isTest && <span style={testTagStyle}>בדיקה</span>}
         <button
           type="button"
           onClick={toggleReceipt}
-          disabled={busy}
+          disabled={busy || (order.isCompleted && order.receiptSent)}
           aria-pressed={order.receiptSent}
-          title="לחיצה משנה את הסימון"
+          title={order.isCompleted ? 'הזמנה שהושלמה חייבת קבלה' : 'לחיצה משנה את הסימון'}
           style={order.receiptSent ? receiptSentStyle : receiptMissingStyle}
         >
           {order.receiptSent ? '✓ קבלה נשלחה' : 'קבלה לא נשלחה'}
@@ -176,13 +183,22 @@ export function OrderCard({ order, stages, onOpen, onChanged }: OrderCardProps) 
 
       {next && !(order.status === 'IN_PROGRESS' && hasStages) && !confirmingComplete && (
         <div style={footerStyle}>
-          <button type="button" onClick={() => requestStatus(next.status)} disabled={busy} style={nextButtonStyle}>
+          <button
+            type="button"
+            onClick={() => requestStatus(next.status)}
+            disabled={busy || (next.status === 'COMPLETED' && !order.receiptSent)}
+            style={{ ...nextButtonStyle, ...(next.status === 'COMPLETED' && !order.receiptSent ? disabledNextStyle : null) }}
+          >
             {next.label}
           </button>
+          {next.status === 'COMPLETED' && !order.receiptSent && <p style={warningTextStyle}>{NEEDS_RECEIPT}</p>}
         </div>
       )}
 
-      {error && <p style={{ ...errorTextStyle, marginTop: 6 }}>{error}</p>}
+      {/* The receipt hint under the "complete" button already says the same thing. */}
+      {error && !(error === NEEDS_RECEIPT && next?.status === 'COMPLETED' && !order.receiptSent) && (
+        <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>
+      )}
     </article>
   )
 }
@@ -219,16 +235,23 @@ const receiptSentStyle: React.CSSProperties = {
 
 const receiptMissingStyle: React.CSSProperties = {
   ...pillButton,
-  background: 'var(--warning-bg)',
-  color: 'var(--warning)',
+  fontWeight: 500,
+  background: 'var(--danger-bg)',
+  color: 'var(--danger)',
 }
 
-const testTagStyle: React.CSSProperties = {
-  padding: '1px 8px',
-  borderRadius: 10,
-  background: 'var(--border)',
-  color: 'var(--text-muted)',
+// Small and gray on purpose: a note, not a label.
+const demoNoteStyle: React.CSSProperties = {
   fontSize: 12,
+  fontWeight: 400,
+  color: 'var(--text-muted)',
+}
+
+// A quiet warning: red text on a faint tint, not a bright block.
+const warningTextStyle: React.CSSProperties = {
+  margin: '4px 0 0',
+  fontSize: 12,
+  color: 'var(--danger)',
 }
 
 const statusChoiceStyle: React.CSSProperties = {
@@ -241,6 +264,11 @@ const footerStyle: React.CSSProperties = {
   marginTop: 8,
   paddingTop: 8,
   borderTop: '1px solid var(--border)',
+}
+
+const disabledNextStyle: React.CSSProperties = {
+  opacity: 0.45,
+  cursor: 'not-allowed',
 }
 
 const nextButtonStyle: React.CSSProperties = {

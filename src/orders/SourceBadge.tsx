@@ -1,8 +1,8 @@
 import type { OrderSource } from './types'
 
 const icon = {
-  width: 13,
-  height: 13,
+  width: 14,
+  height: 14,
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
@@ -12,24 +12,18 @@ const icon = {
   'aria-hidden': true,
 }
 
-// A small mark showing where the order came from: typed in by hand, or pulled from Shopify.
+// A tiny, quiet mark of where the order came from: a keyboard for one typed in by hand, a shopping
+// bag for Shopify. Icon only; the meaning is in the tooltip and the screen-reader label.
 export function SourceBadge({ source }: { source: OrderSource }) {
   const shopify = source === 'SHOPIFY'
-  const label = shopify ? 'Shopify' : 'ידנית'
+  const label = shopify ? 'הזמנה שנכנסה מ-Shopify' : 'הזמנה שהוזנה ידנית'
 
   return (
     <span
-      title={shopify ? 'הזמנה שנכנסה מ-Shopify' : 'הזמנה שהוזנה ידנית'}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '1px 8px',
-        borderRadius: 10,
-        border: '1px solid var(--border)',
-        fontSize: 12,
-        color: 'var(--text-muted)',
-      }}
+      role="img"
+      title={label}
+      aria-label={label}
+      style={{ display: 'inline-flex', verticalAlign: 'middle', color: 'var(--text-muted)', opacity: 0.8 }}
     >
       {shopify ? (
         <svg {...icon}>
@@ -38,10 +32,10 @@ export function SourceBadge({ source }: { source: OrderSource }) {
         </svg>
       ) : (
         <svg {...icon}>
-          <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" />
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10" />
         </svg>
       )}
-      {label}
     </span>
   )
 }

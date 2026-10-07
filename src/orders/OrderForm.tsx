@@ -346,7 +346,10 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
         <button type="button" onClick={() => navigate('/orders')} aria-label="חזרה להזמנות" style={backButtonStyle}>
           <BackIcon />
         </button>
-        <h1 style={{ flex: 1, margin: 0 }}>{order ? `הזמנה #${order.number}` : 'הזמנה חדשה'}</h1>
+        <h1 style={{ flex: 1, margin: 0 }}>
+          {order ? `הזמנה #${order.number}` : 'הזמנה חדשה'}
+          {order?.isTest && <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}> (הזמנת דמו)</span>}
+        </h1>
         {order && <SourceBadge source={order.source} />}
         {!isNew && <ConfirmDeleteButton onConfirm={remove} ariaLabel="מחיקת ההזמנה" />}
       </header>
@@ -519,11 +522,13 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
               {STATUS_ORDER.map((status) => {
                 const active = order.status === status
+                // Completing needs the receipt; the reason is written right below.
+                const blocked = status === 'COMPLETED' && !order.receiptSent
                 return (
                   <button
                     key={status}
                     type="button"
-                    disabled={actionsDisabled}
+                    disabled={actionsDisabled || blocked}
                     aria-pressed={active}
                     onClick={() => !active && changeStatus(status)}
                     style={statusButtonStyle(status, active)}
@@ -533,6 +538,10 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
                 )
               })}
             </div>
+
+            {!order.receiptSent && !order.isCompleted && (
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--danger)' }}>יש לסמן שנשלחה קבלה כדי לסיים את ההזמנה.</p>
+            )}
 
             {confirmingComplete && (
               <ConfirmInline
@@ -555,7 +564,12 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
             )}
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, fontSize: 15 }}>
-              <input type="checkbox" checked={order.receiptSent} disabled={actionsDisabled} onChange={toggleReceipt} />
+              <input
+                type="checkbox"
+                checked={order.receiptSent}
+                disabled={actionsDisabled || order.isCompleted}
+                onChange={toggleReceipt}
+              />
               קבלה נשלחה
             </label>
 
