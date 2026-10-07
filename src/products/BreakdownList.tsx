@@ -91,13 +91,10 @@ export function BreakdownList({ breakdown, maxHeight }: BreakdownListProps) {
           </div>
           {line.words && (
             <div style={formulaStyle}>
+              {/* No LTR isolation on the numbers: they must flow right to left like the words,
+                  so the first number lines up with the first word. */}
               {line.words}
-              {line.numbers && (
-                <>
-                  {' = '}
-                  <bdi dir="ltr">{line.numbers}</bdi>
-                </>
-              )}
+              {line.numbers && ` = ${line.numbers}`}
             </div>
           )}
         </div>

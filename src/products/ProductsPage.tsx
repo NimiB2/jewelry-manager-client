@@ -23,7 +23,9 @@ export function ProductsPage() {
   const [collectionFilter, setCollectionFilter] = useState('')
   const [discount, setDiscount] = useState('')
 
-  useEffect(() => {
+  // Reads everything fresh. Prices follow the settings, so this also runs when she comes back to the
+  // tab or the app after changing something elsewhere.
+  function load() {
     Promise.all([
       apiJson<ProductsList>('/products'),
       apiJson<Collection[]>('/collections'),
@@ -35,6 +37,14 @@ export function ProductsPage() {
         setDiscountPresets(settings?.data.discountPresets ?? [])
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+  }
+
+  useEffect(() => {
+    load()
+    const onVisible = () => document.visibilityState === 'visible' && load()
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const customOrderId = collections.find((c) => c.key === CUSTOM_ORDER_KEY)?.id
@@ -213,7 +223,7 @@ export function ProductsPage() {
               product={product}
               meta={data.pricing}
               discountPercent={discountPercent}
-              onOpen={() => navigate(`/products/${product.id}`)}
+              onEdit={() => navigate(`/products/${product.id}`)}
               onUpdated={replaceProduct}
             />
           ))}

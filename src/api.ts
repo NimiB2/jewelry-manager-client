@@ -2,8 +2,27 @@ import { auth } from './firebase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
+// Writes that haven't finished yet. A read waits for them, so a screen that opens right after an
+// edit (e.g. settings autosave flushing as she taps "Products") always sees the saved data.
+const pendingWrites = new Set<Promise<unknown>>()
+
 // Every server call goes through here so the auth token and 401 handling stay in one place.
-export async function apiFetch(path: string, init: RequestInit = {}) {
+export function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const isRead = (init.method ?? 'GET').toUpperCase() === 'GET'
+  const request = send(path, init, isRead)
+
+  if (!isRead) {
+    pendingWrites.add(request)
+    const done = () => pendingWrites.delete(request)
+    request.then(done, done)
+  }
+
+  return request
+}
+
+async function send(path: string, init: RequestInit, isRead: boolean): Promise<Response> {
+  if (isRead && pendingWrites.size > 0) await Promise.allSettled([...pendingWrites])
+
   const token = await auth.currentUser?.getIdToken()
 
   const response = await fetch(`${API_URL}${path}`, {

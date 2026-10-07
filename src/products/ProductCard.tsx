@@ -3,20 +3,20 @@ import { apiJson } from '../api'
 import { BreakdownList } from './BreakdownList'
 import { discountedPrice, isBelowProfitFloor } from './discount'
 import { formatMoney } from './format'
-import { cardStyle, errorTextStyle, linkButtonStyle, mutedTextStyle } from './productStyles'
+import { cardStyle, errorTextStyle, mutedTextStyle } from './productStyles'
 import type { PricingMeta, Product } from './types'
 
 type ProductCardProps = {
   product: Product
   meta: PricingMeta | null
   discountPercent: number
-  onOpen: () => void
+  onEdit: () => void
   onUpdated: (product: Product) => void
 }
 
-// Name and price first (scannable in a second); type/material are secondary. The price can be
-// edited in place without opening the calculator.
-export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated }: ProductCardProps) {
+// Name and price first (scannable in a second). Three clear actions per product: see how the
+// price is calculated, edit the site price in place, or edit the whole piece (weight, additions...).
+export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated }: ProductCardProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [showCalc, setShowCalc] = useState(false)
@@ -27,6 +27,8 @@ export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated 
   const discounted = discountPercent > 0
   const belowFloor = isBelowProfitFloor(product, meta, shownPrice)
   const recommended = product.price?.recommendedPrice
+  // The recommended price follows the settings; the site price only changes when she changes it.
+  const gap = recommended === undefined ? 0 : Math.round(recommended - product.sitePrice)
 
   function startEdit() {
     setDraft(String(product.sitePrice))
@@ -36,7 +38,7 @@ export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated 
 
   async function saveEdit() {
     const value = Number(draft)
-    if (!Number.isFinite(value) || value < 0) {
+    if (draft === '' || !Number.isFinite(value) || value < 0) {
       setError('הזיני מחיר תקין')
       return
     }
@@ -58,12 +60,12 @@ export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated 
   return (
     <article style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <button type="button" onClick={onOpen} style={openButtonStyle} aria-label={`פתיחת ${product.name}`}>
-          <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--text)' }}>{product.name}</span>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            {product.type} · {product.material}
-          </span>
-        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 600 }}>{product.name}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            {product.type} · {product.material} · {product.weight} גרם
+          </div>
+        </div>
 
         <div style={{ textAlign: 'left', flexShrink: 0 }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>
@@ -72,33 +74,34 @@ export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated 
           {discounted && (
             <div style={{ ...mutedTextStyle, textDecoration: 'line-through' }}>{formatMoney(product.sitePrice)}</div>
           )}
+          <div style={mutedTextStyle}>מחיר באתר</div>
         </div>
       </div>
 
       {belowFloor && <p style={{ ...errorTextStyle, marginTop: 6 }}>מתחת לרצפת הרווח</p>}
       {product.priceError && <p style={{ ...errorTextStyle, marginTop: 6 }}>{product.priceError}</p>}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-        <span style={mutedTextStyle}>{recommended !== undefined ? `מחיר מומלץ ${formatMoney(recommended)}` : ''}</span>
-        <div style={{ display: 'flex', gap: 14 }}>
-          {product.price && (
-            <button type="button" onClick={() => setShowCalc((v) => !v)} aria-expanded={showCalc} style={linkButtonStyle}>
-              {showCalc ? 'הסתרת חישוב' : 'חישוב'}
-            </button>
-          )}
-          {!editing && (
-            <button type="button" onClick={startEdit} style={linkButtonStyle}>
-              עריכת מחיר
-            </button>
-          )}
-        </div>
-      </div>
-
-      {showCalc && product.price && (
-        <div style={{ marginTop: 8 }}>
-          <BreakdownList breakdown={product.price} />
-        </div>
+      {recommended !== undefined && (
+        <p style={{ ...mutedTextStyle, marginTop: 6 }}>
+          מחיר מומלץ {formatMoney(recommended)}
+          {gap > 0 && <span style={{ color: 'var(--danger)' }}> · המחיר באתר נמוך ב-{formatMoney(gap)}</span>}
+          {gap < 0 && <span> · המחיר באתר גבוה ב-{formatMoney(-gap)}</span>}
+        </p>
       )}
+
+      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        {product.price && (
+          <button type="button" onClick={() => setShowCalc((v) => !v)} aria-expanded={showCalc} style={actionButtonStyle}>
+            {showCalc ? 'הסתרת חישוב' : 'חישוב'}
+          </button>
+        )}
+        <button type="button" onClick={startEdit} style={actionButtonStyle}>
+          עריכת מחיר
+        </button>
+        <button type="button" onClick={onEdit} style={actionButtonStyle}>
+          עריכת תכשיט
+        </button>
+      </div>
 
       {editing && (
         <div style={{ marginTop: 8 }}>
@@ -121,25 +124,38 @@ export function ProductCard({ product, meta, discountPercent, onOpen, onUpdated 
               ביטול
             </button>
           </div>
+          {recommended !== undefined && (
+            <button
+              type="button"
+              onClick={() => setDraft(String(Math.round(recommended)))}
+              style={{ ...cancelButtonStyle, color: 'var(--accent)', padding: '6px 0' }}
+            >
+              שימוש במחיר המומלץ ({formatMoney(Math.round(recommended))})
+            </button>
+          )}
           {error && <p style={{ ...errorTextStyle, marginTop: 4 }}>{error}</p>}
+        </div>
+      )}
+
+      {showCalc && product.price && (
+        <div style={{ marginTop: 8 }}>
+          <BreakdownList breakdown={product.price} />
         </div>
       )}
     </article>
   )
 }
 
-const openButtonStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  gap: 2,
-  border: 'none',
-  background: 'transparent',
-  padding: 0,
-  textAlign: 'right',
-  cursor: 'pointer',
+const actionButtonStyle: React.CSSProperties = {
   flex: 1,
-  minWidth: 0,
+  minHeight: 40,
+  padding: '0 6px',
+  border: '1px solid var(--border)',
+  borderRadius: 8,
+  background: 'var(--surface)',
+  color: 'var(--accent)',
+  fontSize: 14,
+  cursor: 'pointer',
 }
 
 const editInputStyle: React.CSSProperties = {
