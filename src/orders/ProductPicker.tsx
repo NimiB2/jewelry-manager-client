@@ -9,7 +9,8 @@ type ProductPickerProps = {
   onClose: () => void
 }
 
-// A bottom sheet with the catalog: type a few letters, tap a product, it joins the order.
+// A window in the middle of the screen with the catalog: type a few letters, tap a product, it
+// joins the order. (Not stuck to the bottom edge, where the list looked cut off.)
 export function ProductPicker({ onPick, onClose }: ProductPickerProps) {
   const [products, setProducts] = useState<Product[] | null>(null)
   const [customOrderId, setCustomOrderId] = useState<string | undefined>()
@@ -81,19 +82,22 @@ const overlayStyle: React.CSSProperties = {
   zIndex: 50,
   background: 'rgba(0, 0, 0, 0.4)',
   display: 'flex',
-  alignItems: 'flex-end',
+  alignItems: 'center',
   justifyContent: 'center',
+  // A little extra room below, so the window sits slightly above the exact middle.
+  padding: '16px 16px 12vh',
 }
 
 const sheetStyle: React.CSSProperties = {
   width: '100%',
   maxWidth: 560,
-  maxHeight: '80dvh',
+  maxHeight: 'min(70dvh, 560px)',
   display: 'flex',
   flexDirection: 'column',
   background: 'var(--bg)',
-  borderRadius: '16px 16px 0 0',
+  borderRadius: 16,
   padding: 12,
+  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.25)',
 }
 
 const closeStyle: React.CSSProperties = {
