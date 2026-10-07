@@ -7,20 +7,20 @@ import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 type Material = {
   name: string
   pricePerGram: string
-  laborHoursPerGram: string
+  laborHours: string
   profitMultiplier: string
 }
 
 export type MaterialsRecord = Record<
   string,
-  { pricePerGram: number; laborHoursPerGram: number; profitMultiplier: number }
+  { pricePerGram: number; laborHours: number; profitMultiplier: number }
 >
 
 function toRows(materials: MaterialsRecord): Material[] {
   return Object.entries(materials).map(([name, values]) => ({
     name,
     pricePerGram: String(values.pricePerGram),
-    laborHoursPerGram: String(values.laborHoursPerGram),
+    laborHours: String(values.laborHours),
     profitMultiplier: String(values.profitMultiplier),
   }))
 }
@@ -30,7 +30,7 @@ function rowsToRecord(rows: Material[]): MaterialsRecord {
   for (const row of rows) {
     materials[row.name.trim()] = {
       pricePerGram: Number(row.pricePerGram) || 0,
-      laborHoursPerGram: Number(row.laborHoursPerGram) || 0,
+      laborHours: Number(row.laborHours) || 0,
       profitMultiplier: Number(row.profitMultiplier) || 0,
     }
   }
@@ -71,7 +71,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { name: '', pricePerGram: '', laborHoursPerGram: '', profitMultiplier: '' }])
+    setRows((prev) => [...prev, { name: '', pricePerGram: '', laborHours: '', profitMultiplier: '' }])
   }
 
   return (
@@ -108,9 +108,9 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
               inputMode="decimal"
               min={0}
               step="1"
-              value={row.laborHoursPerGram}
-              onChange={(e) => updateRow(index, 'laborHoursPerGram', e.target.value)}
-              aria-label="שעות עבודה לגרם"
+              value={row.laborHours}
+              onChange={(e) => updateRow(index, 'laborHours', e.target.value)}
+              aria-label="שעות עבודה לתכשיט"
               style={{ ...cellInputStyle, borderBottom: '1px solid var(--border)' }}
             />
             <input
