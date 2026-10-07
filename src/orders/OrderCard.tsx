@@ -135,11 +135,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
             <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span>
                 {item.name} <span style={{ color: 'var(--text-muted)' }}>· {item.material} × {item.quantity}</span>
-                {item.note && (
-                  <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)' }}>
-                    <b style={{ fontWeight: 600 }}>הערה:</b> {item.note}
-                  </span>
-                )}
+                {item.note && <span style={itemNoteStyle}>הערה: {item.note}</span>}
               </span>
               <span>{formatMoney(item.lineTotal)}</span>
             </li>
@@ -275,6 +271,16 @@ const itemsButtonStyle: React.CSSProperties = {
   fontSize: 13,
   color: 'var(--accent)',
   cursor: 'pointer',
+}
+
+// The item's note sits right next to it, on the same line, as a small tag.
+const itemNoteStyle: React.CSSProperties = {
+  marginInlineStart: 6,
+  padding: '1px 7px',
+  borderRadius: 6,
+  background: 'var(--border)',
+  color: 'var(--text)',
+  fontSize: 12,
 }
 
 const itemsListStyle: React.CSSProperties = {
