@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
 import { apiFetch } from '../api'
 import { nameInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles'
 import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
 import { ConfirmDeleteButton } from './ConfirmDeleteButton'
+import { DragHandle, useDragReorder } from './useDragReorder'
 
 function isValid(stages: string[]): boolean {
   const trimmed = stages.map((s) => s.trim())
@@ -18,8 +18,6 @@ async function saveStages(stages: string[]) {
   })
 }
 
-type DragState = { index: number; startY: number; deltaY: number }
-
 type PreparationStagesFormProps = {
   initialStages: string[]
 }
@@ -30,8 +28,7 @@ export function PreparationStagesForm({ initialStages }: PreparationStagesFormPr
     saveStages,
     isValid,
   )
-  const [drag, setDrag] = useState<DragState | null>(null)
-  const rowRefs = useRef<(HTMLDivElement | null)[]>([])
+  const reorder = useDragReorder(setStages)
 
   function updateStage(index: number, value: string) {
     setStages((prev) => prev.map((s, i) => (i === index ? value : s)))
@@ -45,64 +42,21 @@ export function PreparationStagesForm({ initialStages }: PreparationStagesFormPr
     setStages((prev) => [...prev, ''])
   }
 
-  function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>, index: number) {
-    e.currentTarget.setPointerCapture(e.pointerId)
-    setDrag({ index, startY: e.clientY, deltaY: 0 })
-  }
-
-  function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
-    if (!drag) return
-    const deltaY = e.clientY - drag.startY
-    const currentRect = rowRefs.current[drag.index]?.getBoundingClientRect()
-    if (!currentRect) return
-    const currentMid = currentRect.top + currentRect.height / 2 + deltaY
-
-    for (let i = 0; i < rowRefs.current.length; i++) {
-      if (i === drag.index) continue
-      const rect = rowRefs.current[i]?.getBoundingClientRect()
-      if (!rect) continue
-      const mid = rect.top + rect.height / 2
-      const crossedDown = i > drag.index && currentMid > mid
-      const crossedUp = i < drag.index && currentMid < mid
-      if (crossedDown || crossedUp) {
-        setStages((prev) => {
-          const next = [...prev]
-          ;[next[drag.index], next[i]] = [next[i], next[drag.index]]
-          return next
-        })
-        setDrag({ index: i, startY: e.clientY, deltaY: 0 })
-        return
-      }
-    }
-
-    setDrag({ ...drag, deltaY })
-  }
-
-  function handlePointerUp(e: React.PointerEvent<HTMLButtonElement>) {
-    e.currentTarget.releasePointerCapture(e.pointerId)
-    setDrag(null)
-  }
-
   return (
     <Section title="שלבי הכנה" action={<UndoButton hasChanges={hasChanges} onUndo={undo} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {stages.map((stage, index) => (
           <div
             key={index}
-            ref={(el) => {
-              rowRefs.current[index] = el
-            }}
+            ref={reorder.rowRef(index)}
             style={{
+              ...reorder.rowStyle(index),
               display: 'grid',
               gridTemplateColumns: '20px 28px 1fr 32px',
               gap: 6,
               alignItems: 'start',
               borderBottom: '1px solid var(--border)',
               paddingBottom: 4,
-              background: 'var(--surface)',
-              position: 'relative',
-              zIndex: drag?.index === index ? 10 : 'auto',
-              transform: drag?.index === index ? `translateY(${drag.deltaY}px)` : undefined,
             }}
           >
             <span
@@ -115,16 +69,7 @@ export function PreparationStagesForm({ initialStages }: PreparationStagesFormPr
             >
               {index + 1}
             </span>
-            <button
-              type="button"
-              onPointerDown={(e) => handlePointerDown(e, index)}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              aria-label="גרירה לשינוי סדר"
-              style={dragHandleStyle}
-            >
-              ⠿
-            </button>
+            <DragHandle {...reorder.handleProps(index)} />
             <input
               type="text"
               value={stage}
@@ -154,18 +99,4 @@ export function PreparationStagesForm({ initialStages }: PreparationStagesFormPr
       )}
     </Section>
   )
-}
-
-const dragHandleStyle: React.CSSProperties = {
-  width: 28,
-  height: 36,
-  border: 'none',
-  background: 'transparent',
-  color: 'var(--chevron)',
-  fontSize: 18,
-  cursor: 'grab',
-  touchAction: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
 }

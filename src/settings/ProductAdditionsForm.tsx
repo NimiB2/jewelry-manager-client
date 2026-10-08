@@ -3,6 +3,7 @@ import { nameInputStyle, addRowButtonStyle, statusTextStyle } from './formStyles
 import { Section, UndoButton } from './Section'
 import { useAutosaveSection } from './useAutosaveSection'
 import { ConfirmDeleteButton } from './ConfirmDeleteButton'
+import { DragHandle, useDragReorder } from './useDragReorder'
 
 export type ProductAdditionType = { name: string; allowsCustomName: boolean }
 
@@ -34,6 +35,8 @@ export function ProductAdditionsForm({ initialTypes }: ProductAdditionsFormProps
     isValid,
   )
 
+  const reorder = useDragReorder(setTypes)
+
   function updateName(index: number, name: string) {
     setTypes((prev) => prev.map((t, i) => (i === index ? { ...t, name } : t)))
   }
@@ -59,15 +62,18 @@ export function ProductAdditionsForm({ initialTypes }: ProductAdditionsFormProps
         {types.map((type, index) => (
           <div
             key={index}
+            ref={reorder.rowRef(index)}
             style={{
+              ...reorder.rowStyle(index),
               display: 'grid',
-              gridTemplateColumns: '1fr auto 32px',
+              gridTemplateColumns: '28px 1fr auto 32px',
               gap: 8,
               alignItems: 'center',
               borderBottom: '1px solid var(--border)',
               paddingBottom: 4,
             }}
           >
+            <DragHandle {...reorder.handleProps(index)} />
             <input
               type="text"
               value={type.name}

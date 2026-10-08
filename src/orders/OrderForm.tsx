@@ -112,6 +112,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
   const [actionBusy, setActionBusy] = useState(false)
   const [stages, setStages] = useState<string[]>([])
   const [confirmingComplete, setConfirmingComplete] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [celebration, setCelebration] = useState<string[] | null>(null)
   // Lines whose note field was opened by tapping "+ הערה לפריט" (lines that already have a note always show it).
   const [openNotes, setOpenNotes] = useState<Set<string>>(new Set())
@@ -636,6 +637,21 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
             {saving ? 'שומר...' : isNew ? 'יצירת הזמנה' : 'שמירת שינויים'}
           </button>
         )}
+
+        {/* Deleting is in plain view under Save, and asks first. */}
+        {!isNew && !confirmingDelete && (
+          <button type="button" onClick={() => setConfirmingDelete(true)} style={deleteOrderStyle}>
+            מחיקת ההזמנה
+          </button>
+        )}
+        {confirmingDelete && (
+          <ConfirmInline
+            message="למחוק את ההזמנה? גם ההכנסה והמשימה שנוצרו ממנה יימחקו."
+            confirmLabel="כן, למחוק"
+            onConfirm={remove}
+            onCancel={() => setConfirmingDelete(false)}
+          />
+        )}
       </div>
 
       {celebration && <Toast lines={celebration} onDone={() => setCelebration(null)} />}
@@ -643,6 +659,19 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
       {picking && <ProductPicker onPick={addProduct} onClose={() => setPicking(false)} />}
     </div>
   )
+}
+
+const deleteOrderStyle: React.CSSProperties = {
+  width: '100%',
+  minHeight: 40,
+  marginTop: 6,
+  border: '1px solid var(--danger)',
+  borderRadius: 10,
+  background: 'transparent',
+  color: 'var(--danger)',
+  fontSize: 15,
+  fontWeight: 600,
+  cursor: 'pointer',
 }
 
 function modeStyle(active: boolean): React.CSSProperties {

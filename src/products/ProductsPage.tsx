@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../api'
 import { PlusIcon, SearchIcon } from '../icons/NavIcons'
+import { subItemsOf } from '../shell/navItems'
+import { SubNav } from '../shell/SubNav'
 import { navigate } from '../shell/useRoute'
 import { ProductCard } from './ProductCard'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from './productStyles'
@@ -11,7 +13,12 @@ const CUSTOM_ORDER_KEY = 'customOrder'
 // Material filter values: a material name to show only it, or "not:<name>" to show everything except it.
 const EXCLUDE_PREFIX = 'not:'
 
-export function ProductsPage() {
+type ProductsPageProps = {
+  // Open already filtered to the collection with this name (the rings shortcuts).
+  collectionName?: string | null
+}
+
+export function ProductsPage({ collectionName = null }: ProductsPageProps) {
   const [data, setData] = useState<ProductsList | null>(null)
   const [collections, setCollections] = useState<Collection[]>([])
   const [discountPresets, setDiscountPresets] = useState<number[]>([])
@@ -34,6 +41,7 @@ export function ProductsPage() {
       .then(([list, cols, settings]) => {
         setData(list)
         setCollections(cols)
+        if (collectionName) setCollectionFilter(cols.find((c) => c.name === collectionName)?.id ?? '')
         setDiscountPresets(settings?.data.discountPresets ?? [])
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
@@ -99,11 +107,19 @@ export function ProductsPage() {
   return (
     <div className="screen">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>מוצרים</h1>
+        <h1 style={{ margin: 0 }}>{collectionName ?? 'מוצרים'}</h1>
         <button type="button" onClick={() => navigate('/products/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
           + הוספת מוצר
         </button>
       </div>
+
+      <SubNav items={subItemsOf('products', { page: 'products', collection: collectionName })} />
+
+      {collectionName && data && !collections.some((c) => c.name === collectionName) && (
+        <p style={{ ...mutedTextStyle, marginBottom: 10 }}>
+          אין קולקציה בשם "{collectionName}". אפשר ליצור אותה בהגדרות ולשייך אליה מוצרים.
+        </p>
+      )}
 
       <div style={{ position: 'relative', marginBottom: 8 }}>
         <span style={searchIconStyle}>

@@ -12,6 +12,16 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.app-nav-group {
+  flex: 1;
+  display: flex;
+}
+
+/* Sub-options live in the sidebar only; on a phone they are tabs at the top of the screen. */
+.app-sub {
+  display: none;
+}
+
 .app-nav a {
   flex: 1;
   display: flex;
@@ -38,22 +48,9 @@
   padding-bottom: 0;
 }
 
-.app-topbar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.app-topbar button {
-  border: none;
-  background: transparent;
-  color: var(--accent);
-  font-size: 13px;
-  cursor: pointer;
+/* The signed-in user: only in the sidebar (wide screens); on a phone it is on the home screen. */
+.app-user {
+  display: none;
 }
 
 @media (min-width: 900px) {
@@ -72,6 +69,40 @@
     border-inline-end: 1px solid var(--border);
   }
 
+  .app-nav-group {
+    flex: 0 0 auto;
+    flex-direction: column;
+  }
+
+  /* Always open, lighter than the main items, and joined to their parent by a thin line. */
+  .app-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-inline-start: 22px;
+    margin-bottom: 6px;
+    padding-inline-start: 10px;
+    border-inline-start: 2px solid var(--border);
+  }
+
+  .app-nav .app-sub a {
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    background: transparent;
+  }
+
+  .app-nav .app-sub a:hover {
+    color: var(--text);
+  }
+
+  .app-nav .app-sub a[aria-current='page'] {
+    background: transparent;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
   .app-nav a {
     flex: 0 0 auto;
     flex-direction: row;
@@ -86,6 +117,33 @@
     background: var(--accent-bg);
   }
 
+  .app-user {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: auto;
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .app-user span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-user button {
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
   .app-main {
     padding-bottom: 0;
     padding-inline-start: 200px;
@@ -93,6 +151,13 @@
 
   .app-main.app-main-full {
     padding-inline-start: 0;
+  }
+}
+
+/* The account block on the home screen exists for phones only; the sidebar has its own. */
+@media (min-width: 900px) {
+  .home-account {
+    display: none;
   }
 }
 

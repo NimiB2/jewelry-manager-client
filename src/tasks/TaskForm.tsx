@@ -5,7 +5,6 @@ import { ConfirmInline } from '../orders/ConfirmInline'
 import { formatOrderDate } from '../orders/dates'
 import type { OrdersList } from '../orders/types'
 import {
-  cardStyle,
   errorTextStyle,
   fieldInputStyle,
   fieldLabelStyle,
@@ -17,7 +16,8 @@ import { TASK_STATUS_LABELS, TASK_STATUS_ORDER, type Task, type TaskStatus } fro
 type TaskFormProps = {
   // Null = a new task.
   task: Task | null
-  onSaved: () => void
+  // Gets the lines to show in the confirmation toast.
+  onSaved: (message: string[]) => void
   onCancel: () => void
 }
 
@@ -48,12 +48,12 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
       .catch(() => setOrders([]))
   }, [])
 
-  async function run(action: () => Promise<unknown>) {
+  async function run(action: () => Promise<unknown>, message: string) {
     setBusy(true)
     setError(null)
     try {
       await action()
-      onSaved()
+      onSaved([message])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
       setBusy(false)
@@ -63,16 +63,17 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
   function save() {
     if (!title.trim()) return setError('צריך להוסיף כותרת')
     const body = JSON.stringify({ title: title.trim(), content: content.trim() || null, status, orderId: orderId || null })
-    void run(() => apiJson(editing ? `/tasks/${task.id}` : '/tasks', { method: editing ? 'PUT' : 'POST', body }))
+    void run(
+      () => apiJson(editing ? `/tasks/${task.id}` : '/tasks', { method: editing ? 'PUT' : 'POST', body }),
+      'המשימה נשמרה',
+    )
   }
 
   // A linked order that is not in the list (e.g. a long-gone one) still shows, so the link is not lost on save.
   const knownOrder = orderId === '' || orders.some((o) => o.id === orderId)
 
   return (
-    <div style={{ ...cardStyle, marginBottom: 12 }}>
-      <h2 style={{ margin: '0 0 12px', fontSize: 18 }}>{editing ? 'עריכת משימה' : 'משימה חדשה'}</h2>
-
+    <div>
       <label style={{ display: 'block', marginBottom: 8 }}>
         <span style={fieldLabelStyle}>כותרת</span>
         <input
@@ -128,7 +129,7 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
           message="למחוק את המשימה?"
           confirmLabel="כן, למחוק"
           busy={busy}
-          onConfirm={() => void run(() => apiJson(`/tasks/${task!.id}`, { method: 'DELETE' }))}
+          onConfirm={() => void run(() => apiJson(`/tasks/${task!.id}`, { method: 'DELETE' }), 'המשימה נמחקה')}
           onCancel={() => setConfirmingDelete(false)}
         />
       )}
@@ -140,12 +141,18 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
         <button type="button" onClick={onCancel} disabled={busy} style={secondaryButtonStyle}>
           ביטול
         </button>
-        {editing && !confirmingDelete && (
-          <button type="button" onClick={() => setConfirmingDelete(true)} disabled={busy} style={{ ...secondaryButtonStyle, color: 'var(--danger)' }}>
-            מחיקה
-          </button>
-        )}
       </div>
+
+      {editing && !confirmingDelete && (
+        <button
+          type="button"
+          onClick={() => setConfirmingDelete(true)}
+          disabled={busy}
+          style={{ ...secondaryButtonStyle, width: '100%', marginTop: 10, minHeight: 44, borderColor: 'var(--danger)', color: 'var(--danger)', fontWeight: 600 }}
+        >
+          מחיקת המשימה
+        </button>
+      )}
     </div>
   )
 }

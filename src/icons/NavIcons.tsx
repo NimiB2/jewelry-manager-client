@@ -18,6 +18,14 @@ function Icon({ children }: { children: ReactNode }) {
   )
 }
 
+export function HomeIcon() {
+  return (
+    <Icon>
+      <path d="M4 11l8-7 8 7M6 10v10h12V10M10 20v-5h4v5" />
+    </Icon>
+  )
+}
+
 export function OrdersIcon() {
   return (
     <Icon>

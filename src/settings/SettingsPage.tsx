@@ -17,6 +17,8 @@ type SettingsData = {
   productAdditionTypes?: ProductAdditionType[]
   discountPresets?: number[]
   testOrderPrefix?: string
+  expenseTypes?: string[]
+  expenseSuppliers?: string[]
 }
 
 type SettingsRow = {
@@ -83,6 +85,8 @@ export function SettingsPage() {
           productAdditionTypes={settings.data.productAdditionTypes ?? []}
           discountPresets={settings.data.discountPresets ?? []}
           testOrderPrefix={settings.data.testOrderPrefix ?? ''}
+          expenseTypes={settings.data.expenseTypes ?? []}
+          expenseSuppliers={settings.data.expenseSuppliers ?? []}
         />
       </div>
     </div>

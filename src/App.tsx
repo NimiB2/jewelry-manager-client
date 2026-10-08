@@ -1,6 +1,8 @@
 import { SignIn } from './auth/SignIn'
 import { useAuth } from './auth/useAuth'
 import { FinancesPage } from './finances/FinancesPage'
+import { HomePage } from './home/HomePage'
+import { InvoicesPage } from './finances/InvoicesPage'
 import { AppShell } from './shell/AppShell'
 import { useRoute } from './shell/useRoute'
 import { OrderForm } from './orders/OrderForm'
@@ -20,7 +22,8 @@ function App() {
 
   return (
     <AppShell route={route} userEmail={user.email} onSignOut={signOutUser}>
-      {route.page === 'products' && <ProductsPage />}
+      {route.page === 'home' && <HomePage userEmail={user.email} onSignOut={signOutUser} />}
+      {route.page === 'products' && <ProductsPage key={route.collection ?? 'all'} collectionName={route.collection} />}
       {route.page === 'product-form' && (
         <ProductCalculator
           key={route.productId ?? 'new'}
@@ -39,7 +42,7 @@ function App() {
           restoreDraft={route.restoreDraft}
         />
       )}
-      {route.page === 'finances' && <FinancesPage />}
+      {route.page === 'finances' && (route.view === 'invoices' ? <InvoicesPage /> : <FinancesPage />)}
       {route.page === 'tasks' && <TasksPage />}
     </AppShell>
   )

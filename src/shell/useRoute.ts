@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 
 export type Route =
+  | { page: 'home' }
   | { page: 'orders' }
   // addProductId: a product just created through "custom item", to be added to the order.
   | { page: 'order-form'; orderId: string | null; addProductId: string | null; restoreDraft: boolean }
-  | { page: 'products' }
+  // collection: show only the products of the collection with this name.
+  | { page: 'products'; collection: string | null }
   // custom + returnTo: the calculator was opened from an order to make a one-off item.
   | { page: 'product-form'; productId: string | null; custom: boolean; returnTo: string | null }
-  | { page: 'finances' }
+  // view: the movements list, or the invoices view (expenses and whether each has an invoice).
+  | { page: 'finances'; view: 'all' | 'invoices' }
   | { page: 'tasks' }
   | { page: 'settings' }
 
@@ -18,6 +21,8 @@ function parse(hash: string): Route {
   const query = new URLSearchParams(queryString)
 
   switch (parts[0]) {
+    case 'home':
+      return { page: 'home' }
     case 'orders':
       if (parts[1]) {
         return {
@@ -29,7 +34,7 @@ function parse(hash: string): Route {
       }
       return { page: 'orders' }
     case 'finances':
-      return { page: 'finances' }
+      return { page: 'finances', view: parts[1] === 'invoices' ? 'invoices' : 'all' }
     case 'tasks':
       return { page: 'tasks' }
     case 'settings':
@@ -43,10 +48,9 @@ function parse(hash: string): Route {
           returnTo: query.get('returnTo'),
         }
       }
-      return { page: 'products' }
+      return { page: 'products', collection: query.get('collection') }
     default:
-      // The spec opens on Orders.
-      return { page: 'orders' }
+      return { page: 'home' }
   }
 }
 

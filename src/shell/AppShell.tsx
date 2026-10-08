@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { FinancesIcon, OrdersIcon, ProductsIcon, SettingsIcon, TasksIcon } from '../icons/NavIcons'
+import { FinancesIcon, HomeIcon, OrdersIcon, ProductsIcon, SettingsIcon, TasksIcon } from '../icons/NavIcons'
+import { subItemsOf } from './navItems'
 import type { Route } from './useRoute'
 import './shell.css'
 
@@ -12,6 +13,7 @@ type AppShellProps = {
 
 // Top to bottom in the sidebar (right to left in the phone tab bar): Settings sits at the bottom.
 const tabs = [
+  { page: 'home', href: '#/home', label: 'בית', icon: <HomeIcon /> },
   { page: 'finances', href: '#/finances', label: 'כספים', icon: <FinancesIcon /> },
   { page: 'orders', href: '#/orders', label: 'הזמנות', icon: <OrdersIcon /> },
   { page: 'products', href: '#/products', label: 'מוצרים', icon: <ProductsIcon /> },
@@ -29,25 +31,36 @@ export function AppShell({ route, userEmail, onSignOut, children }: AppShellProp
   return (
     <>
       <div className={fullScreen ? 'app-main app-main-full' : 'app-main'}>
-        {!fullScreen && (
-          <div className="app-topbar">
-            <span>מחוברת כ-{userEmail}</span>
-            <button type="button" onClick={onSignOut}>
-              התנתקי
-            </button>
-          </div>
-        )}
         {children}
       </div>
 
       {!fullScreen && (
         <nav className="app-nav" aria-label="ניווט ראשי">
           {tabs.map((tab) => (
-            <a key={tab.page} href={tab.href} aria-current={activePage === tab.page ? 'page' : undefined}>
-              {tab.icon}
-              <span>{tab.label}</span>
-            </a>
+            <div key={tab.page} className="app-nav-group">
+              <a href={tab.href} aria-current={activePage === tab.page ? 'page' : undefined}>
+                {tab.icon}
+                <span>{tab.label}</span>
+              </a>
+              {(tab.page === 'finances' || tab.page === 'products') && (
+                <div className="app-sub" role="group" aria-label={`תתי-אפשרויות של ${tab.label}`}>
+                  {subItemsOf(tab.page, route).map((item) => (
+                    <a key={item.href} href={item.href} aria-current={item.active ? 'page' : undefined}>
+                      {item.label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
+
+          {/* On a phone the account lives on the home screen; the sidebar shows it at the bottom. */}
+          <div className="app-user">
+            <span title={userEmail ?? undefined}>{userEmail}</span>
+            <button type="button" onClick={onSignOut}>
+              התנתקות
+            </button>
+          </div>
         </nav>
       )}
     </>

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import type { OrderStatus } from '../orders/types'
 
 export type TaskStatus = 'NEW' | 'IN_PROGRESS' | 'COMPLETED'
 
@@ -13,6 +14,9 @@ export type Task = {
   orderCustomer: string | null
   createdAt: string
   completedAt: string | null
+  // Made by the system for an order: it shows the order's status and is changed only through the order.
+  isAutomatic: boolean
+  orderStatus: OrderStatus | null
 }
 
 export const TASK_STATUS_ORDER: TaskStatus[] = ['NEW', 'IN_PROGRESS', 'COMPLETED']

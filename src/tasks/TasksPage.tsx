@@ -3,6 +3,11 @@ import { apiJson } from '../api'
 import { chipStyle } from '../finances/styles'
 import { PlusIcon } from '../icons/NavIcons'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
+import { Toast } from '../orders/Toast'
+import { Modal } from '../shell/Modal'
+import { ConfirmInline } from '../orders/ConfirmInline'
+import { STATUS_LABELS, statusPillStyle } from '../orders/status'
+import type { OrderStatus } from '../orders/types'
 import { navigate } from '../shell/useRoute'
 import { TaskForm } from './TaskForm'
 import {
@@ -28,6 +33,7 @@ export function TasksPage() {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('open')
   const [form, setForm] = useState<FormState>({ open: false })
+  const [toast, setToast] = useState<string[] | null>(null)
   const requestCounter = useRef(0)
 
   const load = useCallback(() => {
@@ -49,7 +55,6 @@ export function TasksPage() {
 
   function openForm(task: Task | null) {
     setForm({ open: true, task })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const visible = tasks?.filter((t) => filter !== 'open' || t.status !== 'COMPLETED') ?? []
@@ -64,16 +69,21 @@ export function TasksPage() {
       </div>
 
       {form.open && (
-        <TaskForm
-          key={form.task?.id ?? 'new'}
-          task={form.task}
-          onSaved={() => {
-            setForm({ open: false })
-            load()
-          }}
-          onCancel={() => setForm({ open: false })}
-        />
+        <Modal title={form.task ? 'עריכת משימה' : 'משימה חדשה'} onClose={() => setForm({ open: false })}>
+          <TaskForm
+            key={form.task?.id ?? 'new'}
+            task={form.task}
+            onSaved={(message) => {
+              setForm({ open: false })
+              setToast(message)
+              load()
+            }}
+            onCancel={() => setForm({ open: false })}
+          />
+        </Modal>
       )}
+
+      {toast && <Toast lines={toast} onDone={() => setToast(null)} />}
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {FILTERS.map((f) => (
@@ -101,7 +111,13 @@ export function TasksPage() {
       {visible.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
           {visible.map((task) => (
-            <TaskCard key={task.id} task={task} onOpen={() => openForm(task)} onChanged={load} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              // A task made from an order is the order itself: tapping it opens the order, not a task form.
+              onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
+              onChanged={load}
+            />
           ))}
         </div>
       )}
@@ -113,17 +129,29 @@ export function TasksPage() {
   )
 }
 
+// The next step of an order, as on the order card.
+const NEXT_ORDER_STATUS: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> = {
+  NEW: { status: 'IN_PROGRESS', label: 'התחלת הכנה ←' },
+  IN_PROGRESS: { status: 'READY', label: 'סימון כמוכנה ←' },
+  READY: { status: 'COMPLETED', label: 'סיום ההזמנה ✓' },
+}
+
 function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void; onChanged: () => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const next = NEXT_TASK_STATUS[task.status]
+  const [confirmingComplete, setConfirmingComplete] = useState(false)
+  const fromOrder = task.isAutomatic && task.orderId !== null
   const done = task.status === 'COMPLETED'
 
-  async function setStatus(status: TaskStatus) {
+  // An order task has the order's status, and its button moves the order itself, so the two never differ.
+  const orderStatus = task.orderStatus ?? 'NEW'
+  const next = fromOrder ? NEXT_ORDER_STATUS[orderStatus] : NEXT_TASK_STATUS[task.status]
+
+  async function run(action: () => Promise<unknown>) {
     setBusy(true)
     setError(null)
     try {
-      await apiJson(`/tasks/${task.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
+      await action()
       onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
@@ -132,9 +160,27 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
     }
   }
 
+  const setTaskStatus = (status: TaskStatus) =>
+    run(() => apiJson(`/tasks/${task.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }))
+  const setOrderStatus = (status: OrderStatus) =>
+    run(() => apiJson(`/orders/${task.orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }))
+
+  function advance() {
+    if (!next) return
+    if (!fromOrder) return void setTaskStatus(next.status as TaskStatus)
+    // Completing locks the order, so it asks first.
+    if (next.status === 'COMPLETED') setConfirmingComplete(true)
+    else void setOrderStatus(next.status as OrderStatus)
+  }
+
   return (
-    <article style={{ ...cardStyle, ...(done ? { borderInlineStart: '4px solid var(--success)' } : null) }}>
-      <button type="button" onClick={onOpen} style={openStyle} aria-label={`עריכת המשימה ${task.title}`}>
+    <article
+      style={{
+        ...cardStyle,
+        ...(fromOrder ? { borderInlineStart: '4px solid var(--accent)' } : done ? { borderInlineStart: '4px solid var(--success)' } : null),
+      }}
+    >
+      <button type="button" onClick={onOpen} style={openStyle} aria-label={fromOrder ? `פתיחת ${task.title}` : `עריכת המשימה ${task.title}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <span
             style={{
@@ -146,25 +192,48 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
           >
             {task.title}
           </span>
-          <span style={{ ...taskPillStyle(task.status), flexShrink: 0 }}>{TASK_STATUS_LABELS[task.status]}</span>
+          {fromOrder ? (
+            <span style={{ ...statusPillStyle(orderStatus), flexShrink: 0 }}>{STATUS_LABELS[orderStatus]}</span>
+          ) : (
+            <span style={{ ...taskPillStyle(task.status), flexShrink: 0 }}>{TASK_STATUS_LABELS[task.status]}</span>
+          )}
         </div>
         {task.content && <p style={contentStyle}>{task.content}</p>}
       </button>
 
-      {task.orderId && (
-        <button type="button" onClick={() => navigate(`/orders/${task.orderId}`)} style={orderLinkStyle}>
-          הזמנה #{task.orderNumber} · {task.orderCustomer ?? 'ללא שם'} ←
+      {fromOrder ? (
+        <button type="button" onClick={onOpen} style={orderLinkStyle}>
+          נוצרה מהזמנה #{task.orderNumber} · עריכה בהזמנה ←
         </button>
+      ) : (
+        task.orderId && (
+          <button type="button" onClick={() => navigate(`/orders/${task.orderId}`)} style={orderLinkStyle}>
+            הזמנה #{task.orderNumber} · {task.orderCustomer ?? 'ללא שם'} ←
+          </button>
+        )
       )}
 
-      {next && (
-        <button type="button" onClick={() => void setStatus(next.status)} disabled={busy} style={nextButtonStyle}>
+      {confirmingComplete && (
+        <ConfirmInline
+          message="לסמן את ההזמנה כהושלמה? היא תינעל לעריכה."
+          confirmLabel="כן, להשלים"
+          busy={busy}
+          onConfirm={() => {
+            setConfirmingComplete(false)
+            void setOrderStatus('COMPLETED')
+          }}
+          onCancel={() => setConfirmingComplete(false)}
+        />
+      )}
+
+      {next && !confirmingComplete && (
+        <button type="button" onClick={advance} disabled={busy} style={nextButtonStyle}>
           {next.label}
         </button>
       )}
 
-      {done && (
-        <button type="button" onClick={() => void setStatus('NEW')} disabled={busy} style={reopenStyle}>
+      {done && !fromOrder && (
+        <button type="button" onClick={() => void setTaskStatus('NEW')} disabled={busy} style={reopenStyle}>
           פתיחה מחדש
         </button>
       )}
