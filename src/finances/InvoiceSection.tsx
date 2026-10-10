@@ -17,13 +17,15 @@ type InvoiceSectionProps = {
   slim?: boolean
   // A line under the picked file, e.g. what the reader is doing.
   note?: string | null
+  // True while the reader works on the picked file: shows the waiting card.
+  reading?: boolean
   // Replaces the default text of the big button.
   title?: string
   subtitle?: string
 }
 
 // Everything about one expense's invoice: a place to add one when needed, then view, replace, remove.
-export function InvoiceSection({ expenseId, hasFile, pendingFile, onPick, onRemoved, prominent, slim, note, title, subtitle }: InvoiceSectionProps) {
+export function InvoiceSection({ expenseId, hasFile, pendingFile, onPick, onRemoved, prominent, slim, note, reading, title, subtitle }: InvoiceSectionProps) {
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -65,7 +67,18 @@ export function InvoiceSection({ expenseId, hasFile, pendingFile, onPick, onRemo
         </div>
       )}
 
-      {pendingFile && note && <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{note}</p>}
+      {pendingFile && reading && (
+        <div className="invoice-reading" role="status" aria-live="polite" style={readingStyle}>
+          <span className="invoice-reading-spinner" aria-hidden="true" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>קורא את החשבונית...</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>הפרטים ימולאו לבד בעוד כמה שניות</div>
+            <div className="invoice-reading-bar" aria-hidden="true" />
+          </div>
+        </div>
+      )}
+
+      {pendingFile && !reading && note && <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{note}</p>}
 
       {stored && (
         <div style={rowStyle}>
@@ -152,6 +165,18 @@ const rowStyle: React.CSSProperties = {
   borderRadius: 8,
   background: 'var(--surface)',
   border: '1px solid var(--border)',
+}
+
+const readingStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  marginTop: 8,
+  padding: '12px 14px',
+  borderRadius: 10,
+  background: 'var(--accent-bg)',
+  border: '1px solid var(--accent)',
+  color: 'var(--text)',
 }
 
 const nameStyle: React.CSSProperties = {

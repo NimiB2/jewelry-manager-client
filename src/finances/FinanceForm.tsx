@@ -60,6 +60,7 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [readerAvailable, setReaderAvailable] = useState(false)
   const [readNote, setReadNote] = useState<string | null>(null)
+  const [reading, setReading] = useState(false)
   const [applyToSeries, setApplyToSeries] = useState(false)
 
   const [expenseTypes, setExpenseTypes] = useState<string[]>([])
@@ -99,7 +100,8 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
     setReadNote(null)
     if (!file || !readerAvailable || editing) return
 
-    setReadNote('קורא את החשבונית...')
+    setReadNote(null)
+    setReading(true)
     try {
       const found = await readInvoice(file)
       if (!found) return setReadNote('לא הצלחתי לקרוא את החשבונית, אפשר למלא ידנית.')
@@ -112,6 +114,8 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       setReadNote('הפרטים מולאו מהחשבונית. כדאי לבדוק לפני שמירה.')
     } catch {
       setReadNote('הקריאה האוטומטית לא זמינה כרגע, אפשר למלא ידנית.')
+    } finally {
+      setReading(false)
     }
   }
 
@@ -232,6 +236,7 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
             onRemoved={() => setHasFile(false)}
             slim
             note={readNote}
+            reading={reading}
             title={readerAvailable ? 'צלמי או העלי חשבונית, הפרטים ימולאו לבד' : 'הוספת חשבונית'}
             subtitle={readerAvailable ? '' : 'תמונה או PDF'}
           />
