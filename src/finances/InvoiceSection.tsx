@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { errorTextStyle } from '../products/productStyles'
+import { InvoicePreview } from './InvoicePreview'
 import { openInvoice, removeInvoice } from './invoiceApi'
 
 type InvoiceSectionProps = {
@@ -60,6 +61,7 @@ export function InvoiceSection({ expenseId, hasFile, pendingFile, onPick, onRemo
 
       {pendingFile && (
         <div style={rowStyle}>
+          <InvoicePreview file={pendingFile} />
           <span style={nameStyle}>חשבונית: {pendingFile.name}</span>
           <button type="button" onClick={() => onPick(null)} style={linkStyle}>
             הסרה
