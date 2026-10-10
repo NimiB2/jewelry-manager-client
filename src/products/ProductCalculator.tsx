@@ -14,7 +14,7 @@ import {
   linkButtonStyle,
   mutedTextStyle,
 } from './productStyles'
-import type { Collection, PriceBreakdown, Product, ProductsList, SaveProductBody } from './types'
+import type { Collection, PriceBreakdown, Product, ProductsList, SaveProductBody, ShopifyVariant } from './types'
 
 type SettingsForCalculator = {
   data: {
@@ -54,6 +54,8 @@ export function ProductCalculator({ productId, custom, returnTo }: ProductCalcul
   const [rows, setRows] = useState<AdditionRow[]>([])
   const [collectionIds, setCollectionIds] = useState<string[]>([])
   const [sitePrice, setSitePrice] = useState('')
+  const [shopifyName, setShopifyName] = useState('')
+  const [variants, setVariants] = useState<ShopifyVariant[]>([])
   const sitePriceTouched = useRef(!isNew)
 
   const [preview, setPreview] = useState<Preview>({ breakdown: null, error: null, loading: false })
@@ -83,6 +85,8 @@ export function ProductCalculator({ productId, custom, returnTo }: ProductCalcul
           setWeight(String(product.weight))
           setExtraHours(product.additionalWorkHours ? String(product.additionalWorkHours) : '')
           setSitePrice(String(product.sitePrice))
+          setShopifyName(product.shopifyName ?? '')
+          setVariants(product.shopifyVariants ?? [])
           setCollectionIds(product.collectionIds)
           setRows(rowsFromProduct(types, product.additions))
         } else {
@@ -174,6 +178,8 @@ export function ProductCalculator({ productId, custom, returnTo }: ProductCalcul
       sitePrice: Number(sitePrice),
       additions,
       collectionIds,
+      // Sent always, so clearing the field really clears it (an empty text means "none").
+      shopifyName: shopifyName.trim(),
     }
 
     setSaving(true)
@@ -235,6 +241,48 @@ export function ProductCalculator({ productId, custom, returnTo }: ProductCalcul
       </header>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        {!isNew && (!type.trim() || !material) && (
+          <div role="note" style={needsDetailsStyle}>
+            המוצר יובא מהחנות וחסרים לו סוג וחומר. אחרי שתשלימי אותם יחושבו מחיר מומלץ ורווח.
+          </div>
+        )}
+
+        <section style={cardStyle}>
+          <label htmlFor="product-shopify-name" style={fieldLabelStyle}>
+            שם בשופיפי
+          </label>
+          <input
+            id="product-shopify-name"
+            value={shopifyName}
+            maxLength={300}
+            onChange={(e) => setShopifyName(e.target.value)}
+            placeholder="כך המוצר נקרא בחנות"
+            style={fieldInputStyle}
+          />
+          <p style={{ ...mutedTextStyle, margin: '6px 0 0' }}>לפי השם הזה מזהים הזמנות שמגיעות מהחנות.</p>
+
+          {variants.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <div style={fieldLabelStyle}>האפשרויות והמחירים בחנות (לחיצה קובעת את מחיר האתר)</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {variants.map((v, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => {
+                      sitePriceTouched.current = true
+                      setSitePrice(String(v.price))
+                    }}
+                    style={variantButtonStyle}
+                  >
+                    {v.title ? `${v.title} · ` : ''}₪{v.price}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div>
             <label htmlFor="product-type" style={fieldLabelStyle}>
@@ -406,5 +454,25 @@ const backButtonStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  cursor: 'pointer',
+}
+
+const needsDetailsStyle: React.CSSProperties = {
+  padding: 12,
+  borderRadius: 10,
+  background: '#fff7e0',
+  border: '1px solid #e8c964',
+  color: '#5c4a00',
+  fontSize: 14,
+}
+
+const variantButtonStyle: React.CSSProperties = {
+  minHeight: 34,
+  padding: '0 12px',
+  borderRadius: 17,
+  border: '1px solid var(--accent)',
+  background: 'var(--accent-bg)',
+  color: 'var(--accent)',
+  fontSize: 14,
   cursor: 'pointer',
 }

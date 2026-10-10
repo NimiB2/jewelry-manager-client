@@ -62,10 +62,18 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
     <article style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 600 }}>{product.name}</div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            {product.type} · {product.material} · {product.weight} גרם
+          <div style={{ fontSize: 16, fontWeight: 600 }}>
+            {product.name}
+            {product.needsDetails && <span style={needsDetailsBadgeStyle}>חסרים פרטים</span>}
           </div>
+          {!product.needsDetails && (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              {product.type} · {product.material} · {product.weight} גרם
+            </div>
+          )}
+          {product.needsDetails && product.shopifyName && (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>בחנות: {product.shopifyName}</div>
+          )}
           {profit && (
             <div
               style={{ fontSize: 13, fontWeight: 600, marginTop: 2, color: belowFloor ? 'var(--danger)' : 'var(--success)' }}
@@ -74,7 +82,9 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
               {belowFloor && <span style={{ fontWeight: 400 }}> · מתחת לרצפה</span>}
             </div>
           )}
-          {product.priceError && <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>{product.priceError}</div>}
+          {product.priceError && !product.needsDetails && (
+            <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>{product.priceError}</div>
+          )}
         </div>
 
         {/* The site price is the main number; the recommended price is a small tag under it. */}
@@ -216,4 +226,16 @@ const cancelButtonStyle: React.CSSProperties = {
   color: 'var(--text-muted)',
   fontSize: 14,
   cursor: 'pointer',
+}
+
+const needsDetailsBadgeStyle: React.CSSProperties = {
+  marginInlineStart: 8,
+  padding: '1px 8px',
+  borderRadius: 10,
+  background: '#fff7e0',
+  border: '1px solid #e8c964',
+  color: '#5c4a00',
+  fontSize: 11,
+  fontWeight: 600,
+  verticalAlign: 'middle',
 }

@@ -108,9 +108,14 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
     <div className="screen">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>{collectionName ?? 'מוצרים'}</h1>
-        <button type="button" onClick={() => navigate('/products/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
-          + הוספת מוצר
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={() => navigate('/shopify')} style={importButtonStyle}>
+            ייבוא מהחנות
+          </button>
+          <button type="button" onClick={() => navigate('/products/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+            + הוספת מוצר
+          </button>
+        </div>
       </div>
 
       <SubNav items={subItemsOf('products', { page: 'products', collection: collectionName })} />
@@ -282,4 +287,16 @@ const filterStyle: React.CSSProperties = {
   minHeight: 40,
   padding: '4px 8px',
   fontSize: 14,
+}
+
+const importButtonStyle: React.CSSProperties = {
+  minHeight: 40,
+  padding: '0 12px',
+  border: '1px solid var(--border)',
+  borderRadius: 10,
+  background: 'var(--surface)',
+  color: 'var(--accent)',
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: 'pointer',
 }

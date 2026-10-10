@@ -10,6 +10,7 @@ import { OrdersPage } from './orders/OrdersPage'
 import { ProductCalculator } from './products/ProductCalculator'
 import { ProductsPage } from './products/ProductsPage'
 import { SettingsPage } from './settings/SettingsPage'
+import { ShopifyImportPage } from './shopify/ShopifyImportPage'
 import { TasksPage } from './tasks/TasksPage'
 import './App.css'
 
@@ -44,6 +45,7 @@ function App() {
       )}
       {route.page === 'finances' && (route.view === 'invoices' ? <InvoicesPage /> : <FinancesPage />)}
       {route.page === 'tasks' && <TasksPage />}
+      {route.page === 'shopify' && <ShopifyImportPage />}
     </AppShell>
   )
 }

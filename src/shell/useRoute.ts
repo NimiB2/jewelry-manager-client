@@ -12,6 +12,8 @@ export type Route =
   // view: the movements list, or the invoices view (expenses and whether each has an invoice).
   | { page: 'finances'; view: 'all' | 'invoices' }
   | { page: 'tasks' }
+  // Bring the online store's products next to the catalog and tie them together.
+  | { page: 'shopify' }
   | { page: 'settings' }
 
 // The route lives in the URL hash (#/products/new?custom=1), so refresh and the browser's back button keep working.
@@ -37,6 +39,8 @@ function parse(hash: string): Route {
       return { page: 'finances', view: parts[1] === 'invoices' ? 'invoices' : 'all' }
     case 'tasks':
       return { page: 'tasks' }
+    case 'shopify':
+      return { page: 'shopify' }
     case 'settings':
       return { page: 'settings' }
     case 'products':

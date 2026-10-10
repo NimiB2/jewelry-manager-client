@@ -25,5 +25,6 @@ export function subItemsOf(parent: 'finances' | 'products', route: Route): SubIt
     { label: 'כל המוצרים', href: '#/products', active: onProducts && collection === null },
     { label: WEDDING_RINGS, href: collectionHref(WEDDING_RINGS), active: collection === WEDDING_RINGS },
     { label: ENGAGEMENT_RINGS, href: collectionHref(ENGAGEMENT_RINGS), active: collection === ENGAGEMENT_RINGS },
+    { label: 'ייבוא מהחנות', href: '#/shopify', active: route.page === 'shopify' },
   ]
 }

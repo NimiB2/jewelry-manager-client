@@ -26,7 +26,9 @@ const tabs = [
 export function AppShell({ route, userEmail, onSignOut, children }: AppShellProps) {
   const fullScreen = route.page === 'product-form' || route.page === 'order-form'
   const activePage =
-    route.page === 'product-form' ? (route.custom ? 'orders' : 'products') : route.page === 'order-form' ? 'orders' : route.page
+    route.page === 'product-form'
+      ? route.custom ? 'orders' : 'products'
+      : route.page === 'order-form' ? 'orders' : route.page === 'shopify' ? 'products' : route.page
 
   return (
     <>

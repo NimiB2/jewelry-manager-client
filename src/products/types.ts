@@ -41,6 +41,17 @@ export type Product = {
   // Null when the price can't be computed (priceError says why) — the product is still listed.
   price: PriceBreakdown | null
   priceError: string | null
+  // The product's name in the online store, and what the store offers for it (one entry per variant).
+  shopifyName: string | null
+  shopifyVariants: ShopifyVariant[]
+  // True while the type or the material is missing (a product imported from the store).
+  needsDetails: boolean
+}
+
+export type ShopifyVariant = {
+  title: string
+  price: number
+  sku: string | null
 }
 
 export type PricingMeta = {
@@ -70,4 +81,6 @@ export type SaveProductBody = {
   sitePrice: number
   additions: Addition[]
   collectionIds: string[]
+  // Empty text clears the store name; leaving it out keeps it.
+  shopifyName?: string
 }

@@ -41,6 +41,19 @@ async function send(path: string, init: RequestInit, isRead: boolean): Promise<R
   return response
 }
 
+// A failed call. `code` is set when the server wants the user to confirm something (status 409),
+// e.g. PRODUCT_ALREADY_LINKED; the message is already written for the user.
+export class ApiError extends Error {
+  readonly status: number
+  readonly code: string | null
+
+  constructor(message: string, status: number, code: string | null) {
+    super(message)
+    this.status = status
+    this.code = code
+  }
+}
+
 // Same as apiFetch, but parses JSON and turns a failed response into an Error carrying the
 // server's message, so screens can just try/catch.
 export async function apiJson<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -49,13 +62,15 @@ export async function apiJson<T>(path: string, init: RequestInit = {}): Promise<
 
   if (!response.ok) {
     let message = `HTTP ${response.status}`
+    let code: string | null = null
     try {
       const body = await response.json()
       message = body?.error ?? body?.title ?? message
+      code = typeof body?.code === 'string' ? body.code : null
     } catch {
       // keep the status-code message
     }
-    throw new Error(message)
+    throw new ApiError(message, response.status, code)
   }
 
   if (response.status === 204) return undefined as T

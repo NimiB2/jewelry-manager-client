@@ -14,6 +14,10 @@ export type OrderItem = {
   lineTotal: number
   workHours: number
   note: string | null
+  // The store's product id for a line that came from the store.
+  externalProductId?: string | null
+  // True on a pending order's line that still has to be tied to a catalog product.
+  needsProduct?: boolean
 }
 
 export type Order = {
@@ -36,6 +40,9 @@ export type Order = {
   isCompleted: boolean
   completedDate: string | null
   items: OrderItem[]
+  // The store's display name ("#1001") and whether the owner still has to approve the order.
+  externalName?: string | null
+  isPendingApproval?: boolean
 }
 
 export type OrdersList = {

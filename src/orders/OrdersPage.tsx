@@ -7,6 +7,7 @@ import { navigate } from '../shell/useRoute'
 import { monthName, periodRange } from './dates'
 import { completionMessage } from './celebrate'
 import { OrderCard } from './OrderCard'
+import { PendingOrders } from './PendingOrders'
 import { Toast } from './Toast'
 import type { OrdersList } from './types'
 
@@ -104,6 +105,8 @@ export function OrdersPage() {
           + הזמנה חדשה
         </button>
       </div>
+
+      <PendingOrders onChanged={load} />
 
       <div style={{ position: 'relative', marginBottom: 8 }}>
         <span style={searchIconStyle}>
