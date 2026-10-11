@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { apiJson } from '../api'
 import { errorTextStyle, secondaryButtonStyle } from '../products/productStyles'
+import { ConfirmInline } from './ConfirmInline'
 import { notifyOrdersChanged } from './attention'
 import { STORE_ALERT_LABEL, hasStoreAlert } from './storeAlert'
 import type { Order, StoreAlert } from './types'
@@ -23,6 +24,7 @@ function hint(alert: Exclude<StoreAlert, 'NONE'>, pending: boolean): string {
 export function StoreAlertNotice({ order, onChanged }: StoreAlertNoticeProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   if (!hasStoreAlert(order)) return null
   const alert = order.storeAlert as Exclude<StoreAlert, 'NONE'>
@@ -37,6 +39,25 @@ export function StoreAlertNotice({ order, onChanged }: StoreAlertNoticeProps) {
       onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // A cancelled or deleted store order that is already on the books can be removed in one step here;
+  // deleting also removes its income and task. A waiting order has its own reject button.
+  const canDelete = severe && order.isPendingApproval !== true
+
+  async function remove() {
+    setBusy(true)
+    setError(null)
+    try {
+      await apiJson<void>(`/orders/${order.id}`, { method: 'DELETE' })
+      notifyOrdersChanged()
+      onChanged()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'המחיקה נכשלה')
+      setConfirmingDelete(false)
     } finally {
       setBusy(false)
     }
@@ -58,9 +79,31 @@ export function StoreAlertNotice({ order, onChanged }: StoreAlertNoticeProps) {
         ⚠ ההזמנה {STORE_ALERT_LABEL[alert]}
       </div>
       <p style={{ margin: '4px 0 8px', fontSize: 13 }}>{hint(alert, order.isPendingApproval === true)}</p>
-      <button type="button" disabled={busy} onClick={() => void dismiss()} style={{ ...secondaryButtonStyle, minHeight: 36 }}>
-        הבנתי, להסיר את ההתראה
-      </button>
+      {confirmingDelete ? (
+        <ConfirmInline
+          message="למחוק את ההזמנה? גם ההכנסה והמשימה שלה יימחקו."
+          confirmLabel="כן, למחוק"
+          busy={busy}
+          onConfirm={() => void remove()}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      ) : (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {canDelete && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setConfirmingDelete(true)}
+              style={{ ...secondaryButtonStyle, minHeight: 36, color: 'var(--danger)', borderColor: 'var(--danger)' }}
+            >
+              מחיקת ההזמנה
+            </button>
+          )}
+          <button type="button" disabled={busy} onClick={() => void dismiss()} style={{ ...secondaryButtonStyle, minHeight: 36 }}>
+            הבנתי, להסיר את ההתראה
+          </button>
+        </div>
+      )}
       {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
     </div>
   )
