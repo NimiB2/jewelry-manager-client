@@ -128,6 +128,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           {order.hasDiscount && (
             <div style={mutedTextStyle}>
               <span style={{ textDecoration: 'line-through' }}>{formatMoney(order.amount)}</span> · הנחה {order.discountPercent}%
+              {order.discountReason && <div title={order.discountReason}>{order.discountReason}</div>}
             </div>
           )}
         </div>

@@ -113,6 +113,12 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
                     {order.customer ? ` · ${order.customer}` : ''}
                   </div>
                   <div style={mutedTextStyle}>מהחנות · {order.date}</div>
+                  {order.hasDiscount && (
+                    <div style={{ ...mutedTextStyle, color: 'var(--warning)' }}>
+                      הנחה {formatMoney(order.discountAmount)}
+                      {order.discountReason ? ` · ${order.discountReason}` : ''}
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--success)' }}>{formatMoney(order.finalAmount)}</div>
               </div>
