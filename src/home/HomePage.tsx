@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../api'
 import type { FinanceList } from '../finances/types'
+import { useOrdersAttention } from '../orders/attention'
 import { monthName, periodRange } from '../orders/dates'
 import type { OrdersList } from '../orders/types'
 import { formatMoney } from '../products/format'
@@ -22,6 +23,7 @@ type HomePageProps = {
 // The landing screen: the three numbers she checks most, each a shortcut to its screen.
 export function HomePage({ userEmail, onSignOut }: HomePageProps) {
   const [data, setData] = useState<HomeData | null>(null)
+  const attention = useOrdersAttention('home')
   const now = new Date()
 
   useEffect(() => {
@@ -47,6 +49,22 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
     <div className="screen">
       <h1 style={{ margin: '0 0 4px' }}>שלום</h1>
       <p style={{ ...mutedTextStyle, fontSize: 14, marginBottom: 16 }}>מה קורה בעסק היום</p>
+
+      {attention !== null && attention.total > 0 && (
+        <button type="button" onClick={() => navigate('/orders')} style={attentionStyle}>
+          <span style={{ fontWeight: 700 }}>
+            {attention.total === 1 ? 'הזמנה אחת מחכה לך' : `${attention.total} הזמנות מחכות לך`}
+          </span>
+          <span style={{ fontSize: 13 }}>
+            {[
+              attention.pending > 0 ? `${attention.pending} לאישור` : null,
+              attention.alerts > 0 ? `${attention.alerts} ששונו בחנות` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        </button>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <StatCard
@@ -105,6 +123,24 @@ function StatCard({ label, value, tone = 'var(--text)', ltr, onClick }: StatCard
       </span>
     </button>
   )
+}
+
+// Above the numbers on purpose: it is the one thing on this screen that asks her to do something.
+const attentionStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  gap: 2,
+  width: '100%',
+  marginBottom: 12,
+  padding: '12px 14px',
+  border: '1px solid var(--danger)',
+  borderRadius: 10,
+  background: 'var(--danger-bg)',
+  color: 'var(--danger)',
+  textAlign: 'right',
+  cursor: 'pointer',
+  font: 'inherit',
 }
 
 const statCardStyle: React.CSSProperties = {

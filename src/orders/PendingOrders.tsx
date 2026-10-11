@@ -3,7 +3,10 @@ import { ApiError, apiJson } from '../api'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import type { Product } from '../products/types'
+import { notifyOrdersChanged } from './attention'
 import { ProductPicker } from './ProductPicker'
+import { blocksApproval } from './storeAlert'
+import { StoreAlertNotice } from './StoreAlertNotice'
 import type { Order } from './types'
 
 type PendingOrdersProps = {
@@ -65,6 +68,7 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
       await apiJson<Order>(`/orders/${orderId}/approve`, { method: 'POST' })
       await load()
       onChanged()
+      notifyOrdersChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'האישור נכשל')
     } finally {
@@ -79,6 +83,7 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
       await apiJson<void>(`/orders/${orderId}`, { method: 'DELETE' })
       setRejecting(null)
       await load()
+      notifyOrdersChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'המחיקה נכשלה')
     } finally {
@@ -160,6 +165,8 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
                 ))}
               </ul>
 
+              <StoreAlertNotice order={order} onChanged={() => void load()} />
+
               {unmatched > 0 && (
                 <p style={{ ...mutedTextStyle, margin: '8px 0 0' }}>
                   {unmatched === 1 ? 'פריט אחד עדיין לא זוהה' : `${unmatched} פריטים עדיין לא זוהו`}. אחרי שיזוהו אפשר לאשר.
@@ -169,9 +176,10 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <button
                   type="button"
-                  disabled={busy || unmatched > 0}
+                  disabled={busy || unmatched > 0 || blocksApproval(order)}
+                  title={blocksApproval(order) ? 'ההזמנה בוטלה או נמחקה בחנות' : undefined}
                   onClick={() => void approve(order.id)}
-                  style={{ ...primaryButtonStyle, flex: 1, opacity: unmatched > 0 ? 0.5 : 1 }}
+                  style={{ ...primaryButtonStyle, flex: 1, opacity: unmatched > 0 || blocksApproval(order) ? 0.5 : 1 }}
                 >
                   אישור ההזמנה
                 </button>

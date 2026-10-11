@@ -2,6 +2,8 @@ export type OrderStatus = 'NEW' | 'IN_PROGRESS' | 'READY' | 'COMPLETED'
 
 export type OrderSource = 'MANUAL' | 'SHOPIFY'
 
+export type StoreAlert = 'NONE' | 'UPDATED' | 'CANCELLED' | 'DELETED'
+
 export type OrderItem = {
   id: string
   // Null once the catalog product was deleted; the line keeps its frozen name and price.
@@ -43,6 +45,9 @@ export type Order = {
   // The store's display name ("#1001") and whether the owner still has to approve the order.
   externalName?: string | null
   isPendingApproval?: boolean
+  // What the store reported after the order arrived. A warning only; nothing is changed automatically.
+  storeAlert?: StoreAlert
+  storeAlertAt?: string | null
 }
 
 export type OrdersList = {

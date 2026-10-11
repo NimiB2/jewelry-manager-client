@@ -6,8 +6,9 @@ import { ConfirmInline } from './ConfirmInline'
 import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
 import { StageChips } from './StageChips'
+import { STORE_ALERT_LABEL, hasStoreAlert } from './storeAlert'
 import { STATUS_LABELS, STATUS_ORDER, statusColors, statusPillStyle } from './status'
-import type { Order, OrderStatus } from './types'
+import type { Order, OrderStatus, StoreAlert } from './types'
 
 type OrderCardProps = {
   order: Order
@@ -116,6 +117,9 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
               {itemsCount} {itemsCount === 1 ? 'פריט' : 'פריטים'} {showItems ? '▴' : '▾'}
             </button>
             <SourceBadge source={order.source} />
+            {hasStoreAlert(order) && (
+              <span style={storeAlertTagStyle}>⚠ {STORE_ALERT_LABEL[order.storeAlert as Exclude<StoreAlert, 'NONE'>]}</span>
+            )}
           </div>
         </div>
 
@@ -248,6 +252,16 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
       )}
     </article>
   )
+}
+
+// The full warning, with its dismiss button, is at the top of the orders screen; the card only carries a mark.
+const storeAlertTagStyle: React.CSSProperties = {
+  padding: '1px 8px',
+  borderRadius: 8,
+  background: 'var(--danger-bg)',
+  color: 'var(--danger)',
+  fontSize: 12,
+  fontWeight: 600,
 }
 
 const completedCardStyle: React.CSSProperties = {

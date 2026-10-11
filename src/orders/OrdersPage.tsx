@@ -6,6 +6,7 @@ import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButt
 import { navigate } from '../shell/useRoute'
 import { monthName, periodRange } from './dates'
 import { completionMessage } from './celebrate'
+import { AlertedOrders } from './AlertedOrders'
 import { OrderCard } from './OrderCard'
 import { PendingOrders } from './PendingOrders'
 import { Toast } from './Toast'
@@ -107,6 +108,7 @@ export function OrdersPage() {
       </div>
 
       <PendingOrders onChanged={load} />
+      <AlertedOrders onChanged={load} />
 
       <div style={{ position: 'relative', marginBottom: 8 }}>
         <span style={searchIconStyle}>

@@ -39,6 +39,27 @@
   font-weight: 600;
 }
 
+/* The number of orders that need her attention, on the Orders tab. On a phone it sits on the icon. */
+.app-nav a {
+  position: relative;
+}
+
+.app-badge {
+  position: absolute;
+  top: 6px;
+  inset-inline-start: calc(50% + 6px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
 .app-main {
   padding-bottom: 80px;
 }
@@ -115,6 +136,12 @@
 
   .app-nav a[aria-current='page'] {
     background: var(--accent-bg);
+  }
+
+  /* In the sidebar the number sits at the far end of the row. */
+  .app-badge {
+    position: static;
+    margin-inline-start: auto;
   }
 
   .app-user {
