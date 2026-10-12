@@ -3,7 +3,9 @@ import { apiJson } from '../api'
 import { PlusIcon, SearchIcon } from '../icons/NavIcons'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
+import { SearchButton } from '../search/SearchButton'
 import { FilterTabs } from '../shell/FilterTabs'
+import { SkeletonCards } from '../shell/Skeleton'
 import { navigate } from '../shell/useRoute'
 import { monthName, periodRange } from './dates'
 import { completionMessage } from './celebrate'
@@ -103,9 +105,12 @@ export function OrdersPage() {
     <div className="screen">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>הזמנות</h1>
-        <button type="button" onClick={() => navigate('/orders/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
-          + הזמנה חדשה
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <SearchButton />
+          <button type="button" onClick={() => navigate('/orders/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+            + הזמנה חדשה
+          </button>
+        </div>
       </div>
 
       <PendingOrders onChanged={load} />
@@ -164,7 +169,7 @@ export function OrdersPage() {
       </div>
 
       {error && <p style={errorTextStyle}>שגיאה בטעינת ההזמנות: {error}</p>}
-      {!data && !error && <p style={mutedTextStyle}>טוען הזמנות...</p>}
+      {!data && !error && <SkeletonCards label="טוען הזמנות" />}
 
       {data && data.orders.length === 0 && (
         <div style={{ ...cardStyle, textAlign: 'center', padding: '28px 16px' }}>

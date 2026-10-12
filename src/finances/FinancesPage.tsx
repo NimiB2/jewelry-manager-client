@@ -6,7 +6,9 @@ import { Toast } from '../orders/Toast'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
 import { FilterTabs, tabStyle } from '../shell/FilterTabs'
+import { SearchButton } from '../search/SearchButton'
 import { Modal } from '../shell/Modal'
+import { SkeletonCards } from '../shell/Skeleton'
 import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
 import { navigate } from '../shell/useRoute'
@@ -159,9 +161,12 @@ export function FinancesPage() {
     <div className="screen">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <h1 style={{ margin: 0 }}>כספים</h1>
-        <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 40 }}>
-          + הוספה
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <SearchButton />
+          <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+            + הוספה
+          </button>
+        </div>
       </div>
 
       <SubNav items={subItemsOf('finances', { page: 'finances', view: 'all' })} />
@@ -284,7 +289,7 @@ export function FinancesPage() {
       </div>
 
       {error && <p style={errorTextStyle}>שגיאה: {error}</p>}
-      {!data && !error && <p style={mutedTextStyle}>טוען...</p>}
+      {!data && !error && <SkeletonCards count={4} label="טוען" />}
 
       {data && data.items.length === 0 && (
         <div style={{ ...cardStyle, textAlign: 'center', padding: '28px 16px' }}>

@@ -15,6 +15,8 @@ export type Route =
   // Bring the online store's products next to the catalog and tie them together.
   | { page: 'shopify' }
   | { page: 'settings' }
+  // One search over orders, products and expenses.
+  | { page: 'search' }
 
 // The route lives in the URL hash (#/products/new?custom=1), so refresh and the browser's back button keep working.
 function parse(hash: string): Route {
@@ -43,6 +45,8 @@ function parse(hash: string): Route {
       return { page: 'shopify' }
     case 'settings':
       return { page: 'settings' }
+    case 'search':
+      return { page: 'search' }
     case 'products':
       if (parts[1]) {
         return {

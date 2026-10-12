@@ -2,6 +2,7 @@ import { SignIn } from './auth/SignIn'
 import { useAuth } from './auth/useAuth'
 import { FinancesPage } from './finances/FinancesPage'
 import { HomePage } from './home/HomePage'
+import { SearchPage } from './search/SearchPage'
 import { InvoicesPage } from './finances/InvoicesPage'
 import { AppShell } from './shell/AppShell'
 import { useRoute } from './shell/useRoute'
@@ -46,6 +47,7 @@ function App() {
       {route.page === 'finances' && (route.view === 'invoices' ? <InvoicesPage /> : <FinancesPage />)}
       {route.page === 'tasks' && <TasksPage />}
       {route.page === 'shopify' && <ShopifyImportPage />}
+      {route.page === 'search' && <SearchPage />}
     </AppShell>
   )
 }

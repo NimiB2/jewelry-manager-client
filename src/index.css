@@ -6,7 +6,8 @@
   --bg: #f2f2f7;
   --surface: #ffffff;
   --text: #000000;
-  --text-muted: rgba(60, 60, 67, 0.6);
+  /* Darker than before so dates, numbers and descriptions are readable in daylight (contrast about 6:1). */
+  --text-muted: #5f5f64;
   --chevron: rgba(60, 60, 67, 0.3);
   --border: rgba(60, 60, 67, 0.12);
   --nav-icon: #404040;
@@ -78,4 +79,19 @@ p {
 
 .settings-section {
   margin-bottom: 1.5rem;
+}
+
+/* Placeholder bars shown while a screen loads. */
+.skeleton {
+  background: var(--border);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
 }

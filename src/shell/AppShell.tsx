@@ -31,7 +31,7 @@ export function AppShell({ route, userEmail, onSignOut, children }: AppShellProp
   const activePage =
     route.page === 'product-form'
       ? route.custom ? 'orders' : 'products'
-      : route.page === 'order-form' ? 'orders' : route.page === 'shopify' ? 'products' : route.page
+      : route.page === 'order-form' ? 'orders' : route.page === 'shopify' ? 'products' : route.page === 'search' ? 'home' : route.page
 
   return (
     <>

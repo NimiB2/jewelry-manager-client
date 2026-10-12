@@ -3,6 +3,8 @@ import { apiJson } from '../api'
 import { downloadFile } from '../finances/invoiceApi'
 import type { FinanceList } from '../finances/types'
 import { useOrdersAttention } from '../orders/attention'
+import { SearchButton } from '../search/SearchButton'
+import { Skeleton } from '../shell/Skeleton'
 import { monthName, periodRange } from '../orders/dates'
 import type { OrdersList } from '../orders/types'
 import { formatMoney } from '../products/format'
@@ -70,7 +72,10 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
 
   return (
     <div className="screen">
-      <h1 style={{ margin: '0 0 2px' }}>שלום</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ margin: '0 0 2px' }}>שלום</h1>
+        <SearchButton />
+      </div>
       <p style={{ ...mutedTextStyle, fontSize: 14, margin: '0 0 16px' }}>
         {monthName(now.getMonth() + 1)} {now.getFullYear()}
       </p>
@@ -97,17 +102,21 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
             color: data?.netProfit != null && data.netProfit < 0 ? 'var(--danger)' : 'var(--success)',
           }}
         >
-          {data?.netProfit == null ? '...' : formatMoney(data.netProfit)}
+          {data?.netProfit == null ? <Skeleton width={120} height={34} /> : formatMoney(data.netProfit)}
         </span>
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          הכנסות {data?.income == null ? '...' : formatMoney(data.income)} · הוצאות {data?.expenses == null ? '...' : formatMoney(data.expenses)}
+          {data?.income == null || data?.expenses == null ? (
+            <Skeleton width={200} height={13} style={{ marginTop: 4 }} />
+          ) : (
+            `הכנסות ${formatMoney(data.income)} · הוצאות ${formatMoney(data.expenses)}`
+          )}
         </span>
       </button>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
         <button type="button" onClick={() => navigate('/orders')} style={{ ...cardStyle, ...tileStyle }}>
           <span style={tileLabelStyle}>הזמנות פעילות</span>
-          <span style={tileValueStyle}>{activeCount === null ? '...' : activeCount}</span>
+          <span style={tileValueStyle}>{activeCount === null ? <Skeleton width={36} height={26} /> : activeCount}</span>
           {data && data.notStarted !== null && (
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               {data.inProgress} בהכנה · {data.ready} מוכנות
@@ -116,7 +125,7 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
         </button>
         <button type="button" onClick={() => navigate('/tasks')} style={{ ...cardStyle, ...tileStyle }}>
           <span style={tileLabelStyle}>משימות פתוחות</span>
-          <span style={tileValueStyle}>{data?.openTasks == null ? '...' : data.openTasks}</span>
+          <span style={tileValueStyle}>{data?.openTasks == null ? <Skeleton width={36} height={26} /> : data.openTasks}</span>
         </button>
       </div>
 

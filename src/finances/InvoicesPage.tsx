@@ -6,6 +6,7 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
 import { FilterTabs } from '../shell/FilterTabs'
 import { Modal } from '../shell/Modal'
+import { SkeletonCards } from '../shell/Skeleton'
 import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
 import { InvoiceSection } from './InvoiceSection'
@@ -177,7 +178,7 @@ export function InvoicesPage() {
       />
 
       {error && <p style={errorTextStyle}>שגיאה: {error}</p>}
-      {!data && !error && range && <p style={mutedTextStyle}>טוען...</p>}
+      {!data && !error && range && <SkeletonCards count={4} label="טוען" />}
       {!range && <p style={mutedTextStyle}>בחרי חודש התחלה וחודש סיום.</p>}
 
       {data && visible.length === 0 && (

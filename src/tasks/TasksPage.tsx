@@ -8,6 +8,7 @@ import { ConfirmInline } from '../orders/ConfirmInline'
 import { STATUS_LABELS, statusPillStyle } from '../orders/status'
 import type { OrderStatus } from '../orders/types'
 import { FilterTabs } from '../shell/FilterTabs'
+import { SkeletonCards } from '../shell/Skeleton'
 import { navigate } from '../shell/useRoute'
 import { TaskForm } from './TaskForm'
 import {
@@ -88,7 +89,7 @@ export function TasksPage() {
       <FilterTabs items={FILTERS} value={filter} onChange={setFilter} ariaLabel="סטטוס משימות" style={{ marginBottom: 12 }} />
 
       {error && <p style={errorTextStyle}>שגיאה בטעינת המשימות: {error}</p>}
-      {!tasks && !error && <p style={mutedTextStyle}>טוען משימות...</p>}
+      {!tasks && !error && <SkeletonCards label="טוען משימות" />}
 
       {tasks && visible.length === 0 && (
         <div style={{ ...cardStyle, textAlign: 'center', padding: '28px 16px' }}>

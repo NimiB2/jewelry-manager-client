@@ -3,6 +3,8 @@ import { apiJson } from '../api'
 import { PlusIcon, SearchIcon } from '../icons/NavIcons'
 import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
+import { SearchButton } from '../search/SearchButton'
+import { SkeletonCards } from '../shell/Skeleton'
 import { navigate } from '../shell/useRoute'
 import { ProductCard } from './ProductCard'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from './productStyles'
@@ -99,7 +101,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
     return (
       <div className="screen">
         <h1>מוצרים</h1>
-        <p style={mutedTextStyle}>טוען מוצרים...</p>
+        <SkeletonCards count={4} label="טוען מוצרים" />
       </div>
     )
   }
@@ -108,7 +110,8 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
     <div className="screen">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>{collectionName ?? 'מוצרים'}</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <SearchButton />
           <button type="button" onClick={() => navigate('/shopify')} style={importButtonStyle}>
             ייבוא מהחנות
           </button>
