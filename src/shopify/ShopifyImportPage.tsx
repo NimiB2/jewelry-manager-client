@@ -4,6 +4,7 @@ import { ProductPicker } from '../orders/ProductPicker'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import type { ShopifyVariant } from '../products/types'
+import { FilterTabs } from '../shell/FilterTabs'
 import { navigate } from '../shell/useRoute'
 
 type ShopifyStatus = { catalogConfigured: boolean; ordersConfigured: boolean }
@@ -213,13 +214,7 @@ export function ShopifyImportPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            {FILTERS.map((f) => (
-              <button key={f.value} type="button" onClick={() => setFilter(f.value)} aria-pressed={filter === f.value} style={chipStyle(filter === f.value)}>
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <FilterTabs items={FILTERS} value={filter} onChange={setFilter} ariaLabel="סינון מוצרים" style={{ marginBottom: 12 }} />
 
           {visible.length === 0 && (
             <div style={{ ...cardStyle, textAlign: 'center', padding: '24px 16px' }}>
@@ -323,19 +318,6 @@ function ConfirmRow({ text, busy, onYes, onNo }: { text: string; busy: boolean; 
       </button>
     </div>
   )
-}
-
-function chipStyle(active: boolean): React.CSSProperties {
-  return {
-    minHeight: 36,
-    padding: '0 14px',
-    borderRadius: 18,
-    border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent-bg)' : 'var(--surface)',
-    color: active ? 'var(--accent)' : 'var(--text)',
-    fontSize: 15,
-    cursor: 'pointer',
-  }
 }
 
 const variantChipStyle: React.CSSProperties = {

@@ -4,12 +4,13 @@ import { formatOrderDate } from '../orders/dates'
 import { Toast } from '../orders/Toast'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
+import { FilterTabs } from '../shell/FilterTabs'
 import { Modal } from '../shell/Modal'
 import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
 import { InvoiceSection } from './InvoiceSection'
 import { attachInvoice, downloadFile } from './invoiceApi'
-import { chipStyle, smallPillStyle } from './styles'
+import { smallPillStyle } from './styles'
 import type { FinanceItem, FinanceList } from './types'
 
 type Preset = 'last2' | 'month' | 'year' | 'lastYear' | 'custom'
@@ -119,19 +120,7 @@ export function InvoicesPage() {
       <SubNav items={subItemsOf('finances', { page: 'finances', view: 'invoices' })} />
 
       <div style={{ ...cardStyle, marginBottom: 8, padding: '10px 12px' }}>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
-          {PRESETS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              aria-pressed={preset === p.value}
-              onClick={() => setPreset(p.value)}
-              style={{ ...chipStyle(preset === p.value), flex: '0 0 auto', minHeight: 34, fontSize: 14 }}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <FilterTabs items={PRESETS} value={preset} onChange={setPreset} ariaLabel="תקופה" />
 
         {preset === 'custom' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
@@ -175,19 +164,17 @@ export function InvoicesPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-        {(
-          [
-            ['all', 'כל ההוצאות'],
-            ['missing', `חסרות חשבונית${missing > 0 ? ` (${missing})` : ''}`],
-            ['has', 'עם חשבונית'],
-          ] as [Filter, string][]
-        ).map(([value, label]) => (
-          <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} style={{ ...chipStyle(filter === value), minHeight: 34, fontSize: 14, minWidth: 0, padding: '0 12px' }}>
-            {label}
-          </button>
-        ))}
-      </div>
+      <FilterTabs
+        items={[
+          { value: 'all', label: 'כל ההוצאות' },
+          { value: 'missing', label: 'חסרות חשבונית', count: missing > 0 ? missing : undefined },
+          { value: 'has', label: 'עם חשבונית' },
+        ]}
+        value={filter}
+        onChange={setFilter}
+        ariaLabel="סינון חשבוניות"
+        style={{ marginBottom: 8 }}
+      />
 
       {error && <p style={errorTextStyle}>שגיאה: {error}</p>}
       {!data && !error && range && <p style={mutedTextStyle}>טוען...</p>}

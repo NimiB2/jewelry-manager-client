@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiJson } from '../api'
-import { chipStyle } from '../finances/styles'
 import { PlusIcon } from '../icons/NavIcons'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
 import { Toast } from '../orders/Toast'
@@ -8,6 +7,7 @@ import { Modal } from '../shell/Modal'
 import { ConfirmInline } from '../orders/ConfirmInline'
 import { STATUS_LABELS, statusPillStyle } from '../orders/status'
 import type { OrderStatus } from '../orders/types'
+import { FilterTabs } from '../shell/FilterTabs'
 import { navigate } from '../shell/useRoute'
 import { TaskForm } from './TaskForm'
 import {
@@ -85,13 +85,7 @@ export function TasksPage() {
 
       {toast && <Toast lines={toast} onDone={() => setToast(null)} />}
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {FILTERS.map((f) => (
-          <button key={f.value} type="button" aria-pressed={filter === f.value} onClick={() => setFilter(f.value)} style={chipStyle(filter === f.value)}>
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <FilterTabs items={FILTERS} value={filter} onChange={setFilter} ariaLabel="סטטוס משימות" style={{ marginBottom: 12 }} />
 
       {error && <p style={errorTextStyle}>שגיאה בטעינת המשימות: {error}</p>}
       {!tasks && !error && <p style={mutedTextStyle}>טוען משימות...</p>}

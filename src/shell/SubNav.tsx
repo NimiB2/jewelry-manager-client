@@ -16,10 +16,12 @@ export function SubNav({ items }: { items: SubItem[] }) {
   )
 }
 
+// Same look as FilterTabs: plain text with an underline on the current one.
 const barStyle: React.CSSProperties = {
   display: 'flex',
-  gap: 6,
+  gap: 4,
   marginBottom: 12,
+  borderBottom: '1px solid var(--border)',
   overflowX: 'auto',
   scrollbarWidth: 'none',
 }
@@ -27,14 +29,16 @@ const barStyle: React.CSSProperties = {
 function linkStyle(active: boolean): React.CSSProperties {
   return {
     flex: '0 0 auto',
-    padding: '8px 14px',
-    borderRadius: 18,
+    display: 'flex',
+    alignItems: 'center',
+    minHeight: 40,
+    padding: '0 14px',
+    marginBottom: -1,
     fontSize: 15,
     textDecoration: 'none',
     whiteSpace: 'nowrap',
-    border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent-bg)' : 'var(--surface)',
-    color: active ? 'var(--accent)' : 'var(--text)',
+    borderBottom: `2px solid ${active ? 'var(--text)' : 'transparent'}`,
+    color: active ? 'var(--text)' : 'var(--text-muted)',
     fontWeight: active ? 600 : 400,
   }
 }

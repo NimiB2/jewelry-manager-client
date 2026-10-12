@@ -5,12 +5,13 @@ import { formatOrderDate, monthName, periodRange } from '../orders/dates'
 import { Toast } from '../orders/Toast'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
+import { FilterTabs, tabStyle } from '../shell/FilterTabs'
 import { Modal } from '../shell/Modal'
 import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
 import { navigate } from '../shell/useRoute'
 import { FinanceForm } from './FinanceForm'
-import { chipStyle, selectStyle, smallPillStyle } from './styles'
+import { selectStyle, smallPillStyle } from './styles'
 import { INCOME_CATEGORY_LABELS, type FinanceItem, type FinanceList, type TypeFilter } from './types'
 
 type ExpenseResponse = {
@@ -206,14 +207,18 @@ export function FinancesPage() {
 
         {pickerOpen && (
           <div style={{ marginTop: 8 }}>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-              <button type="button" aria-pressed={!customRange} onClick={() => setCustomRange(false)} style={{ ...chipStyle(!customRange), minHeight: 32, fontSize: 14 }}>
-                חודש / שנה
-              </button>
-              <button type="button" aria-pressed={customRange} onClick={() => setCustomRange(true)} style={{ ...chipStyle(customRange), minHeight: 32, fontSize: 14 }}>
-                טווח תאריכים
-              </button>
-              <button type="button" onClick={showThisMonth} style={{ ...chipStyle(false), minHeight: 32, fontSize: 14, marginInlineStart: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 8, borderBottom: '1px solid var(--border)' }}>
+              <FilterTabs
+                items={[
+                  { value: 'period', label: 'חודש / שנה' },
+                  { value: 'range', label: 'טווח תאריכים' },
+                ]}
+                value={customRange ? 'range' : 'period'}
+                onChange={(mode) => setCustomRange(mode === 'range')}
+                ariaLabel="סוג תקופה"
+                style={{ borderBottom: 'none' }}
+              />
+              <button type="button" onClick={showThisMonth} style={{ ...tabStyle(false), color: 'var(--accent)', marginInlineStart: 'auto' }}>
                 החודש
               </button>
             </div>
@@ -263,20 +268,18 @@ export function FinancesPage() {
         </div>
       )}
 
-      <div style={filterBarStyle} role="group" aria-label="סינון">
-        {TYPE_FILTERS.map((f) => (
-          <button key={f.value} type="button" aria-pressed={type === f.value} onClick={() => setType(f.value)} style={segmentStyle(type === f.value)}>
-            {f.label}
-          </button>
-        ))}
-        <span style={dividerStyle} aria-hidden="true" />
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 8, borderBottom: '1px solid var(--border)' }}>
+        <FilterTabs items={TYPE_FILTERS} value={type} onChange={setType} ariaLabel="סינון" style={{ borderBottom: 'none' }} />
         <button
           type="button"
           aria-pressed={invoice === 'missing'}
           onClick={() => setInvoice(invoice === 'missing' ? 'all' : 'missing')}
-          style={segmentStyle(invoice === 'missing', true)}
+          style={{ ...tabStyle(invoice === 'missing', true), marginInlineStart: 'auto' }}
         >
-          בלי חשבונית{summary && summary.expensesWithoutReceipt > 0 ? ` (${summary.expensesWithoutReceipt})` : ''}
+          בלי חשבונית
+          {summary && summary.expensesWithoutReceipt > 0 && (
+            <span style={{ marginInlineStart: 6, fontSize: 13, fontWeight: 400 }}>{summary.expensesWithoutReceipt}</span>
+          )}
         </button>
       </div>
 
@@ -420,42 +423,4 @@ function Figure({ label, value, color, strong }: { label: string; value: string;
       </div>
     </div>
   )
-}
-
-// One scrollable row: type (all / income / expenses), a divider, then the missing-invoice filter.
-const filterBarStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 2,
-  padding: 3,
-  marginBottom: 8,
-  borderRadius: 11,
-  background: 'var(--border)',
-  overflowX: 'auto',
-  scrollbarWidth: 'none',
-}
-
-const dividerStyle: React.CSSProperties = {
-  flexShrink: 0,
-  width: 1,
-  alignSelf: 'stretch',
-  margin: '4px 2px',
-  background: 'var(--chevron)',
-}
-
-function segmentStyle(active: boolean, warn = false): React.CSSProperties {
-  return {
-    flex: '1 0 auto',
-    minHeight: 34,
-    padding: '0 12px',
-    border: 'none',
-    borderRadius: 8,
-    whiteSpace: 'nowrap',
-    fontSize: 14,
-    fontWeight: active ? 700 : 500,
-    cursor: 'pointer',
-    background: active ? 'var(--surface)' : 'transparent',
-    color: active ? (warn ? 'var(--danger)' : 'var(--accent)') : 'var(--text)',
-    boxShadow: active ? '0 1px 3px rgba(0, 0, 0, 0.15)' : 'none',
-  }
 }

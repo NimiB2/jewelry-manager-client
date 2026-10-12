@@ -3,6 +3,7 @@ import { apiJson } from '../api'
 import { PlusIcon, SearchIcon } from '../icons/NavIcons'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from '../products/productStyles'
+import { FilterTabs } from '../shell/FilterTabs'
 import { navigate } from '../shell/useRoute'
 import { monthName, periodRange } from './dates'
 import { completionMessage } from './celebrate'
@@ -124,19 +125,13 @@ export function OrdersPage() {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-        {STATUS_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => setStatus(f.value)}
-            aria-pressed={status === f.value}
-            style={chipStyle(status === f.value)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <FilterTabs
+        items={STATUS_FILTERS.map((f) => ({ ...f, count: f.value === status ? data?.summary.count : undefined }))}
+        value={status}
+        onChange={setStatus}
+        ariaLabel="סטטוס הזמנות"
+        style={{ marginBottom: 8 }}
+      />
 
       <div style={{ ...cardStyle, marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6 }}>
@@ -211,20 +206,6 @@ export function OrdersPage() {
   )
 }
 
-function chipStyle(active: boolean): React.CSSProperties {
-  return {
-    minHeight: 36,
-    minWidth: 64,
-    padding: '0 14px',
-    borderRadius: 18,
-    border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent-bg)' : 'var(--surface)',
-    color: active ? 'var(--accent)' : 'var(--text)',
-    fontSize: 15,
-    cursor: 'pointer',
-  }
-}
-
 const searchIconStyle: React.CSSProperties = {
   position: 'absolute',
   insetInlineStart: 12,
@@ -244,10 +225,9 @@ const selectStyle: React.CSSProperties = {
 
 const thisMonthStyle: React.CSSProperties = {
   minHeight: 40,
-  padding: '0 14px',
-  border: '1px solid var(--border)',
-  borderRadius: 8,
-  background: 'var(--surface)',
+  padding: '0 8px',
+  border: 'none',
+  background: 'transparent',
   color: 'var(--accent)',
   fontSize: 14,
   fontWeight: 600,
