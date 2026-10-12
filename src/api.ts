@@ -20,18 +20,40 @@ export function apiFetch(path: string, init: RequestInit = {}): Promise<Response
   return request
 }
 
+const RETRY_DELAYS_MS = [1500, 3000, 6000]
+
 async function send(path: string, init: RequestInit, isRead: boolean): Promise<Response> {
   if (isRead && pendingWrites.size > 0) await Promise.allSettled([...pendingWrites])
 
   const token = await auth.currentUser?.getIdToken()
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const options: RequestInit = {
     ...init,
     headers: {
       ...init.headers,
       Authorization: token ? `Bearer ${token}` : '',
     },
-  })
+  }
+
+  // A read that cannot reach the server at all (typically for a minute after an update, while it restarts)
+  // is tried again a few times by itself. A write is never repeated automatically: it might have gone through.
+  let response: Response | null = null
+  for (let attempt = 0; response === null; attempt++) {
+    try {
+      response = await fetch(`${API_URL}${path}`, options)
+    } catch {
+      if (isRead && attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]))
+        continue
+      }
+
+      throw new ApiError(
+        isRead ? 'אין חיבור לשרת כרגע. אם זה קורה אחרי עדכון, כדאי לנסות שוב בעוד דקה' : 'אין חיבור לשרת, והפעולה לא נשמרה. נסי שוב',
+        0,
+        'NETWORK',
+      )
+    }
+  }
 
   if (response.status === 401) {
     // Server no longer recognizes this session — send the user back to sign-in.
@@ -70,6 +92,12 @@ export async function apiJson<T>(path: string, init: RequestInit = {}): Promise<
     } catch {
       // keep the status-code message
     }
+
+    // The server's own words for "something broke" are English and say nothing; say it plainly instead.
+    if (response.status >= 500 || message === 'An unexpected error occurred') {
+      message = 'משהו השתבש בשרת. כדאי לנסות שוב, ואם זה חוזר להגיד לי'
+    }
+
     throw new ApiError(message, response.status, code)
   }
 
