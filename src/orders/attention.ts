@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiJson } from '../api'
 
 // What needs her eye: orders waiting for approval, plus orders the store cancelled, deleted or changed.
-export type Attention = { pending: number; alerts: number; total: number }
+export type Attention = { pending: number; alerts: number; messagesToSend: number; total: number }
 
 const CHANGED = 'orders-attention-changed'
 
