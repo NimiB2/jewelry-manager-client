@@ -4,7 +4,33 @@ import { errorTextStyle, mutedTextStyle, secondaryButtonStyle } from '../product
 import { notifyOrdersChanged } from './attention'
 import type { Order } from './types'
 
-type CustomerMessagePanelProps = {
+type PillProps = {
+  order: Order
+  open: boolean
+  onClick: () => void
+}
+
+// The same kind of mark as "receipt sent": green once the order summary went to the customer, a red dashed
+// reminder while it did not. Tapping it opens the message, ready to send.
+export function WhatsAppPill({ order, open, onClick }: PillProps) {
+  if (!order.customerMessage) return null
+
+  const sent = !!order.customerNotifiedAt
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      title={sent ? 'ההודעה נשלחה ללקוחה. לחיצה פותחת אותה' : 'ההודעה עוד לא נשלחה. לחיצה פותחת אותה לשליחה'}
+      style={sent ? sentStyle : notSentStyle}
+    >
+      {sent ? '☑ וואטסאפ נשלח' : '☐ וואטסאפ לא נשלח · לשליחה'}
+    </button>
+  )
+}
+
+type BodyProps = {
   order: Order
   // Called after the "sent" mark changed, so the list can reload.
   onChanged: () => void
@@ -12,9 +38,8 @@ type CustomerMessagePanelProps = {
 
 // The order summary she sends the customer right after she orders. The text is ready (the real details
 // are filled in); she opens it in WhatsApp with one tap, already addressed to the customer's number,
-// and only has to press send. Marking it sent keeps track of who still has not got hers.
-export function CustomerMessagePanel({ order, onChanged }: CustomerMessagePanelProps) {
-  const [open, setOpen] = useState(false)
+// and only has to press send. The number is kept only until it is marked sent, then it is erased.
+export function CustomerMessageBody({ order, onChanged }: BodyProps) {
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState<'message' | 'phone' | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -54,71 +79,99 @@ export function CustomerMessagePanel({ order, onChanged }: CustomerMessagePanelP
   }
 
   return (
-    <div style={{ marginTop: 10 }}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        style={{ ...secondaryButtonStyle, minHeight: 36, width: '100%', textAlign: 'right' }}
-      >
-        {sent ? '✓ ההודעה ללקוחה נשלחה' : 'הודעה ללקוחה (עוד לא נשלחה)'} {open ? '▴' : '▾'}
-      </button>
+    <div style={panelStyle}>
+      <pre dir="rtl" style={messageStyle}>
+        {order.customerMessage}
+      </pre>
 
-      {open && (
-        <div style={panelStyle}>
-          <pre dir="rtl" style={messageStyle}>
-            {order.customerMessage}
-          </pre>
-
-          <div style={{ ...mutedTextStyle, margin: '8px 0' }}>
+      <div style={{ ...mutedTextStyle, margin: '8px 0' }}>
+        {order.customerPhone ? (
+          <>
             מספר הלקוחה:{' '}
-            {order.customerPhone ? (
-              <b dir="ltr" style={{ color: 'var(--text)' }}>
-                {order.customerPhone}
-              </b>
-            ) : (
-              'אין מספר טלפון בהזמנה'
-            )}
-          </div>
+            <b dir="ltr" style={{ color: 'var(--text)' }}>
+              {order.customerPhone}
+            </b>
+          </>
+        ) : sent ? (
+          'המספר נמחק מהמערכת אחרי השליחה.'
+        ) : (
+          'אין מספר טלפון בהזמנה'
+        )}
+      </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {link && (
-              <a href={link} target="_blank" rel="noreferrer" style={whatsappStyle}>
-                פתיחה בוואטסאפ ללקוחה
-              </a>
-            )}
-            <button
-              type="button"
-              style={{ ...secondaryButtonStyle, minHeight: 40 }}
-              onClick={() => void copy('message', order.customerMessage ?? '')}
-            >
-              {copied === 'message' ? 'הועתק ✓' : 'העתקת ההודעה'}
-            </button>
-            {order.customerPhone && (
-              <button
-                type="button"
-                style={{ ...secondaryButtonStyle, minHeight: 40 }}
-                onClick={() => void copy('phone', order.customerPhone ?? '')}
-              >
-                {copied === 'phone' ? 'הועתק ✓' : 'העתקת המספר'}
-              </button>
-            )}
-          </div>
-
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {link && !sent && (
+          <a href={link} target="_blank" rel="noreferrer" style={whatsappStyle}>
+            פתיחה בוואטסאפ ללקוחה
+          </a>
+        )}
+        <button
+          type="button"
+          style={{ ...secondaryButtonStyle, minHeight: 40 }}
+          onClick={() => void copy('message', order.customerMessage ?? '')}
+        >
+          {copied === 'message' ? 'הועתק ✓' : 'העתקת ההודעה'}
+        </button>
+        {order.customerPhone && (
           <button
             type="button"
-            disabled={busy}
-            onClick={() => void markSent(!sent)}
-            style={{ ...secondaryButtonStyle, minHeight: 40, width: '100%', marginTop: 8 }}
+            style={{ ...secondaryButtonStyle, minHeight: 40 }}
+            onClick={() => void copy('phone', order.customerPhone ?? '')}
           >
-            {sent ? 'ביטול הסימון "נשלחה"' : 'סימון: ההודעה נשלחה ללקוחה'}
+            {copied === 'phone' ? 'הועתק ✓' : 'העתקת המספר'}
           </button>
+        )}
+      </div>
 
-          {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
-        </div>
-      )}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void markSent(!sent)}
+        style={{ ...secondaryButtonStyle, minHeight: 40, width: '100%', marginTop: 8 }}
+      >
+        {sent ? 'ביטול הסימון "נשלח"' : 'סימון: ההודעה נשלחה ללקוחה (המספר יימחק)'}
+      </button>
+
+      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
     </div>
   )
+}
+
+// Pill and message together, for the cards that have no status row of their own (the waiting orders).
+export function CustomerMessagePanel({ order, onChanged }: BodyProps) {
+  const [open, setOpen] = useState(false)
+  if (!order.customerMessage) return null
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <WhatsAppPill order={order} open={open} onClick={() => setOpen((v) => !v)} />
+      {open && <CustomerMessageBody order={order} onChanged={onChanged} />}
+    </div>
+  )
+}
+
+const pillBase: React.CSSProperties = {
+  minHeight: 26,
+  padding: '1px 10px',
+  borderRadius: 10,
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: 'pointer',
+  border: '1px solid transparent',
+}
+
+const sentStyle: React.CSSProperties = {
+  ...pillBase,
+  background: 'var(--success-bg)',
+  color: 'var(--success)',
+}
+
+const notSentStyle: React.CSSProperties = {
+  ...pillBase,
+  fontWeight: 500,
+  background: 'var(--danger-bg)',
+  color: 'var(--danger)',
+  border: '1px dashed var(--danger)',
 }
 
 const panelStyle: React.CSSProperties = {

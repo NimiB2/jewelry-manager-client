@@ -12,9 +12,31 @@ const icon = {
   'aria-hidden': true,
 }
 
-// Where the order came from. An order from the store says so in words ("הזמנה מהשופיפי"), because she
-// treats those differently (the store already sent the receipt, and they wait for her approval);
-// a hand-typed one says "הזמנה ידנית" in gray.
+// Shopify's green, and a darker shade of it for text that has to be readable on a light background.
+const SHOPIFY_GREEN = '#95BF47'
+const SHOPIFY_DARK = '#4F7A1E'
+
+// The Shopify mark: its green shopping bag with the "S" in it.
+function ShopifyMark() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5.2 7.5h13.6l1 13.2a.8.8 0 0 1-.8.8H5a.8.8 0 0 1-.8-.8l1-13.2z" fill={SHOPIFY_GREEN} />
+      <path
+        d="M8.8 7.5a3.2 3.2 0 0 1 6.4 0"
+        fill="none"
+        stroke={SHOPIFY_DARK}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
+      <text x="12" y="18" textAnchor="middle" fontSize="9.5" fontWeight="700" fontFamily="Arial, sans-serif" fill="#fff">
+        S
+      </text>
+    </svg>
+  )
+}
+
+// Where the order came from, in words. An order from the store carries Shopify's mark and colour, because
+// she treats those differently (the store already sent the receipt, and they wait for her approval).
 export function SourceBadge({ source }: { source: OrderSource }) {
   if (source === 'SHOPIFY') {
     return (
@@ -22,20 +44,17 @@ export function SourceBadge({ source }: { source: OrderSource }) {
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 4,
-          padding: '1px 8px',
+          gap: 5,
+          padding: '1px 8px 1px 8px',
           borderRadius: 8,
-          background: 'var(--accent-bg)',
-          color: 'var(--accent)',
+          background: 'rgba(149, 191, 71, 0.18)',
+          color: SHOPIFY_DARK,
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 700,
           verticalAlign: 'middle',
         }}
       >
-        <svg {...icon}>
-          <path d="M6 7h12l1 13H5L6 7z" />
-          <path d="M9 7a3 3 0 0 1 6 0" />
-        </svg>
+        <ShopifyMark />
         הזמנה מהשופיפי
       </span>
     )

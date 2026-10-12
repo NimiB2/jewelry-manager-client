@@ -3,7 +3,7 @@ import { apiJson } from '../api'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle } from '../products/productStyles'
 import { ConfirmInline } from './ConfirmInline'
-import { CustomerMessagePanel } from './CustomerMessagePanel'
+import { CustomerMessageBody, WhatsAppPill } from './CustomerMessagePanel'
 import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
 import { StageChips } from './StageChips'
@@ -39,6 +39,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
   const [choosingStatus, setChoosingStatus] = useState(false)
   const [confirmingComplete, setConfirmingComplete] = useState(false)
   const [showItems, setShowItems] = useState(false)
+  const [showMessage, setShowMessage] = useState(false)
 
   async function run<T>(action: () => Promise<T>): Promise<T | null> {
     setBusy(true)
@@ -184,6 +185,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           {order.receiptSent ? '☑ קבלה נשלחה' : '☐ קבלה לא נשלחה'}
           {receiptBlocksEnd ? ' · חובה לסיום' : ''}
         </button>
+        <WhatsAppPill order={order} open={showMessage} onClick={() => setShowMessage((v) => !v)} />
       </div>
 
       {choosingStatus && (
@@ -249,7 +251,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
         </div>
       )}
 
-      <CustomerMessagePanel order={order} onChanged={onChanged} />
+      {showMessage && <CustomerMessageBody order={order} onChanged={onChanged} />}
 
       {error && (
         <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>
