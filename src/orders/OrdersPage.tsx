@@ -188,7 +188,7 @@ export function OrdersPage() {
       )}
 
       {data && data.orders.length > 0 && (
-        <div className="card-list" style={{ paddingBottom: 90 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
           {data.orders.map((order) => (
             <OrderCard
               key={order.id}
