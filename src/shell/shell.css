@@ -197,6 +197,13 @@
   min-height: 100dvh;
 }
 
+/* Desktop: the phone-width column leaves most of the screen empty, so let content breathe. */
+@media (min-width: 900px) {
+  .screen {
+    max-width: 1100px;
+  }
+}
+
 /* Floating add button; the extra bottom space on lists keeps it from hiding the last card. */
 .fab {
   position: fixed;
