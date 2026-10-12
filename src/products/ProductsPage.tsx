@@ -289,14 +289,15 @@ const filterStyle: React.CSSProperties = {
   fontSize: 14,
 }
 
+// A rarely needed tool, so it is a quiet text link and not a button next to the main action.
 const importButtonStyle: React.CSSProperties = {
   minHeight: 40,
-  padding: '0 12px',
-  border: '1px solid var(--border)',
-  borderRadius: 10,
-  background: 'var(--surface)',
-  color: 'var(--accent)',
-  fontSize: 14,
-  fontWeight: 600,
+  padding: '0 6px',
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--text-muted)',
+  fontSize: 13,
+  fontWeight: 400,
+  textDecoration: 'underline',
   cursor: 'pointer',
 }
