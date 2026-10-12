@@ -7,6 +7,7 @@ import { ProductAdditionsForm, type ProductAdditionType } from './ProductAdditio
 import { TestOrderPrefixForm } from './TestOrderPrefixForm'
 import { ExpenseTypesForm } from './ExpenseTypesForm'
 import { ExpenseSuppliersForm } from './ExpenseSuppliersForm'
+import { NotificationsCard } from './NotificationsCard'
 
 type PersonalSettingsPageProps = {
   preparationStages: string[]
@@ -27,6 +28,7 @@ export function PersonalSettingsPage({
 }: PersonalSettingsPageProps) {
   return (
     <>
+      <NotificationsCard />
       <ConversionRatiosTable />
       <CollectionsForm />
       <PreparationStagesForm initialStages={preparationStages} />
