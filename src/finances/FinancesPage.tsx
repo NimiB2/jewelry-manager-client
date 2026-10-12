@@ -51,7 +51,6 @@ export function FinancesPage() {
   const [toast, setToast] = useState<string[] | null>(null)
 
   // The period is a year and/or month, or a free from-to range (opened from the period bar).
-  const [pickerOpen, setPickerOpen] = useState(false)
   const [customRange, setCustomRange] = useState(false)
   const [year, setYear] = useState<number | null>(now.getFullYear())
   const [month, setMonth] = useState<number | null>(now.getMonth() + 1)
@@ -148,13 +147,6 @@ export function FinancesPage() {
   }
 
   const yearOptions = [...new Set([...years, ...(year !== null ? [year] : [now.getFullYear()])])].sort((a, b) => b - a)
-  const periodTitle = customRange
-    ? 'טווח תאריכים'
-    : year === null
-      ? 'כל התקופות'
-      : month === null
-        ? `שנת ${year}`
-        : `${monthName(month)} ${year}`
   const summary = data?.summary
 
   return (
@@ -192,74 +184,76 @@ export function FinancesPage() {
       {toast && <Toast lines={toast} onDone={() => setToast(null)} />}
 
       <div style={periodBarStyle}>
-        <div style={stepperStyle}>
-          <button type="button" onClick={() => step(-1)} disabled={customRange || year === null} style={stepButtonStyle}>
-            → {month === null ? 'שנה קודמת' : 'חודש קודם'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPickerOpen((v) => !v)}
-            aria-expanded={pickerOpen}
-            title="שינוי התקופה"
-            style={periodTitleStyle}
-          >
-            {periodTitle} {pickerOpen ? '▴' : '▾'}
-          </button>
-          <button type="button" onClick={() => step(1)} disabled={customRange || year === null} style={stepButtonStyle}>
-            {month === null ? 'שנה הבאה' : 'חודש הבא'} ←
-          </button>
-        </div>
-
-        {pickerOpen && (
-          <div style={{ marginTop: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 8, borderBottom: '1px solid var(--border)' }}>
-              <FilterTabs
-                items={[
-                  { value: 'period', label: 'חודש / שנה' },
-                  { value: 'range', label: 'טווח תאריכים' },
-                ]}
-                value={customRange ? 'range' : 'period'}
-                onChange={(mode) => setCustomRange(mode === 'range')}
-                ariaLabel="סוג תקופה"
-                style={{ borderBottom: 'none' }}
-              />
-              <button type="button" onClick={showThisMonth} style={{ ...tabStyle(false), color: 'var(--accent)', marginInlineStart: 'auto' }}>
-                החודש
+        {customRange ? (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <label>
+                <span style={mutedTextStyle}>מתאריך</span>
+                <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={selectStyle} />
+              </label>
+              <label>
+                <span style={mutedTextStyle}>עד תאריך</span>
+                <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={selectStyle} />
+              </label>
+            </div>
+            <div style={linksRowStyle}>
+              <button type="button" onClick={() => setCustomRange(false)} style={periodLinkStyle}>
+                חזרה לחודש / שנה
+              </button>
+              <button type="button" onClick={showThisMonth} style={periodLinkStyle}>
+                חזרה לחודש הנוכחי
               </button>
             </div>
-
-            {customRange ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                <label>
-                  <span style={mutedTextStyle}>מתאריך</span>
-                  <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={selectStyle} />
-                </label>
-                <label>
-                  <span style={mutedTextStyle}>עד תאריך</span>
-                  <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={selectStyle} />
-                </label>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                <select value={year ?? ''} onChange={(e) => pickYear(e.target.value)} aria-label="שנה" style={selectStyle}>
-                  <option value="">כל השנים</option>
-                  {yearOptions.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-                <select value={month ?? ''} onChange={(e) => pickMonth(e.target.value)} aria-label="חודש" style={selectStyle}>
-                  <option value="">{year === null ? 'כל החודשים' : 'כל השנה'}</option>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                    <option key={m} value={m}>
-                      {monthName(m)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
+          </>
+        ) : (
+          <>
+            <div style={periodRowStyle}>
+              <button
+                type="button"
+                onClick={() => step(-1)}
+                disabled={year === null}
+                aria-label={month === null ? 'שנה קודמת' : 'חודש קודם'}
+                title={month === null ? 'שנה קודמת' : 'חודש קודם'}
+                style={arrowStyle}
+              >
+                ›
+              </button>
+              <select value={month ?? ''} onChange={(e) => pickMonth(e.target.value)} aria-label="חודש" style={{ ...periodSelectStyle, flex: 1 }}>
+                <option value="">{year === null ? 'כל החודשים' : 'כל השנה'}</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <option key={m} value={m}>
+                    {monthName(m)}
+                  </option>
+                ))}
+              </select>
+              <select value={year ?? ''} onChange={(e) => pickYear(e.target.value)} aria-label="שנה" style={{ ...periodSelectStyle, width: 104 }}>
+                <option value="">כל השנים</option>
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => step(1)}
+                disabled={year === null}
+                aria-label={month === null ? 'שנה הבאה' : 'חודש הבא'}
+                title={month === null ? 'שנה הבאה' : 'חודש הבא'}
+                style={arrowStyle}
+              >
+                ‹
+              </button>
+            </div>
+            <div style={linksRowStyle}>
+              <button type="button" onClick={() => setCustomRange(true)} style={periodLinkStyle}>
+                טווח תאריכים אחר
+              </button>
+              <button type="button" onClick={showThisMonth} style={periodLinkStyle}>
+                חזרה לחודש הנוכחי
+              </button>
+            </div>
+          </>
         )}
       </div>
 
@@ -373,34 +367,44 @@ const periodBarStyle: React.CSSProperties = {
   marginBottom: 8,
 }
 
-const stepperStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'auto 1fr auto',
+const periodRowStyle: React.CSSProperties = {
+  display: 'flex',
   alignItems: 'center',
   gap: 6,
 }
 
-const stepButtonStyle: React.CSSProperties = {
-  minHeight: 36,
-  padding: '0 8px',
+// A month or a year is picked from a list, as before, only smaller.
+const periodSelectStyle: React.CSSProperties = {
+  ...selectStyle,
+  minHeight: 38,
+  fontSize: 15,
+}
+
+const arrowStyle: React.CSSProperties = {
+  flexShrink: 0,
+  width: 34,
+  height: 38,
   border: 'none',
   borderRadius: 8,
   background: 'transparent',
-  color: 'var(--accent)',
-  fontSize: 13,
-  fontWeight: 600,
+  color: 'var(--text-muted)',
+  fontSize: 22,
+  lineHeight: 1,
   cursor: 'pointer',
-  whiteSpace: 'nowrap',
 }
 
-const periodTitleStyle: React.CSSProperties = {
-  minHeight: 36,
+const linksRowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  marginTop: 4,
+}
+
+const periodLinkStyle: React.CSSProperties = {
   border: 'none',
-  borderRadius: 8,
-  background: 'var(--bg)',
-  color: 'var(--text)',
-  fontSize: 16,
-  fontWeight: 700,
+  background: 'transparent',
+  padding: '4px 2px',
+  color: 'var(--accent)',
+  fontSize: 12,
   cursor: 'pointer',
 }
 
