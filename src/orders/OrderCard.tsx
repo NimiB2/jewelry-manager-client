@@ -4,6 +4,7 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle } from '../products/productStyles'
 import { ConfirmInline } from './ConfirmInline'
 import { CustomerMessageBody, WhatsAppPill } from './CustomerMessagePanel'
+import { ReceiptIcon } from './pillIcons'
 import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
 import { StageChips } from './StageChips'
@@ -182,7 +183,8 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           }
           style={order.receiptSent ? receiptSentStyle : receiptMissingStyle}
         >
-          {order.receiptSent ? '☑ קבלה נשלחה' : '☐ קבלה לא נשלחה'}
+          <ReceiptIcon />
+          {order.receiptSent ? 'קבלה נשלחה ✓' : 'קבלה לא נשלחה'}
           {receiptBlocksEnd ? ' · חובה לסיום' : ''}
         </button>
         <WhatsAppPill order={order} open={showMessage} onClick={() => setShowMessage((v) => !v)} />
@@ -329,7 +331,10 @@ const notesStyle: React.CSSProperties = {
 }
 
 const pillButton: React.CSSProperties = {
-  minHeight: 26,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 5,
+  minHeight: 28,
   padding: '1px 10px',
   borderRadius: 10,
   fontSize: 12,
@@ -338,10 +343,12 @@ const pillButton: React.CSSProperties = {
   border: '1px solid transparent',
 }
 
+// The receipt is blue and the WhatsApp message is green/amber, each with its own icon, so the two marks
+// cannot be mistaken for each other.
 const receiptSentStyle: React.CSSProperties = {
   ...pillButton,
-  background: 'var(--success-bg)',
-  color: 'var(--success)',
+  background: 'var(--accent-bg)',
+  color: 'var(--accent)',
 }
 
 // A quiet warning: small red text on a faint tint, with a dashed edge that says "tap me".

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { apiJson } from '../api'
 import { errorTextStyle, mutedTextStyle, secondaryButtonStyle } from '../products/productStyles'
 import { notifyOrdersChanged } from './attention'
+import { ChatIcon } from './pillIcons'
 import type { Order } from './types'
 
 type PillProps = {
@@ -25,7 +26,8 @@ export function WhatsAppPill({ order, open, onClick }: PillProps) {
       title={sent ? 'ההודעה נשלחה ללקוחה. לחיצה פותחת אותה' : 'ההודעה עוד לא נשלחה. לחיצה פותחת אותה לשליחה'}
       style={sent ? sentStyle : notSentStyle}
     >
-      {sent ? '☑ וואטסאפ נשלח' : '☐ וואטסאפ לא נשלח · לשליחה'}
+      <ChatIcon />
+      {sent ? 'וואטסאפ נשלח ✓' : 'וואטסאפ לא נשלח · לשליחה'}
     </button>
   )
 }
@@ -154,7 +156,10 @@ export function CustomerMessagePanel({ order, onChanged }: BodyProps) {
 }
 
 const pillBase: React.CSSProperties = {
-  minHeight: 26,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 5,
+  minHeight: 28,
   padding: '1px 10px',
   borderRadius: 10,
   fontSize: 12,
@@ -163,18 +168,19 @@ const pillBase: React.CSSProperties = {
   border: '1px solid transparent',
 }
 
+// WhatsApp's own green once it went out; amber (not red, which belongs to the receipt) while it did not.
 const sentStyle: React.CSSProperties = {
   ...pillBase,
-  background: 'var(--success-bg)',
-  color: 'var(--success)',
+  background: 'rgba(37, 211, 102, 0.16)',
+  color: '#0b7a3c',
 }
 
 const notSentStyle: React.CSSProperties = {
   ...pillBase,
   fontWeight: 500,
-  background: 'var(--danger-bg)',
-  color: 'var(--danger)',
-  border: '1px dashed var(--danger)',
+  background: 'var(--warning-bg)',
+  color: 'var(--warning)',
+  border: '1px dashed var(--warning)',
 }
 
 const panelStyle: React.CSSProperties = {

@@ -19,7 +19,7 @@ const SHOPIFY_DARK = '#4F7A1E'
 // The Shopify mark: its green shopping bag with the "S" in it.
 function ShopifyMark() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true">
+    <svg width={13} height={13} viewBox="0 0 24 24" aria-hidden="true">
       <path d="M5.2 7.5h13.6l1 13.2a.8.8 0 0 1-.8.8H5a.8.8 0 0 1-.8-.8l1-13.2z" fill={SHOPIFY_GREEN} />
       <path
         d="M8.8 7.5a3.2 3.2 0 0 1 6.4 0"
@@ -44,13 +44,14 @@ export function SourceBadge({ source }: { source: OrderSource }) {
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 5,
-          padding: '1px 8px 1px 8px',
-          borderRadius: 8,
+          gap: 3,
+          padding: '0 6px',
+          borderRadius: 6,
           background: 'rgba(149, 191, 71, 0.18)',
           color: SHOPIFY_DARK,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 700,
+          lineHeight: '18px',
           verticalAlign: 'middle',
         }}
       >
@@ -65,13 +66,14 @@ export function SourceBadge({ source }: { source: OrderSource }) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
-        padding: '1px 8px',
-        borderRadius: 8,
+        gap: 3,
+        padding: '0 6px',
+        borderRadius: 6,
         background: 'var(--border)',
         color: 'var(--text)',
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 600,
+        lineHeight: '18px',
         verticalAlign: 'middle',
       }}
     >
