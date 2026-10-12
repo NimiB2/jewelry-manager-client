@@ -347,7 +347,7 @@ function FinanceRow({ item, onOpen }: { item: FinanceItem; onOpen: () => void })
               {income ? `מהזמנה #${item.orderNumber ?? ''} · עריכה בהזמנה ←` : `הזמנה #${item.orderNumber ?? ''}`}
             </span>
           )}
-          {!income && !coming && !item.hasReceipt && <span style={{ ...smallPillStyle, background: 'var(--danger-bg)', color: 'var(--danger)' }}>אין חשבונית</span>}
+          {!income && !coming && !item.hasReceipt && <span style={{ ...smallPillStyle, background: 'var(--warning-bg)', color: 'var(--warning)' }}>אין חשבונית</span>}
           {!income && !coming && item.hasReceipt && <span style={{ ...smallPillStyle, background: 'var(--success-bg)', color: 'var(--success)' }}>חשבונית ✓</span>}
         </div>
       </div>

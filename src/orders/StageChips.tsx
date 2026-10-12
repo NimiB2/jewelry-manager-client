@@ -43,9 +43,9 @@ export function StageChips({ stages, current, disabled, compact, onPick }: Stage
               fontSize: compact ? 12 : 13,
               cursor: active ? 'default' : 'pointer',
               fontWeight: active ? 700 : 400,
-              border: `1px solid ${active ? 'var(--warning)' : 'var(--border)'}`,
-              background: active ? 'var(--warning-bg)' : 'var(--surface)',
-              color: active ? 'var(--warning)' : 'var(--text)',
+              border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+              background: active ? 'var(--accent-bg)' : 'var(--surface)',
+              color: active ? 'var(--accent)' : 'var(--text)',
             }}
           >
             {stage}

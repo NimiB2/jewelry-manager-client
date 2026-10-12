@@ -9,7 +9,7 @@ import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
 import { StageChips } from './StageChips'
 import { STORE_ALERT_LABEL, hasStoreAlert } from './storeAlert'
-import { STATUS_LABELS, STATUS_ORDER, statusColors, statusPillStyle } from './status'
+import { STATUS_LABELS, STATUS_ORDER, statusColors } from './status'
 import type { Order, OrderStatus, StoreAlert } from './types'
 
 type OrderCardProps = {
@@ -94,6 +94,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
   const hasStages = stages.length > 0
   const completed = order.status === 'COMPLETED'
   const receiptBlocksEnd = order.status === 'READY' && !order.receiptSent
+  const notedItems = order.items.filter((i) => i.note && i.note.trim().length > 0)
   const receiptLocked = order.isCompleted && order.receiptSent
 
   return (
@@ -119,9 +120,11 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
             >
               {itemsCount} {itemsCount === 1 ? 'פריט' : 'פריטים'} {showItems ? '▴' : '▾'}
             </button>
-            <SourceBadge source={order.source} />
+            <SourceBadge source={order.source} compact />
             {hasStoreAlert(order) && (
-              <span style={storeAlertTagStyle}>⚠ {STORE_ALERT_LABEL[order.storeAlert as Exclude<StoreAlert, 'NONE'>]}</span>
+              <span style={storeAlertTagStyle(order.storeAlert === 'UPDATED')}>
+                ⚠ {STORE_ALERT_LABEL[order.storeAlert as Exclude<StoreAlert, 'NONE'>]}
+              </span>
             )}
           </div>
         </div>
@@ -136,6 +139,16 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           )}
         </div>
       </div>
+
+      {!showItems && notedItems.length > 0 && (
+        <ul style={noteLinesStyle}>
+          {notedItems.map((item) => (
+            <li key={item.id}>
+              <b style={{ fontWeight: 600 }}>{item.name}:</b> {item.note}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {showItems && (
         <ul style={itemsListStyle}>
@@ -157,14 +170,14 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
         </p>
       )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 8 }}>
+      <div style={checklistStyle}>
         <button
           type="button"
           onClick={() => setChoosingStatus((v) => !v)}
           disabled={busy}
           aria-expanded={choosingStatus}
           title="בחירת סטטוס אחר"
-          style={{ ...statusPillStyle(order.status), border: '1px solid transparent', minHeight: 26, cursor: 'pointer' }}
+          style={{ ...chipBase, color: statusColors(order.status).color }}
         >
           {completed ? '✓ ' : ''}
           {STATUS_LABELS[order.status]} ▾
@@ -181,7 +194,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
                 ? 'הקבלה נשלחה. לחיצה מבטלת את הסימון'
                 : 'לחיצה מסמנת שהקבלה נשלחה'
           }
-          style={order.receiptSent ? receiptSentStyle : receiptMissingStyle}
+          style={order.receiptSent ? receiptSentStyle : receiptBlocksEnd ? receiptBlockingStyle : receiptMissingStyle}
         >
           <ReceiptIcon />
           {order.receiptSent ? 'קבלה נשלחה ✓' : 'קבלה לא נשלחה'}
@@ -265,14 +278,15 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
 }
 
 // The full warning, with its dismiss button, is at the top of the orders screen; the card only carries a mark.
-const storeAlertTagStyle: React.CSSProperties = {
+// A change is amber (look at it); a cancellation or deletion is red (a problem).
+const storeAlertTagStyle = (minor: boolean): React.CSSProperties => ({
   padding: '1px 8px',
   borderRadius: 8,
-  background: 'var(--danger-bg)',
-  color: 'var(--danger)',
+  background: minor ? 'var(--warning-bg)' : 'var(--danger-bg)',
+  color: minor ? 'var(--warning)' : 'var(--danger)',
   fontSize: 12,
   fontWeight: 600,
-}
+})
 
 const completedCardStyle: React.CSSProperties = {
   borderInlineStart: '4px solid var(--success)',
@@ -330,34 +344,55 @@ const notesStyle: React.CSSProperties = {
   overflow: 'hidden',
 }
 
-const pillButton: React.CSSProperties = {
+// The marks of a card are plain words with an icon, not boxes: colour carries the state.
+const chipBase: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 5,
-  minHeight: 28,
-  padding: '1px 10px',
-  borderRadius: 10,
-  fontSize: 12,
+  minHeight: 30,
+  padding: '0 6px',
+  borderRadius: 8,
+  fontSize: 13,
   fontWeight: 600,
   cursor: 'pointer',
-  border: '1px solid transparent',
+  border: 'none',
+  background: 'transparent',
+}
+
+const checklistStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: 4,
+  marginTop: 10,
+  paddingTop: 6,
+  borderTop: '1px solid var(--border)',
+}
+
+const noteLinesStyle: React.CSSProperties = {
+  listStyle: 'none',
+  margin: '6px 0 0',
+  padding: 0,
+  fontSize: 12,
+  color: 'var(--text-muted)',
 }
 
 // The receipt is blue and the WhatsApp message is green/amber, each with its own icon, so the two marks
 // cannot be mistaken for each other.
 const receiptSentStyle: React.CSSProperties = {
-  ...pillButton,
-  background: 'var(--accent-bg)',
+  ...chipBase,
   color: 'var(--accent)',
 }
 
-// A quiet warning: small red text on a faint tint, with a dashed edge that says "tap me".
+// Waiting for her: amber. Red only when it blocks finishing the order.
 const receiptMissingStyle: React.CSSProperties = {
-  ...pillButton,
-  fontWeight: 500,
-  background: 'var(--danger-bg)',
+  ...chipBase,
+  color: 'var(--warning)',
+}
+
+const receiptBlockingStyle: React.CSSProperties = {
+  ...chipBase,
   color: 'var(--danger)',
-  border: '1px dashed var(--danger)',
 }
 
 // Small and gray on purpose: a note, not a label.
@@ -389,10 +424,10 @@ const nextButtonStyle: React.CSSProperties = {
   width: '100%',
   minHeight: 36,
   padding: '0 14px',
-  border: '1px solid var(--accent)',
+  border: '1px solid var(--border)',
   borderRadius: 8,
-  background: 'var(--accent-bg)',
-  color: 'var(--accent)',
+  background: 'var(--surface)',
+  color: 'var(--text)',
   fontSize: 14,
   fontWeight: 600,
   cursor: 'pointer',

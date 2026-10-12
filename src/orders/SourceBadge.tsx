@@ -37,7 +37,19 @@ function ShopifyMark() {
 
 // Where the order came from, in words. An order from the store carries Shopify's mark and colour, because
 // she treats those differently (the store already sent the receipt, and they wait for her approval).
-export function SourceBadge({ source }: { source: OrderSource }) {
+export function SourceBadge({ source, compact = false }: { source: OrderSource; compact?: boolean }) {
+  // On a card the origin is a quiet word at the end of the line, not a chip.
+  if (compact) {
+    return source === 'SHOPIFY' ? (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: SHOPIFY_DARK, fontWeight: 600 }}>
+        <ShopifyMark />
+        מהשופיפי
+      </span>
+    ) : (
+      <span>ידנית</span>
+    )
+  }
+
   if (source === 'SHOPIFY') {
     return (
       <span

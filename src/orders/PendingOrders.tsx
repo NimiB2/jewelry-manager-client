@@ -107,7 +107,7 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
           const unmatched = order.items.filter((i) => i.needsProduct).length
 
           return (
-            <article key={order.id} style={{ ...cardStyle, border: '1px solid var(--accent)' }}>
+            <article key={order.id} style={{ ...cardStyle, border: '1px solid var(--warning)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 600 }}>
@@ -124,7 +124,7 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
                     </div>
                   )}
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--success)' }}>{formatMoney(order.finalAmount)}</div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>{formatMoney(order.finalAmount)}</div>
               </div>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: 6 }}>

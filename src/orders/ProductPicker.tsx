@@ -67,7 +67,7 @@ export function ProductPicker({ onPick, onClose }: ProductPickerProps) {
                   {product.type} · {product.material}
                 </span>
               </span>
-              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--success)' }}>{formatMoney(product.sitePrice)}</span>
+              <span style={{ fontSize: 15, fontWeight: 600 }}>{formatMoney(product.sitePrice)}</span>
             </button>
           ))}
         </div>

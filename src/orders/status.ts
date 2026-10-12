@@ -12,8 +12,9 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 
 // One clear color per status, so the state is readable at a glance.
 const STATUS_COLORS: Record<OrderStatus, { background: string; color: string }> = {
-  NEW: { background: 'var(--accent-bg)', color: 'var(--accent)' },
-  IN_PROGRESS: { background: 'var(--warning-bg)', color: 'var(--warning)' },
+  // Not started: neutral. Being made: blue. Amber is kept for what is waiting for her to act.
+  NEW: { background: 'var(--border)', color: 'var(--text)' },
+  IN_PROGRESS: { background: 'var(--accent-bg)', color: 'var(--accent)' },
   READY: { background: 'var(--ready-bg)', color: 'var(--ready)' },
   // Finished orders are a success: green, like the check mark that goes with them.
   COMPLETED: { background: 'var(--success-bg)', color: 'var(--success)' },

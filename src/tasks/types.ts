@@ -28,8 +28,8 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
 }
 
 const TASK_STATUS_COLORS: Record<TaskStatus, { background: string; color: string }> = {
-  NEW: { background: 'var(--accent-bg)', color: 'var(--accent)' },
-  IN_PROGRESS: { background: 'var(--warning-bg)', color: 'var(--warning)' },
+  NEW: { background: 'var(--border)', color: 'var(--text)' },
+  IN_PROGRESS: { background: 'var(--accent-bg)', color: 'var(--accent)' },
   COMPLETED: { background: 'var(--success-bg)', color: 'var(--success)' },
 }
 

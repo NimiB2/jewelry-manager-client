@@ -159,7 +159,7 @@ export function InvoicesPage() {
             <div>
               <b>{withFile}</b> חשבוניות מצורפות
             </div>
-            <div style={{ color: missing > 0 ? 'var(--danger)' : 'var(--success)' }}>
+            <div style={{ color: missing > 0 ? 'var(--warning)' : 'var(--success)' }}>
               {missing > 0 ? <b>{missing}</b> : 'אין'} הוצאות בלי חשבונית
             </div>
           </div>
@@ -211,7 +211,7 @@ export function InvoicesPage() {
                 {item.hasInvoiceFile ? (
                   <span style={{ ...smallPillStyle, background: 'var(--success-bg)', color: 'var(--success)' }}>חשבונית מצורפת</span>
                 ) : (
-                  <span style={{ ...smallPillStyle, background: 'var(--danger-bg)', color: 'var(--danger)' }}>אין חשבונית</span>
+                  <span style={{ ...smallPillStyle, background: 'var(--warning-bg)', color: 'var(--warning)' }}>אין חשבונית</span>
                 )}
               </div>
             </div>
