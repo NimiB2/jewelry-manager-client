@@ -14,7 +14,7 @@ const icon = {
 
 // Where the order came from. An order from the store says so in words ("הזמנה מהשופיפי"), because she
 // treats those differently (the store already sent the receipt, and they wait for her approval);
-// a hand-typed one keeps the quiet keyboard icon.
+// a hand-typed one says "הזמנה ידנית" in gray.
 export function SourceBadge({ source }: { source: OrderSource }) {
   if (source === 'SHOPIFY') {
     return (
@@ -41,18 +41,26 @@ export function SourceBadge({ source }: { source: OrderSource }) {
     )
   }
 
-  const label = 'הזמנה שהוזנה ידנית'
   return (
     <span
-      role="img"
-      title={label}
-      aria-label={label}
-      style={{ display: 'inline-flex', verticalAlign: 'middle', color: 'var(--text-muted)', opacity: 0.8 }}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '1px 8px',
+        borderRadius: 8,
+        background: 'var(--border)',
+        color: 'var(--text)',
+        fontSize: 12,
+        fontWeight: 600,
+        verticalAlign: 'middle',
+      }}
     >
       <svg {...icon}>
         <rect x="2" y="6" width="20" height="12" rx="2" />
         <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10" />
       </svg>
+      הזמנה ידנית
     </span>
   )
 }
