@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { apiJson } from '../api'
 import { isBelowProfitFloor, profitAt } from './discount'
 import { formatMoney, formatPercent } from './format'
@@ -11,30 +12,22 @@ type ProductsTableProps = {
   onUpdated: (product: Product) => void
 }
 
-// The catalog as a table, for going through many products fast: weight and site price are typed
-// straight into the row and saved on Enter or when the field is left. Everything else is read-only here
-// (the full editor is one tap on the name).
+// The catalog as a compact list that fits the screen without scrolling sideways: a type icon, the name with
+// its material and weight in a small line, the site price (the number that matters, so the biggest), and
+// the profit. The weight and the price are typed straight into the row and saved on Enter or when the
+// field is left; everything else is one tap on the name away.
 export function ProductsTable({ products, meta, onOpen, onUpdated }: ProductsTableProps) {
   return (
     <div style={wrapStyle}>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={{ ...headStyle, ...stickyStyle }}>מוצר</th>
-            <th style={headStyle}>סוג</th>
-            <th style={headStyle}>חומר</th>
-            <th style={headStyle}>משקל</th>
-            <th style={headStyle}>מחיר באתר</th>
-            <th style={headStyle}>מומלץ</th>
-            <th style={headStyle}>רווח</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <Row key={product.id} product={product} meta={meta} onOpen={onOpen} onUpdated={onUpdated} />
-          ))}
-        </tbody>
-      </table>
+      <div style={{ ...rowGrid, padding: '7px 10px' }}>
+        <span />
+        <span style={headStyle}>מוצר</span>
+        <span style={{ ...headStyle, textAlign: 'left' }}>מחיר באתר</span>
+        <span style={{ ...headStyle, textAlign: 'left' }}>רווח</span>
+      </div>
+      {products.map((product) => (
+        <Row key={product.id} product={product} meta={meta} onOpen={onOpen} onUpdated={onUpdated} />
+      ))}
     </div>
   )
 }
@@ -65,41 +58,134 @@ function Row({ product, meta, onOpen, onUpdated }: { product: Product; meta: Pri
   }
 
   return (
-    <tr>
-      <td style={{ ...cellStyle, ...stickyStyle }}>
+    <div style={{ ...rowGrid, ...rowStyle }}>
+      <TypeIcon type={product.type} />
+
+      <div style={{ minWidth: 0 }}>
         <button type="button" onClick={() => onOpen(product)} style={nameButtonStyle}>
           {product.name}
         </button>
-      </td>
-      <td style={{ ...cellStyle, ...(product.type ? null : missingStyle) }}>{product.type || 'חסר'}</td>
-      <td style={{ ...cellStyle, ...(product.material ? null : missingStyle) }}>{product.material || 'חסר'}</td>
-      <td style={cellStyle}>
-        <EditableNumber value={product.weight} missing={product.weight === 0} suffix=" גרם" onSave={saveWeight} label={`משקל של ${product.name}`} />
-      </td>
-      <td style={cellStyle}>
-        <EditableNumber value={product.sitePrice} missing={product.sitePrice === 0} format={formatMoney} onSave={savePrice} label={`מחיר של ${product.name}`} />
-      </td>
-      <td style={{ ...cellStyle, color: 'var(--text-muted)' }}>
-        {product.price ? formatMoney(Math.round(product.price.recommendedPrice)) : '—'}
-      </td>
-      <td style={{ ...cellStyle, color: belowFloor ? 'var(--danger)' : undefined, whiteSpace: 'nowrap' }}>
-        {profit ? `${formatMoney(Math.round(profit.amount))} · ${formatPercent(profit.rate)}` : '—'}
-      </td>
-    </tr>
+        <div style={subLineStyle}>
+          {product.material ? <span>{product.material}</span> : <span style={missingBadgeStyle}>חסר חומר</span>}
+          <span aria-hidden="true">·</span>
+          <EditableNumber
+            value={product.weight}
+            label={`משקל של ${product.name}`}
+            onSave={saveWeight}
+            width={64}
+            render={(value) =>
+              value === 0 ? (
+                <span style={missingBadgeStyle}>חסר משקל</span>
+              ) : (
+                <span style={{ borderBottom: '1px dotted var(--text-muted)' }}>{value} גרם</span>
+              )
+            }
+            buttonStyle={smallButtonStyle}
+          />
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'left' }}>
+        <EditableNumber
+          value={product.sitePrice}
+          label={`מחיר של ${product.name}`}
+          onSave={savePrice}
+          width={84}
+          render={(value) => (value === 0 ? <span style={missingBadgeStyle}>חסר מחיר</span> : formatMoney(value))}
+          buttonStyle={priceButtonStyle}
+        />
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          {product.price ? `מומלץ ${formatMoney(Math.round(product.price.recommendedPrice))}` : 'מומלץ —'}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'left', fontSize: 12, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>
+        {profit ? (
+          <>
+            {formatMoney(Math.round(profit.amount))}
+            <div style={{ fontSize: 11, color: belowFloor ? 'var(--danger)' : 'var(--text-muted)' }}>{formatPercent(profit.rate)}</div>
+          </>
+        ) : (
+          <span style={{ color: 'var(--text-muted)' }}>—</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// A small drawing in place of the word: ring, earrings, necklace, bracelet. Anything else (or nothing yet) is
+// a plain gem, and a missing type is a dashed circle.
+function TypeIcon({ type }: { type: string }) {
+  const common = {
+    width: 26,
+    height: 26,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    role: 'img' as const,
+    'aria-label': type || 'סוג חסר',
+    style: { color: 'var(--text-muted)' } as CSSProperties,
+  }
+
+  let shape: ReactNode
+  if (type.includes('טבעת')) {
+    shape = (
+      <>
+        <circle cx="12" cy="15" r="5.5" />
+        <path d="M9.5 6.5l2.5-3 2.5 3-2.5 2z" />
+      </>
+    )
+  } else if (type.includes('עגיל')) {
+    shape = (
+      <>
+        <path d="M8 4v4M16 4v4" />
+        <circle cx="8" cy="11" r="3" />
+        <circle cx="16" cy="11" r="3" />
+        <path d="M8 14.5v3M16 14.5v3" />
+      </>
+    )
+  } else if (type.includes('שרשרת') || type.includes('תליון')) {
+    shape = (
+      <>
+        <path d="M5 5c0 8 3 11 7 11s7-3 7-11" />
+        <path d="M12 16v2" />
+        <circle cx="12" cy="20" r="1.6" />
+      </>
+    )
+  } else if (type.includes('צמיד')) {
+    shape = <ellipse cx="12" cy="12" rx="8" ry="5.5" />
+  } else if (type) {
+    shape = <path d="M6 9l3-4h6l3 4-6 10z" />
+  } else {
+    return (
+      <svg {...common} style={{ color: 'var(--warning)' }}>
+        <circle cx="12" cy="12" r="8" strokeDasharray="3 3" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg {...common}>
+      <title>{type}</title>
+      {shape}
+    </svg>
   )
 }
 
 type EditableNumberProps = {
   value: number
-  missing?: boolean
-  suffix?: string
-  format?: (value: number) => string
   label: string
+  width: number
+  render: (value: number) => ReactNode
+  buttonStyle: CSSProperties
   onSave: (value: number) => Promise<void>
 }
 
 // A number that reads as plain text until it is tapped. Enter or leaving the field saves it, Escape drops the change.
-function EditableNumber({ value, missing, suffix = '', format, label, onSave }: EditableNumberProps) {
+function EditableNumber({ value, label, width, render, buttonStyle, onSave }: EditableNumberProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
@@ -139,7 +225,7 @@ function EditableNumber({ value, missing, suffix = '', format, label, onSave }: 
 
   if (editing) {
     return (
-      <div>
+      <span style={{ display: 'inline-block' }}>
         <input
           autoFocus
           inputMode="decimal"
@@ -156,76 +242,53 @@ function EditableNumber({ value, missing, suffix = '', format, label, onSave }: 
               setError(null)
             }
           }}
-          style={inputStyle}
+          style={{ ...inputStyle, width }}
         />
-        {error && <div style={{ fontSize: 11, color: 'var(--danger)' }}>{error}</div>}
-      </div>
+        {error && <span style={{ display: 'block', fontSize: 11, color: 'var(--danger)' }}>{error}</span>}
+      </span>
     )
   }
 
   return (
-    <button type="button" onClick={start} aria-label={`${label}, לעריכה`} style={{ ...numberButtonStyle, ...(missing ? missingStyle : null) }}>
-      {missing ? 'חסר' : `${format ? format(value) : value}${suffix}`}
+    <button type="button" onClick={start} aria-label={`${label}, לעריכה`} style={buttonStyle}>
+      {render(value)}
     </button>
   )
 }
 
-const wrapStyle: React.CSSProperties = {
-  overflowX: 'auto',
+const rowGrid: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '34px minmax(0, 1fr) 86px 64px',
+  gap: 8,
+  alignItems: 'center',
+}
+
+const wrapStyle: CSSProperties = {
   background: 'var(--surface)',
   borderRadius: 10,
   boxShadow: 'var(--shadow)',
+  overflow: 'hidden',
 }
 
-const tableStyle: React.CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  fontSize: 14,
+const rowStyle: CSSProperties = {
+  padding: '9px 10px',
+  borderTop: '1px solid var(--border)',
 }
 
-const headStyle: React.CSSProperties = {
-  position: 'sticky',
-  top: 0,
-  textAlign: 'right',
-  padding: '8px 10px',
-  fontSize: 12,
+const headStyle: CSSProperties = {
+  fontSize: 11,
   fontWeight: 600,
   color: 'var(--text-muted)',
-  background: 'var(--surface)',
-  borderBottom: '1px solid var(--border)',
-  whiteSpace: 'nowrap',
 }
 
-const cellStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  textAlign: 'right',
-  borderBottom: '1px solid var(--border)',
-  whiteSpace: 'nowrap',
-  background: 'var(--surface)',
-}
-
-// The name stays in view while the numbers scroll sideways.
-const stickyStyle: React.CSSProperties = {
-  position: 'sticky',
-  insetInlineStart: 0,
-  zIndex: 1,
-  maxWidth: 170,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-}
-
-const missingStyle: React.CSSProperties = {
-  background: 'var(--warning-bg)',
-  color: 'var(--warning)',
-  borderRadius: 6,
-}
-
-const nameButtonStyle: React.CSSProperties = {
-  maxWidth: 160,
+const nameButtonStyle: CSSProperties = {
+  display: 'block',
+  maxWidth: '100%',
   border: 'none',
   background: 'transparent',
-  padding: '8px 0',
+  padding: 0,
   font: 'inherit',
+  fontSize: 14,
   fontWeight: 600,
   color: 'var(--text)',
   textAlign: 'right',
@@ -235,23 +298,46 @@ const nameButtonStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
-const numberButtonStyle: React.CSSProperties = {
-  minWidth: 64,
-  minHeight: 36,
-  padding: '0 8px',
+const subLineStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
+  fontSize: 11,
+  color: 'var(--text-muted)',
+  whiteSpace: 'nowrap',
+}
+
+const missingBadgeStyle: CSSProperties = {
+  background: 'var(--warning-bg)',
+  color: 'var(--warning)',
+  borderRadius: 4,
+  padding: '0 4px',
+}
+
+const priceButtonStyle: CSSProperties = {
   border: 'none',
-  borderRadius: 6,
   background: 'transparent',
+  padding: 0,
   font: 'inherit',
+  fontSize: 16,
+  fontWeight: 700,
   color: 'var(--text)',
-  textAlign: 'right',
   cursor: 'text',
 }
 
-const inputStyle: React.CSSProperties = {
-  width: 84,
-  minHeight: 36,
-  padding: '0 8px',
+const smallButtonStyle: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  font: 'inherit',
+  fontSize: 11,
+  color: 'var(--text-muted)',
+  cursor: 'text',
+}
+
+const inputStyle: CSSProperties = {
+  minHeight: 32,
+  padding: '0 6px',
   font: 'inherit',
   fontSize: 15,
   border: '1.5px solid var(--accent)',
