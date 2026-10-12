@@ -6,11 +6,25 @@ import { SubNav } from '../shell/SubNav'
 import { SearchButton } from '../search/SearchButton'
 import { SkeletonCards } from '../shell/Skeleton'
 import { navigate } from '../shell/useRoute'
+import { FilterTabs } from '../shell/FilterTabs'
 import { ProductCard } from './ProductCard'
+import { ProductsTable } from './ProductsTable'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from './productStyles'
 import type { Collection, Product, ProductsList } from './types'
 
 const CUSTOM_ORDER_KEY = 'customOrder'
+
+// Cards or a table: the choice is remembered on this device.
+type ViewMode = 'cards' | 'table'
+const VIEW_KEY = 'productsView'
+
+function readView(): ViewMode {
+  try {
+    return localStorage.getItem(VIEW_KEY) === 'table' ? 'table' : 'cards'
+  } catch {
+    return 'cards'
+  }
+}
 
 // Material filter values: a material name to show only it, or "not:<name>" to show everything except it.
 const EXCLUDE_PREFIX = 'not:'
@@ -31,6 +45,16 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
   const [materialFilter, setMaterialFilter] = useState('')
   const [collectionFilter, setCollectionFilter] = useState('')
   const [discount, setDiscount] = useState('')
+  const [view, setView] = useState<ViewMode>(readView)
+
+  function changeView(next: ViewMode) {
+    setView(next)
+    try {
+      localStorage.setItem(VIEW_KEY, next)
+    } catch {
+      // the choice just is not remembered
+    }
+  }
 
   // Reads everything fresh. Prices follow the settings, so this also runs when she comes back to the
   // tab or the app after changing something elsewhere.
@@ -187,7 +211,18 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
         </select>
       </div>
 
-      {data.products.length > 0 && (
+      <FilterTabs
+        items={[
+          { value: 'cards' as ViewMode, label: 'כרטיסים' },
+          { value: 'table' as ViewMode, label: 'טבלה' },
+        ]}
+        value={view}
+        onChange={changeView}
+        ariaLabel="תצוגה"
+        style={{ marginBottom: 10 }}
+      />
+
+      {view === 'cards' && data.products.length > 0 && (
         <div style={{ ...cardStyle, marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <label htmlFor="discount" style={{ fontSize: 14, flex: 1 }}>
@@ -239,6 +274,15 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
         </div>
       ) : visible.length === 0 ? (
         <p style={{ ...mutedTextStyle, textAlign: 'center', padding: 16 }}>לא נמצאו מוצרים שמתאימים לסינון.</p>
+      ) : view === 'table' ? (
+        <div style={{ paddingBottom: 90 }}>
+          <ProductsTable
+            products={visible}
+            meta={data.pricing}
+            onOpen={(product) => navigate(`/products/${product.id}`)}
+            onUpdated={replaceProduct}
+          />
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
           {visible.map((product) => (
