@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { apiJson } from '../api'
-import { isBelowProfitFloor, profitAt } from './discount'
+import { discountedPrice, isBelowProfitFloor, profitAt } from './discount'
 import { formatMoney, formatPercent } from './format'
 import type { PricingMeta, Product, SaveProductBody } from './types'
 
 type ProductsTableProps = {
   products: Product[]
   meta: PricingMeta | null
+  // The discount simulator: a display-only percentage that changes what is shown, never what is stored.
+  discountPercent: number
   onOpen: (product: Product) => void
   onUpdated: (product: Product) => void
 }
@@ -16,7 +18,7 @@ type ProductsTableProps = {
 // its material and weight in a small line, the site price (the number that matters, so the biggest), and
 // the profit. The weight and the price are typed straight into the row and saved on Enter or when the
 // field is left; everything else is one tap on the name away.
-export function ProductsTable({ products, meta, onOpen, onUpdated }: ProductsTableProps) {
+export function ProductsTable({ products, meta, discountPercent, onOpen, onUpdated }: ProductsTableProps) {
   return (
     <div style={wrapStyle}>
       <div style={{ ...rowGrid, padding: '7px 10px' }}>
@@ -26,15 +28,31 @@ export function ProductsTable({ products, meta, onOpen, onUpdated }: ProductsTab
         <span style={{ ...headStyle, textAlign: 'left' }}>רווח</span>
       </div>
       {products.map((product) => (
-        <Row key={product.id} product={product} meta={meta} onOpen={onOpen} onUpdated={onUpdated} />
+        <Row key={product.id} product={product} meta={meta} discountPercent={discountPercent} onOpen={onOpen} onUpdated={onUpdated} />
       ))}
     </div>
   )
 }
 
-function Row({ product, meta, onOpen, onUpdated }: { product: Product; meta: PricingMeta | null; onOpen: (p: Product) => void; onUpdated: (p: Product) => void }) {
-  const profit = meta ? profitAt(product, meta, product.sitePrice) : null
-  const belowFloor = isBelowProfitFloor(product, meta, product.sitePrice)
+function Row({
+  product,
+  meta,
+  discountPercent,
+  onOpen,
+  onUpdated,
+}: {
+  product: Product
+  meta: PricingMeta | null
+  discountPercent: number
+  onOpen: (p: Product) => void
+  onUpdated: (p: Product) => void
+}) {
+  // With the simulator on, price and profit are shown as if the discount were given. The stored price stays,
+  // so the price cannot be edited while a discount is being simulated.
+  const simulating = discountPercent > 0
+  const shownPrice = discountedPrice(product.sitePrice, discountPercent)
+  const profit = meta ? profitAt(product, meta, shownPrice) : null
+  const belowFloor = isBelowProfitFloor(product, meta, shownPrice)
 
   // Weight needs the whole product saved (the server takes it as one piece); the price has its own quick call.
   async function saveWeight(value: number) {
@@ -86,17 +104,30 @@ function Row({ product, meta, onOpen, onUpdated }: { product: Product; meta: Pri
       </div>
 
       <div style={{ textAlign: 'left' }}>
-        <EditableNumber
-          value={product.sitePrice}
-          label={`מחיר של ${product.name}`}
-          onSave={savePrice}
-          width={84}
-          render={(value) => (value === 0 ? <span style={missingBadgeStyle}>חסר מחיר</span> : formatMoney(value))}
-          buttonStyle={priceButtonStyle}
-        />
-        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-          {product.price ? `מומלץ ${formatMoney(Math.round(product.price.recommendedPrice))}` : 'מומלץ —'}
-        </div>
+        {simulating ? (
+          <>
+            <div style={{ ...priceButtonStyle, cursor: 'default' }} title="כדי לערוך מחיר, יש לכבות את סימולטור ההנחה">
+              {formatMoney(Math.round(shownPrice))}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              <s>{formatMoney(product.sitePrice)}</s> · הנחה {discountPercent}%
+            </div>
+          </>
+        ) : (
+          <>
+            <EditableNumber
+              value={product.sitePrice}
+              label={`מחיר של ${product.name}`}
+              onSave={savePrice}
+              width={84}
+              render={(value) => (value === 0 ? <span style={missingBadgeStyle}>חסר מחיר</span> : formatMoney(value))}
+              buttonStyle={priceButtonStyle}
+            />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {product.price ? `מומלץ ${formatMoney(Math.round(product.price.recommendedPrice))}` : 'מומלץ —'}
+            </div>
+          </>
+        )}
       </div>
 
       <div style={{ textAlign: 'left', fontSize: 12, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>

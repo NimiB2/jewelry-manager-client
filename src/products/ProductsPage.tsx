@@ -14,15 +14,15 @@ import type { Collection, Product, ProductsList } from './types'
 
 const CUSTOM_ORDER_KEY = 'customOrder'
 
-// Cards or a table: the choice is remembered on this device.
+// A table or cards: the table is the default, and the choice is remembered on this device.
 type ViewMode = 'cards' | 'table'
 const VIEW_KEY = 'productsView'
 
 function readView(): ViewMode {
   try {
-    return localStorage.getItem(VIEW_KEY) === 'table' ? 'table' : 'cards'
+    return localStorage.getItem(VIEW_KEY) === 'cards' ? 'cards' : 'table'
   } catch {
-    return 'cards'
+    return 'table'
   }
 }
 
@@ -222,7 +222,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
         style={{ marginBottom: 10 }}
       />
 
-      {view === 'cards' && data.products.length > 0 && (
+      {data.products.length > 0 && (
         <div style={{ ...cardStyle, marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <label htmlFor="discount" style={{ fontSize: 14, flex: 1 }}>
@@ -279,6 +279,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
           <ProductsTable
             products={visible}
             meta={data.pricing}
+            discountPercent={discountPercent}
             onOpen={(product) => navigate(`/products/${product.id}`)}
             onUpdated={replaceProduct}
           />
