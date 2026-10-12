@@ -285,7 +285,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
           />
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
+        <div className="card-list" style={{ paddingBottom: 90 }}>
           {visible.map((product) => (
             <ProductCard
               key={product.id}

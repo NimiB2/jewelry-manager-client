@@ -204,6 +204,22 @@
   }
 }
 
+/* Card lists: one column on the phone, a grid of cards on a wide screen. */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 900px) {
+  .card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+}
+
 /* Floating add button; the extra bottom space on lists keeps it from hiding the last card. */
 .fab {
   position: fixed;
