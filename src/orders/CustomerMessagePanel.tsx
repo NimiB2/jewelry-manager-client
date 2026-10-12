@@ -34,12 +34,14 @@ type BodyProps = {
   order: Order
   // Called after the "sent" mark changed, so the list can reload.
   onChanged: () => void
+  // Called once the mark was saved, so the card can fold the message away again.
+  onDone?: () => void
 }
 
 // The order summary she sends the customer right after she orders. The text is ready (the real details
 // are filled in); she opens it in WhatsApp with one tap, already addressed to the customer's number,
 // and only has to press send. The number is kept only until it is marked sent, then it is erased.
-export function CustomerMessageBody({ order, onChanged }: BodyProps) {
+export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState<'message' | 'phone' | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +73,7 @@ export function CustomerMessageBody({ order, onChanged }: BodyProps) {
       })
       notifyOrdersChanged()
       onChanged()
+      onDone?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
     } finally {
@@ -145,7 +148,7 @@ export function CustomerMessagePanel({ order, onChanged }: BodyProps) {
   return (
     <div style={{ marginTop: 10 }}>
       <WhatsAppPill order={order} open={open} onClick={() => setOpen((v) => !v)} />
-      {open && <CustomerMessageBody order={order} onChanged={onChanged} />}
+      {open && <CustomerMessageBody order={order} onChanged={onChanged} onDone={() => setOpen(false)} />}
     </div>
   )
 }

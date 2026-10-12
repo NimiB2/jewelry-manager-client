@@ -251,7 +251,9 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
         </div>
       )}
 
-      {showMessage && <CustomerMessageBody order={order} onChanged={onChanged} />}
+      {showMessage && (
+        <CustomerMessageBody order={order} onChanged={onChanged} onDone={() => setShowMessage(false)} />
+      )}
 
       {error && (
         <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>
