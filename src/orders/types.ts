@@ -48,6 +48,12 @@ export type Order = {
   // What the store reported after the order arrived. A warning only; nothing is changed automatically.
   storeAlert?: StoreAlert
   storeAlertAt?: string | null
+  // Store orders: the customer's phone, the same number for a WhatsApp link, the ready order-summary
+  // message, and when it was marked as sent.
+  customerPhone?: string | null
+  customerWhatsApp?: string | null
+  customerMessage?: string | null
+  customerNotifiedAt?: string | null
 }
 
 export type OrdersList = {

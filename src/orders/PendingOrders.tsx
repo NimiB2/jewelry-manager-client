@@ -4,7 +4,9 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import type { Product } from '../products/types'
 import { notifyOrdersChanged } from './attention'
+import { CustomerMessagePanel } from './CustomerMessagePanel'
 import { ProductPicker } from './ProductPicker'
+import { SourceBadge } from './SourceBadge'
 import { blocksApproval } from './storeAlert'
 import { StoreAlertNotice } from './StoreAlertNotice'
 import type { Order } from './types'
@@ -112,7 +114,9 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
                     {order.externalName ?? `הזמנה ${order.number}`}
                     {order.customer ? ` · ${order.customer}` : ''}
                   </div>
-                  <div style={mutedTextStyle}>מהחנות · {order.date}</div>
+                  <div style={mutedTextStyle}>
+                    <SourceBadge source={order.source} /> · {order.date}
+                  </div>
                   {order.hasDiscount && (
                     <div style={{ ...mutedTextStyle, color: 'var(--warning)' }}>
                       הנחה {formatMoney(order.discountAmount)}
@@ -172,6 +176,7 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
               </ul>
 
               <StoreAlertNotice order={order} onChanged={() => void load()} />
+              <CustomerMessagePanel order={order} onChanged={() => void load()} />
 
               {unmatched > 0 && (
                 <p style={{ ...mutedTextStyle, margin: '8px 0 0' }}>

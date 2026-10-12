@@ -3,6 +3,7 @@ import { apiJson } from '../api'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, mutedTextStyle } from '../products/productStyles'
 import { ConfirmInline } from './ConfirmInline'
+import { CustomerMessagePanel } from './CustomerMessagePanel'
 import { formatOrderDate } from './dates'
 import { SourceBadge } from './SourceBadge'
 import { StageChips } from './StageChips'
@@ -247,6 +248,8 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           </button>
         </div>
       )}
+
+      <CustomerMessagePanel order={order} onChanged={onChanged} />
 
       {error && (
         <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>
