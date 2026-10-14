@@ -41,6 +41,9 @@ const hoursFormat = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 1 })
 // Colours for the share bar; the same order is used for the dots in the list.
 const PALETTE = ['#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#BA7517', '#D4537E', '#639922', '#888780']
 
+// Name of the seeded expense group that holds the costs of making orders (materials, stones, setting).
+const ORDER_GROUP = 'הוצאות הזמנות'
+
 // Categories below this share of the expenses are folded into one "other" row.
 const SMALL_SHARE = 3
 
@@ -48,7 +51,7 @@ const SMALL_SHARE = 3
 export function AnalysisPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState<number | null>(null)
+  const [month, setMonth] = useState<number | null>(now.getMonth() + 1)
   const [view, setView] = useState<View>('expenses')
   const [group, setGroup] = useState<string | null>(null)
   const [showSmall, setShowSmall] = useState(false)
@@ -100,7 +103,8 @@ export function AnalysisPage() {
   const smallTotal = small.reduce((sum, r) => sum + r.amount, 0)
   const smallPercent = Math.round(small.reduce((sum, r) => sum + r.percent, 0) * 10) / 10
   const colorOf = (index: number) => PALETTE[Math.min(index, PALETTE.length - 1)]
-  const maxSalary = data ? Math.max(1, ...data.months.map((m) => m.salary)) : 1
+  const orderCosts = data?.byGroup.find((g) => g.name === ORDER_GROUP)?.amount ?? 0
+  const maxSalary =data ? Math.max(1, ...data.months.map((m) => m.salary)) : 1
   const periodLabel = month === null ? `שנת ${year}` : `${monthName(month)} ${year}`
 
   return (
@@ -175,6 +179,34 @@ export function AnalysisPage() {
           {view === 'expenses' && (
             <section>
               {rows.length === 0 && <p style={mutedTextStyle}>אין הוצאות בתקופה הזו.</p>}
+
+              {data.byGroup.length > 0 && (
+                <div style={{ ...stripCardStyle, marginBottom: 10 }}>
+                  <div style={{ ...mutedTextStyle, fontSize: 12 }}>לאן הלכו ההוצאות</div>
+                  <div style={shareBarStyle} aria-hidden>
+                    {data.byGroup.map((g, i) => (
+                      <i key={g.name} style={{ width: `${g.percent}%`, background: colorOf(i) }} />
+                    ))}
+                  </div>
+                  {data.byGroup.map((g, i) => (
+                    <div key={g.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
+                      <span>
+                        <span style={{ ...dotStyle, background: colorOf(i), marginLeft: 6 }} />
+                        {g.name}
+                      </span>
+                      <span>
+                        {formatMoney(g.amount)} · {g.percent}%
+                      </span>
+                    </div>
+                  ))}
+                  {orderCosts > 0 && (
+                    <div style={{ ...subStripStyle, justifyContent: 'space-between' }}>
+                      <span>רווח גולמי מהזמנות (הכנסות פחות {ORDER_GROUP})</span>
+                      <b style={{ fontWeight: 500, color: 'var(--text)' }}>{formatMoney(totals.income - orderCosts)}</b>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {rows.length > 0 && (
                 <div style={shareBarStyle} aria-hidden>

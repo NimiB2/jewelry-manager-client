@@ -17,6 +17,8 @@ type HomeData = {
   income: number | null
   expenses: number | null
   netProfit: number | null
+  salary: number | null
+  workHours: number | null
   inProgress: number | null
   ready: number | null
   notStarted: number | null
@@ -45,12 +47,17 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
       apiJson<FinanceList>(`/finances?${params}`),
       apiJson<OrdersList>('/orders?status=active'),
       apiJson<Task[]>('/tasks'),
-    ]).then(([finances, orders, tasks]) => {
+      apiJson<{ totals: { salary: number; workHours: number } }>(
+        `/finances/analysis?year=${now.getFullYear()}&month=${now.getMonth() + 1}`,
+      ),
+    ]).then(([finances, orders, tasks, analysis]) => {
       const list = orders.status === 'fulfilled' ? orders.value.orders : null
       setData({
         income: finances.status === 'fulfilled' ? finances.value.summary.totalIncome : null,
         expenses: finances.status === 'fulfilled' ? finances.value.summary.totalExpenses : null,
         netProfit: finances.status === 'fulfilled' ? finances.value.summary.netProfit : null,
+        salary: analysis.status === 'fulfilled' ? analysis.value.totals.salary : null,
+        workHours: analysis.status === 'fulfilled' ? analysis.value.totals.workHours : null,
         notStarted: list ? list.filter((o) => o.status === 'NEW').length : null,
         inProgress: list ? list.filter((o) => o.status === 'IN_PROGRESS').length : null,
         ready: list ? list.filter((o) => o.status === 'READY').length : null,
@@ -111,6 +118,16 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
             `הכנסות ${formatMoney(data.income)} · הוצאות ${formatMoney(data.expenses)}`
           )}
         </span>
+      </button>
+
+      <button type="button" onClick={() => navigate('/finances/analysis')} style={{ ...cardStyle, ...tileStyle, width: '100%', marginTop: 10 }}>
+        <span style={tileLabelStyle}>משכורת החודש</span>
+        <span style={tileValueStyle}>{data?.salary == null ? <Skeleton width={90} height={26} /> : formatMoney(data.salary)}</span>
+        {data?.workHours != null && data?.netProfit != null && data?.salary != null && (
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {Math.round(data.workHours * 10) / 10} שעות · רווח אחרי משכורת {formatMoney(data.netProfit - data.salary)}
+          </span>
+        )}
       </button>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
