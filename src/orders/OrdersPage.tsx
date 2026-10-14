@@ -188,36 +188,17 @@ export function OrdersPage() {
       )}
 
       {data && data.orders.length > 0 && (
-        <div style={{ paddingBottom: 90 }}>
-          {(status === 'all'
-            ? [
-                { title: 'פתוחות', orders: data.orders.filter((o) => o.status !== 'COMPLETED') },
-                { title: 'הושלמו', orders: data.orders.filter((o) => o.status === 'COMPLETED') },
-              ]
-            : [{ title: null, orders: data.orders }]
-          )
-            .filter((group) => group.orders.length > 0)
-            .map((group) => (
-              <section key={group.title ?? 'all'}>
-                {group.title && (
-                  <h2 style={groupHeadingStyle}>
-                    {group.title} ({group.orders.length})
-                  </h2>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {group.orders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      stages={stages}
-                      onOpen={() => navigate(`/orders/${order.id}`)}
-                      onChanged={load}
-                      onCompleted={async (done) => setCelebration(await completionMessage(done))}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
+          {data.orders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              stages={stages}
+              onOpen={() => navigate(`/orders/${order.id}`)}
+              onChanged={load}
+              onCompleted={async (done) => setCelebration(await completionMessage(done))}
+            />
+          ))}
         </div>
       )}
 
@@ -228,13 +209,6 @@ export function OrdersPage() {
       </button>
     </div>
   )
-}
-
-const groupHeadingStyle: React.CSSProperties = {
-  fontSize: 14,
-  fontWeight: 600,
-  color: 'var(--text-muted)',
-  margin: '20px 4px 10px',
 }
 
 const searchIconStyle: React.CSSProperties = {

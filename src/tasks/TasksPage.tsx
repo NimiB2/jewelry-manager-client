@@ -104,30 +104,16 @@ export function TasksPage() {
       )}
 
       {visible.length > 0 && (
-        <div style={{ paddingBottom: 90 }}>
-          {[
-            { title: 'משימות הזמנות', tasks: visible.filter((t) => t.isAutomatic && t.orderId) },
-            { title: 'משימות כלליות', tasks: visible.filter((t) => !(t.isAutomatic && t.orderId)) },
-          ]
-            .filter((group) => group.tasks.length > 0)
-            .map((group) => (
-              <section key={group.title}>
-                <h2 style={groupHeadingStyle}>
-                  {group.title} ({group.tasks.length})
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {group.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      // A task made from an order is the order itself: tapping it opens the order, not a task form.
-                      onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
-                      onChanged={load}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 90 }}>
+          {visible.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              // A task made from an order is the order itself: tapping it opens the order, not a task form.
+              onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
+              onChanged={load}
+            />
+          ))}
         </div>
       )}
 
@@ -186,14 +172,17 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
     <article
       style={{
         ...cardStyle,
-        ...(fromOrder ? { borderInlineStart: '4px solid var(--accent)' } : done ? { borderInlineStart: '4px solid var(--success)' } : null),
+        padding: '8px 10px',
+        borderInlineStart: `4px solid ${
+          fromOrder ? ORDER_TASK_COLOR : done ? 'var(--success)' : task.status === 'IN_PROGRESS' ? 'var(--accent)' : 'var(--warning)'
+        }`,
       }}
     >
       <button type="button" onClick={onOpen} style={openStyle} aria-label={fromOrder ? `פתיחת ${task.title}` : `עריכת המשימה ${task.title}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <span
             style={{
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: 600,
               color: done ? 'var(--text-muted)' : 'var(--text)',
               textDecoration: done ? 'line-through' : 'none',
@@ -212,8 +201,8 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
       </button>
 
       {fromOrder ? (
-        <button type="button" onClick={onOpen} style={orderLinkStyle}>
-          נוצרה מהזמנה #{task.orderNumber} · עריכה בהזמנה ←
+        <button type="button" onClick={onOpen} style={{ ...orderLinkStyle, color: ORDER_TASK_COLOR }}>
+          הזמנה #{task.orderNumber} ←
         </button>
       ) : (
         task.orderId && (
@@ -253,12 +242,8 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
   )
 }
 
-const groupHeadingStyle: React.CSSProperties = {
-  fontSize: 14,
-  fontWeight: 600,
-  color: 'var(--text-muted)',
-  margin: '18px 4px 8px',
-}
+// Order tasks are purple, so they stand apart from general tasks, which are coloured by their status.
+const ORDER_TASK_COLOR = '#8b5cf6'
 
 const categoryTagStyle: React.CSSProperties = {
   display: 'inline-block',
@@ -284,11 +269,11 @@ const openStyle: React.CSSProperties = {
 
 // Two short lines at most, so a long note can't blow up the card; the full text is in the edit form.
 const contentStyle: React.CSSProperties = {
-  margin: '4px 0 0',
-  fontSize: 13,
+  margin: '2px 0 0',
+  fontSize: 12,
   color: 'var(--text-muted)',
   display: '-webkit-box',
-  WebkitLineClamp: 2,
+  WebkitLineClamp: 1,
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
   whiteSpace: 'pre-line',
@@ -297,16 +282,16 @@ const contentStyle: React.CSSProperties = {
 const orderLinkStyle: React.CSSProperties = {
   border: 'none',
   background: 'transparent',
-  padding: '6px 0 0',
-  fontSize: 13,
+  padding: '4px 0 0',
+  fontSize: 12,
   color: 'var(--accent)',
   cursor: 'pointer',
 }
 
 const nextButtonStyle: React.CSSProperties = {
   width: '100%',
-  minHeight: 36,
-  marginTop: 8,
+  minHeight: 30,
+  marginTop: 6,
   padding: '0 14px',
   border: '1px solid var(--accent)',
   borderRadius: 8,

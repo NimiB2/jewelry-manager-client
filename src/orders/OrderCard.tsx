@@ -101,6 +101,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
     <article
       style={{
         ...cardStyle,
+        padding: '8px 10px',
         // Open orders carry their status colour on the edge; completed ones are tinted green and settled.
         ...(completed ? completedCardStyle : { borderInlineStart: `4px solid ${statusColors(order.status).color}` }),
       }}
@@ -108,7 +109,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <button type="button" onClick={onOpen} style={openButtonStyle} aria-label={`פתיחת הזמנה ${order.number}`}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>
               {order.customer ?? 'ללא שם לקוחה'}
               {order.isTest && <span style={demoNoteStyle}> (הזמנת דמו)</span>}
             </span>
@@ -136,7 +137,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
         </div>
 
         <div style={{ textAlign: 'left', flexShrink: 0 }}>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatMoney(order.finalAmount)}</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatMoney(order.finalAmount)}</div>
           {order.hasDiscount && (
             <div style={mutedTextStyle}>
               <span style={{ textDecoration: 'line-through' }}>{formatMoney(order.amount)}</span> · הנחה {order.discountPercent}%
@@ -371,8 +372,8 @@ const checklistStyle: React.CSSProperties = {
   flexWrap: 'wrap',
   alignItems: 'center',
   gap: 4,
-  marginTop: 10,
-  paddingTop: 6,
+  marginTop: 6,
+  paddingTop: 4,
   borderTop: '1px solid var(--border)',
 }
 
@@ -429,7 +430,7 @@ const disabledNextStyle: React.CSSProperties = {
 
 const nextButtonStyle: React.CSSProperties = {
   width: '100%',
-  minHeight: 36,
+  minHeight: 32,
   padding: '0 14px',
   border: '1px solid var(--border)',
   borderRadius: 8,
