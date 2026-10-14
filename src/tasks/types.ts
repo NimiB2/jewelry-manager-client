@@ -17,6 +17,8 @@ export type Task = {
   // Made by the system for an order: it shows the order's status and is changed only through the order.
   isAutomatic: boolean
   orderStatus: OrderStatus | null
+  // One of her task categories (general tasks only, optional).
+  category: string | null
 }
 
 export const TASK_STATUS_ORDER: TaskStatus[] = ['NEW', 'IN_PROGRESS', 'COMPLETED']

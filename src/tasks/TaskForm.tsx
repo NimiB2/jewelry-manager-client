@@ -29,6 +29,8 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
   const [content, setContent] = useState(task?.content ?? '')
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? 'NEW')
   const [orderId, setOrderId] = useState(task?.orderId ?? '')
+  const [category, setCategory] = useState(task?.category ?? '')
+  const [categories, setCategories] = useState<string[]>([])
   const [orders, setOrders] = useState<OrderOption[]>([])
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -46,6 +48,9 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
         ),
       )
       .catch(() => setOrders([]))
+    apiJson<{ data: { taskCategories?: string[] } }>('/settings')
+      .then((s) => setCategories(s.data.taskCategories ?? []))
+      .catch(() => setCategories([]))
   }, [])
 
   async function run(action: () => Promise<unknown>, message: string) {
@@ -62,7 +67,7 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
 
   function save() {
     if (!title.trim()) return setError('צריך להוסיף כותרת')
-    const body = JSON.stringify({ title: title.trim(), content: content.trim() || null, status, orderId: orderId || null })
+    const body = JSON.stringify({ title: title.trim(), content: content.trim() || null, status, orderId: orderId || null, category: category || null })
     void run(
       () => apiJson(editing ? `/tasks/${task.id}` : '/tasks', { method: editing ? 'PUT' : 'POST', body }),
       'המשימה נשמרה',
@@ -108,6 +113,19 @@ export function TaskForm({ task, onSaved, onCancel }: TaskFormProps) {
           ))}
         </div>
       </div>
+
+      {categories.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <span style={fieldLabelStyle}>קטגוריה (לא חובה)</span>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[...categories, ...(category && !categories.includes(category) ? [category] : [])].map((c) => (
+              <button key={c} type="button" aria-pressed={category === c} onClick={() => setCategory(category === c ? '' : c)} style={chipStyle(category === c)}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <label style={{ display: 'block', marginBottom: 8 }}>
         <span style={fieldLabelStyle}>קשורה להזמנה (לא חובה)</span>

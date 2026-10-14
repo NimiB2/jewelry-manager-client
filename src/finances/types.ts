@@ -23,6 +23,8 @@ export type FinanceItem = {
   hasInvoiceFile: boolean
   supplier: string | null
   notes: string | null
+  // The main group of an expense (orders, business, home...), from her settings list.
+  groupName: string | null
   // A coming occurrence of a recurring expense: not real yet, not in the totals. Its id is the latest real one of the series.
   isProjected: boolean
 }

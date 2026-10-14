@@ -98,7 +98,13 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
   const receiptLocked = order.isCompleted && order.receiptSent
 
   return (
-    <article style={{ ...cardStyle, ...(completed ? completedCardStyle : null) }}>
+    <article
+      style={{
+        ...cardStyle,
+        // Open orders carry their status colour on the edge; completed ones are tinted green and settled.
+        ...(completed ? completedCardStyle : { borderInlineStart: `4px solid ${statusColors(order.status).color}` }),
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <button type="button" onClick={onOpen} style={openButtonStyle} aria-label={`פתיחת הזמנה ${order.number}`}>
@@ -290,6 +296,7 @@ const storeAlertTagStyle = (minor: boolean): React.CSSProperties => ({
 
 const completedCardStyle: React.CSSProperties = {
   borderInlineStart: '4px solid var(--success)',
+  background: 'var(--success-bg)',
 }
 
 const openButtonStyle: React.CSSProperties = {

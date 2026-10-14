@@ -19,6 +19,8 @@ type SettingsData = {
   testOrderPrefix?: string
   expenseTypes?: string[]
   expenseSuppliers?: string[]
+  expenseGroups?: string[]
+  taskCategories?: string[]
 }
 
 type SettingsRow = {
@@ -87,6 +89,8 @@ export function SettingsPage() {
           testOrderPrefix={settings.data.testOrderPrefix ?? ''}
           expenseTypes={settings.data.expenseTypes ?? []}
           expenseSuppliers={settings.data.expenseSuppliers ?? []}
+          expenseGroups={settings.data.expenseGroups ?? []}
+          taskCategories={settings.data.taskCategories ?? []}
         />
       </div>
     </div>

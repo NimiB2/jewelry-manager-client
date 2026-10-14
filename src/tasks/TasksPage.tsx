@@ -104,16 +104,30 @@ export function TasksPage() {
       )}
 
       {visible.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
-          {visible.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              // A task made from an order is the order itself: tapping it opens the order, not a task form.
-              onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
-              onChanged={load}
-            />
-          ))}
+        <div style={{ paddingBottom: 90 }}>
+          {[
+            { title: 'משימות הזמנות', tasks: visible.filter((t) => t.isAutomatic && t.orderId) },
+            { title: 'משימות כלליות', tasks: visible.filter((t) => !(t.isAutomatic && t.orderId)) },
+          ]
+            .filter((group) => group.tasks.length > 0)
+            .map((group) => (
+              <section key={group.title}>
+                <h2 style={groupHeadingStyle}>
+                  {group.title} ({group.tasks.length})
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {group.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      // A task made from an order is the order itself: tapping it opens the order, not a task form.
+                      onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
+                      onChanged={load}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
         </div>
       )}
 
@@ -193,6 +207,7 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
             <span style={{ ...taskPillStyle(task.status), flexShrink: 0 }}>{TASK_STATUS_LABELS[task.status]}</span>
           )}
         </div>
+        {task.category && !fromOrder && <span style={categoryTagStyle}>{task.category}</span>}
         {task.content && <p style={contentStyle}>{task.content}</p>}
       </button>
 
@@ -236,6 +251,23 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
       {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
     </article>
   )
+}
+
+const groupHeadingStyle: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 600,
+  color: 'var(--text-muted)',
+  margin: '18px 4px 8px',
+}
+
+const categoryTagStyle: React.CSSProperties = {
+  display: 'inline-block',
+  marginTop: 4,
+  padding: '1px 8px',
+  borderRadius: 8,
+  background: 'var(--border)',
+  color: 'var(--text)',
+  fontSize: 12,
 }
 
 const openStyle: React.CSSProperties = {

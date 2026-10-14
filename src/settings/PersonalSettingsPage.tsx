@@ -8,8 +8,11 @@ import { TestOrderPrefixForm } from './TestOrderPrefixForm'
 import { ExpenseTypesForm } from './ExpenseTypesForm'
 import { ExpenseSuppliersForm } from './ExpenseSuppliersForm'
 import { NotificationsCard } from './NotificationsCard'
+import { NamedListForm } from './NamedListForm'
 
 type PersonalSettingsPageProps = {
+  expenseGroups: string[]
+  taskCategories: string[]
   preparationStages: string[]
   productAdditionTypes: ProductAdditionType[]
   discountPresets: number[]
@@ -19,6 +22,8 @@ type PersonalSettingsPageProps = {
 }
 
 export function PersonalSettingsPage({
+  expenseGroups,
+  taskCategories,
   preparationStages,
   productAdditionTypes,
   discountPresets,
@@ -33,7 +38,23 @@ export function PersonalSettingsPage({
       <CollectionsForm />
       <PreparationStagesForm initialStages={preparationStages} />
       <ProductAdditionsForm initialTypes={productAdditionTypes} />
+      <NamedListForm
+        field="expenseGroups"
+        title="קבוצות הוצאה"
+        description="הקבוצות הראשיות שההוצאות מתחלקות אליהן, למשל הוצאות הזמנות, עסק, בית."
+        placeholder="לדוגמה: הוצאות בית"
+        addLabel="+ הוספת קבוצה"
+        initialNames={expenseGroups}
+      />
       <ExpenseTypesForm initialTypes={expenseTypes} />
+      <NamedListForm
+        field="taskCategories"
+        title="קטגוריות משימות"
+        description="הקטגוריות שאפשר לשייך להן משימה כללית, למשל שיווק, חומרים."
+        placeholder="לדוגמה: שיווק"
+        addLabel="+ הוספת קטגוריה"
+        initialNames={taskCategories}
+      />
       <ExpenseSuppliersForm initialSuppliers={expenseSuppliers} />
       <DiscountPresetsForm initialPercents={discountPresets} />
       <TestOrderPrefixForm initialPrefix={testOrderPrefix} />

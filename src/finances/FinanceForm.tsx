@@ -63,6 +63,8 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
   const [reading, setReading] = useState(false)
   const [applyToSeries, setApplyToSeries] = useState(false)
 
+  const [groupName, setGroupName] = useState(item?.groupName ?? '')
+  const [expenseGroups, setExpenseGroups] = useState<string[]>([])
   const [expenseTypes, setExpenseTypes] = useState<string[]>([])
   const [suppliers, setSuppliers] = useState<string[]>([])
   const [orders, setOrders] = useState<OrderOption[]>([])
@@ -76,9 +78,15 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
     repeat === 'once' ? null : repeat === 'other' ? Math.min(24, Math.max(1, Math.round(Number(every)) || 1)) : Number(repeat)
 
   useEffect(() => {
-    apiJson<{ data: { expenseTypes?: string[] } }>('/settings')
-      .then((s) => setExpenseTypes(s.data.expenseTypes ?? []))
-      .catch(() => setExpenseTypes([]))
+    apiJson<{ data: { expenseTypes?: string[]; expenseGroups?: string[] } }>('/settings')
+      .then((s) => {
+        setExpenseTypes(s.data.expenseTypes ?? [])
+        setExpenseGroups(s.data.expenseGroups ?? [])
+      })
+      .catch(() => {
+        setExpenseTypes([])
+        setExpenseGroups([])
+      })
     apiJson<string[]>('/expenses/suppliers').then(setSuppliers).catch(() => setSuppliers([]))
     isInvoiceReaderAvailable().then(setReaderAvailable).catch(() => setReaderAvailable(false))
     apiJson<OrdersList>('/orders?status=all')
@@ -126,6 +134,7 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       description: text,
       amount: value,
       typeName: typeName || null,
+      groupName: groupName || null,
       supplier: supplier.trim() || null,
       notes: notes.trim() || null,
       // A recurring expense repeats the money, not an order.
@@ -262,6 +271,23 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
         </label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="תאריך" style={dateStyle} />
       </div>
+
+      {/* The main group comes first: orders, business, home. The category below is the detail. */}
+      {isExpense && expenseGroups.length > 0 && (
+        <div style={stripStyle} role="group" aria-label="קבוצה">
+          {[...expenseGroups, ...(groupName && !expenseGroups.includes(groupName) ? [groupName] : [])].map((g) => (
+            <button
+              key={g}
+              type="button"
+              aria-pressed={groupName === g}
+              onClick={() => setGroupName(groupName === g ? '' : g)}
+              style={stripItemStyle(groupName === g)}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
 
       {strip.length > 0 ? (
         <div style={stripStyle} role="group" aria-label="קטגוריה">

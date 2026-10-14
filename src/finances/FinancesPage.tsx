@@ -31,6 +31,7 @@ type ExpenseResponse = {
   invoiceFileName: string | null
   supplier: string | null
   notes: string | null
+  groupName: string | null
 }
 
 const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
@@ -135,7 +136,7 @@ export function FinancesPage() {
           kind: 'EXPENSE', id: e.id, date: e.date, description: e.description, amount: e.amount,
           expenseCategory: e.category, incomeCategory: null, orderId: e.orderId, hasReceipt: e.hasReceipt,
           seriesId: e.seriesId, repeatEveryMonths: e.repeatEveryMonths, typeName: e.typeName,
-          orderNumber: e.orderNumber, hasInvoiceFile: e.invoiceFileName != null, isProjected: false, supplier: e.supplier, notes: e.notes,
+          orderNumber: e.orderNumber, hasInvoiceFile: e.invoiceFileName != null, isProjected: false, supplier: e.supplier, notes: e.notes, groupName: e.groupName,
         })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'הפתיחה נכשלה')
@@ -296,9 +297,21 @@ export function FinancesPage() {
       )}
 
       {data && data.items.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 90 }}>
-          {data.items.map((item) => (
-            <FinanceRow key={`${item.kind}-${item.id}-${item.date}`} item={item} onOpen={() => void openRow(item)} />
+        <div style={{ paddingBottom: 90 }}>
+          {groupItems(data.items, type === 'expense').map((group) => (
+            <section key={group.title ?? 'all'}>
+              {group.title && (
+                <h2 style={groupHeadingStyle}>
+                  <span>{group.title}</span>
+                  <span dir="ltr">{formatMoney(group.total)}</span>
+                </h2>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {group.items.map((item) => (
+                  <FinanceRow key={`${item.kind}-${item.id}-${item.date}`} item={item} onOpen={() => void openRow(item)} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
@@ -308,6 +321,27 @@ export function FinancesPage() {
       </button>
     </div>
   )
+}
+
+const NO_GROUP = 'ללא קבוצה'
+
+// The expenses view is split by her main groups, each with its own total (coming occurrences are not counted).
+function groupItems(items: FinanceItem[], byGroup: boolean): { title: string | null; total: number; items: FinanceItem[] }[] {
+  if (!byGroup) return [{ title: null, total: 0, items }]
+
+  const groups = new Map<string, FinanceItem[]>()
+  for (const item of items) {
+    const key = item.groupName ?? NO_GROUP
+    groups.set(key, [...(groups.get(key) ?? []), item])
+  }
+
+  return [...groups.entries()]
+    .map(([title, list]) => ({
+      title,
+      total: list.filter((i) => !i.isProjected).reduce((sum, i) => sum + i.amount, 0),
+      items: list,
+    }))
+    .sort((a, b) => (a.title === NO_GROUP ? 1 : b.title === NO_GROUP ? -1 : b.total - a.total))
 }
 
 function FinanceRow({ item, onOpen }: { item: FinanceItem; onOpen: () => void }) {
@@ -342,6 +376,7 @@ function FinanceRow({ item, onOpen }: { item: FinanceItem; onOpen: () => void })
           {coming && <span style={{ ...smallPillStyle, background: 'var(--warning-bg)', color: 'var(--warning)' }}>צפויה</span>}
           {income && item.incomeCategory && item.incomeCategory !== 'SALES' && <span>· {INCOME_CATEGORY_LABELS[item.incomeCategory]}</span>}
           {item.supplier && <span>· {item.supplier}</span>}
+          {item.groupName && <span style={{ ...smallPillStyle, background: 'var(--accent-bg)', color: 'var(--accent)' }}>{item.groupName}</span>}
           {item.typeName && <span style={{ ...smallPillStyle, background: 'var(--border)', color: 'var(--text)' }}>{item.typeName}</span>}
           {item.repeatEveryMonths && <span>↻ {item.repeatEveryMonths === 1 ? 'כל חודש' : `כל ${item.repeatEveryMonths} חודשים`}</span>}
           {item.orderId && (
@@ -359,6 +394,15 @@ function FinanceRow({ item, onOpen }: { item: FinanceItem; onOpen: () => void })
       </div>
     </button>
   )
+}
+
+const groupHeadingStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  fontSize: 14,
+  fontWeight: 600,
+  color: 'var(--text-muted)',
+  margin: '16px 4px 8px',
 }
 
 const periodBarStyle: React.CSSProperties = {
