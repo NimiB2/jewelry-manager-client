@@ -626,6 +626,14 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
           </span>
           <span style={{ fontSize: 24, fontWeight: 700 }}>{formatMoney(totals.final)}</span>
         </div>
+        {order && order.salary !== undefined && (
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+            משכורת: {formatMoney(order.salary)}
+            {order.laborHourRate
+              ? ` · ${order.items.reduce((sum, i) => sum + i.workHours * i.quantity, 0)} שעות × ${formatMoney(order.laborHourRate)}`
+              : ''}
+          </div>
+        )}
         {error && <p style={{ ...errorTextStyle, margin: '4px 0' }}>{error}</p>}
         {!locked && (
           <button

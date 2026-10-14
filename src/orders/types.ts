@@ -54,6 +54,9 @@ export type Order = {
   customerWhatsApp?: string | null
   customerMessage?: string | null
   customerNotifiedAt?: string | null
+  // The work hours of the order x the hourly rate frozen on it; it does not move when the settings change.
+  salary?: number
+  laborHourRate?: number
 }
 
 export type OrdersList = {
