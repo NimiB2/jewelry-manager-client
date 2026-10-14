@@ -189,6 +189,14 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           {completed ? '✓ ' : ''}
           {STATUS_LABELS[order.status]} ▾
         </button>
+        {order.status === 'IN_PROGRESS' && hasStages && (
+          <>
+            <StageChips stages={stages} current={order.preparationStage} disabled={busy} compact onPick={pickStage} />
+            <button type="button" onClick={advanceStage} disabled={busy} style={smallNextStyle}>
+              הבא ←
+            </button>
+          </>
+        )}
         <button
           type="button"
           onClick={toggleReceipt}
@@ -248,15 +256,6 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
           onConfirm={confirmComplete}
           onCancel={() => setConfirmingComplete(false)}
         />
-      )}
-
-      {order.status === 'IN_PROGRESS' && hasStages && (
-        <div style={actionRowStyle}>
-          <StageChips stages={stages} current={order.preparationStage} disabled={busy} compact onPick={pickStage} />
-          <button type="button" onClick={advanceStage} disabled={busy} style={smallNextStyle}>
-            הבא ←
-          </button>
-        </div>
       )}
 
       {next && !(order.status === 'IN_PROGRESS' && hasStages) && !confirmingComplete && (

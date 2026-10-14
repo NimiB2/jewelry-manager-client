@@ -5,6 +5,7 @@ import { formatOrderDate, todayIso } from '../orders/dates'
 import type { OrdersList } from '../orders/types'
 import { errorTextStyle, fieldInputStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import { InvoiceSection } from './InvoiceSection'
+import { categoryLook } from './categoryEmoji'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
 import {
   INCOME_CATEGORY_LABELS,
@@ -274,6 +275,9 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
 
       {/* The main group comes first: orders, business, home. The category below is the detail. */}
       {isExpense && expenseGroups.length > 0 && (
+        <p style={subTitleStyle}>סוג הוצאה</p>
+      )}
+      {isExpense && expenseGroups.length > 0 && (
         <div style={stripStyle} role="group" aria-label="קבוצה">
           {[...expenseGroups, ...(groupName && !expenseGroups.includes(groupName) ? [groupName] : [])].map((g) => (
             <button
@@ -290,13 +294,32 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       )}
 
       {strip.length > 0 ? (
-        <div style={stripStyle} role="group" aria-label="קטגוריה">
-          {strip.map((c) => (
-            <button key={c.key} type="button" aria-pressed={c.active} onClick={c.pick} style={stripItemStyle(c.active)}>
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <>
+          <p style={subTitleStyle}>{isExpense ? 'קטגוריה' : 'סוג הכנסה'}</p>
+          {isExpense ? (
+            <div style={categoryGridStyle} role="group" aria-label="קטגוריה">
+              {strip.map((c) => {
+                const look = categoryLook(c.label)
+                return (
+                  <button key={c.key} type="button" aria-pressed={c.active} onClick={c.pick} style={categoryTileStyle(c.active)}>
+                    <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>
+                      {look.emoji}
+                    </span>
+                    <span style={{ fontSize: 11, lineHeight: 1.15, overflowWrap: 'anywhere' }}>{look.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={stripStyle} role="group" aria-label="קטגוריה">
+              {strip.map((c) => (
+                <button key={c.key} type="button" aria-pressed={c.active} onClick={c.pick} style={stripItemStyle(c.active)}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         isExpense && <p style={hintStyle}>אפשר להגדיר קטגוריות הוצאה (חומרים, אריזה, שיווק) בהגדרות האישיות.</p>
       )}
@@ -550,6 +573,40 @@ function stripItemStyle(active: boolean): React.CSSProperties {
     fontWeight: active ? 700 : 400,
     color: active ? 'var(--accent)' : 'var(--text-muted)',
     cursor: 'pointer',
+  }
+}
+
+const subTitleStyle: React.CSSProperties = {
+  margin: '10px 2px 0',
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'var(--text-muted)',
+}
+
+// All categories at once: several small tiles per row, wrapping onto more rows instead of scrolling sideways.
+const categoryGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))',
+  gap: 6,
+  marginTop: 6,
+}
+
+function categoryTileStyle(active: boolean): React.CSSProperties {
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    minHeight: 56,
+    padding: '4px 2px',
+    borderRadius: 10,
+    cursor: 'pointer',
+    textAlign: 'center',
+    border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+    background: active ? 'var(--accent-bg)' : 'var(--surface)',
+    color: active ? 'var(--accent)' : 'var(--text)',
+    fontWeight: active ? 700 : 400,
   }
 }
 

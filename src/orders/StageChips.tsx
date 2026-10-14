@@ -21,7 +21,7 @@ export function StageChips({ stages, current, disabled, compact, onPick }: Stage
         scrollbarWidth: 'none',
         gap: 6,
         minWidth: 0,
-        flex: compact ? 1 : undefined,
+        flex: compact ? '1 1 150px' : undefined,
       }}
       role="group"
       aria-label="שלב הכנה"

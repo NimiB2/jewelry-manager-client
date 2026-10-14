@@ -106,7 +106,7 @@ export function ProductCalculator({ productId, custom, returnTo }: ProductCalcul
   const additions = useMemo(() => rowsToAdditions(rows), [rows])
 
   // Live price: ask the server whenever an input that affects the price changes.
-  const previewKey = JSON.stringify([material, weightNumber, extraHours, additions])
+  const previewKey = JSON.stringify([material, weightNumber, extraHours, additions, collectionIds])
   const requestCounter = useRef(0)
   useEffect(() => {
     if (!ready) return
@@ -125,6 +125,7 @@ export function ProductCalculator({ productId, custom, returnTo }: ProductCalcul
           weight: weightNumber,
           additionalWorkHours: Number(extraHours) || 0,
           additions,
+          collectionIds,
         }),
       })
         .then((breakdown) => {

@@ -70,6 +70,8 @@ export type Collection = {
   name: string
   isPermanent: boolean
   key: string | null
+  // Total work hours per piece for the whole collection; null = material hours plus the product's own extra.
+  fixedWorkHours?: number | null
 }
 
 export type SaveProductBody = {

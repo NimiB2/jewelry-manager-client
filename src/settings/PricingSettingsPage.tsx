@@ -1,6 +1,7 @@
 import { MaterialsForm, type MaterialsRecord } from './MaterialsForm'
 import { PricingAdditionsForm, type PricingAdditionsRecord } from './PricingAdditionsForm'
 import { FeesForm, type FeesItemsRecord } from './FeesForm'
+import { CollectionHoursForm } from './CollectionHoursForm'
 import { NumberFieldsForm } from './NumberFieldsForm'
 import { PricingFormulaDisplay } from './PricingFormulaDisplay'
 
@@ -30,6 +31,8 @@ export function PricingSettingsPage({
       />
 
       <MaterialsForm initialMaterials={materials} />
+
+      <CollectionHoursForm />
 
       <NumberFieldsForm
         title="תעריף שעתי"

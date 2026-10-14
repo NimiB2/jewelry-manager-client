@@ -47,12 +47,17 @@ export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState<'message' | 'phone' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // She can adjust the text before sending; the change lives only here, until the panel is closed.
+  const [edited, setEdited] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
 
   if (!order.customerMessage) return null
 
+  const message = edited ?? order.customerMessage
+
   const sent = !!order.customerNotifiedAt
   const link = order.customerWhatsApp
-    ? `https://wa.me/${order.customerWhatsApp}?text=${encodeURIComponent(order.customerMessage)}`
+    ? `https://wa.me/${order.customerWhatsApp}?text=${encodeURIComponent(message)}`
     : null
 
   async function copy(kind: 'message' | 'phone', text: string) {
@@ -85,9 +90,38 @@ export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
 
   return (
     <div style={panelStyle}>
-      <pre dir="rtl" style={messageStyle}>
-        {order.customerMessage}
-      </pre>
+      {editing ? (
+        <textarea
+          dir="rtl"
+          value={message}
+          onChange={(e) => setEdited(e.target.value)}
+          aria-label="עריכת ההודעה"
+          rows={Math.min(14, Math.max(5, message.split('\n').length + 1))}
+          style={{ ...messageStyle, width: '100%', boxSizing: 'border-box', padding: 8, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', color: 'var(--text)' }}
+        />
+      ) : (
+        <pre dir="rtl" style={messageStyle}>
+          {message}
+        </pre>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, margin: '6px 0 0' }}>
+        <button type="button" style={{ ...secondaryButtonStyle, minHeight: 36 }} onClick={() => setEditing((v) => !v)}>
+          {editing ? 'סיום עריכה' : '✎ עריכת ההודעה'}
+        </button>
+        {edited !== null && (
+          <button
+            type="button"
+            style={{ ...secondaryButtonStyle, minHeight: 36 }}
+            onClick={() => {
+              setEdited(null)
+              setEditing(false)
+            }}
+          >
+            שחזור למקור
+          </button>
+        )}
+      </div>
 
       <div style={{ ...mutedTextStyle, margin: '8px 0' }}>
         {order.customerPhone ? (
@@ -113,7 +147,7 @@ export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
         <button
           type="button"
           style={{ ...secondaryButtonStyle, minHeight: 40 }}
-          onClick={() => void copy('message', order.customerMessage ?? '')}
+          onClick={() => void copy('message', message)}
         >
           {copied === 'message' ? 'הועתק ✓' : 'העתקת ההודעה'}
         </button>
