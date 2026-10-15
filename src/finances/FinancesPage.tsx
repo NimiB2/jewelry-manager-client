@@ -13,7 +13,8 @@ import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
 import { navigate } from '../shell/useRoute'
 import { FinanceForm } from './FinanceForm'
-import { selectStyle, smallPillStyle } from './styles'
+import { categoryLook } from './categoryEmoji'
+import { chipStyle, selectStyle, smallPillStyle } from './styles'
 import { INCOME_CATEGORY_LABELS, type FinanceItem, type FinanceList, type TypeFilter } from './types'
 
 type ExpenseResponse = {
@@ -42,6 +43,26 @@ const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
 
 type FormState = { open: false } | { open: true; item: FinanceItem | null }
 
+const HIDDEN_KEY = 'finance-hidden-categories'
+const NO_CATEGORY = ''
+
+// The categories she chose to hide, remembered on this device.
+function loadHidden(): Set<string> {
+  try {
+    return new Set(JSON.parse(window.localStorage.getItem(HIDDEN_KEY) ?? '[]') as string[])
+  } catch {
+    return new Set()
+  }
+}
+
+function saveHidden(hidden: Set<string>) {
+  try {
+    window.localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hidden]))
+  } catch {
+    // Hiding still works for this visit.
+  }
+}
+
 // The movements: a compact period bar and totals on top, so the records themselves are the page.
 export function FinancesPage() {
   const now = new Date()
@@ -61,7 +82,26 @@ export function FinancesPage() {
   const [type, setType] = useState<TypeFilter>('all')
   const [invoice, setInvoice] = useState<'all' | 'missing' | 'has'>('all')
 
+  const [hidden, setHidden] = useState<Set<string>>(loadHidden)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
   const requestCounter = useRef(0)
+
+  function toggleCategory(name: string) {
+    const next = new Set(hidden)
+    if (next.has(name)) next.delete(name)
+    else next.add(name)
+    setHidden(next)
+    saveHidden(next)
+  }
+
+  function toggleGroup(title: string) {
+    const next = new Set(collapsed)
+    if (next.has(title)) next.delete(title)
+    else next.add(title)
+    setCollapsed(next)
+  }
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams({ projected: 'true' })
@@ -149,6 +189,17 @@ export function FinancesPage() {
 
   const yearOptions = [...new Set([...years, ...(year !== null ? [year] : [now.getFullYear()])])].sort((a, b) => b - a)
   const summary = data?.summary
+
+  // The expense categories present in this period, with how many records each has.
+  const categoryCounts = new Map<string, number>()
+  for (const i of data?.items ?? []) {
+    if (i.kind !== 'EXPENSE') continue
+    const key = i.typeName ?? NO_CATEGORY
+    categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1)
+  }
+  const categoryList = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])
+  const visibleItems = (data?.items ?? []).filter((i) => !(i.kind === 'EXPENSE' && hidden.has(i.typeName ?? NO_CATEGORY)))
+  const hiddenCount = (data?.items.length ?? 0) - visibleItems.length
 
   return (
     <div className="screen">
@@ -283,6 +334,37 @@ export function FinancesPage() {
         </button>
       </div>
 
+      {categoryList.length > 0 && type !== 'income' && (
+        <div style={{ marginBottom: 8 }}>
+          <button type="button" onClick={() => setFilterOpen((v) => !v)} aria-expanded={filterOpen} style={periodLinkStyle}>
+            קטגוריות הוצאה {filterOpen ? '▴' : '▾'}
+            {hidden.size > 0 && hiddenCount > 0 && ` · ${hiddenCount} הוצאות מוסתרות`}
+          </button>
+          {filterOpen && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+              {categoryList.map(([name, count]) => {
+                const look = categoryLook(name || 'ללא קטגוריה')
+                const shown = !hidden.has(name)
+                return (
+                  <button
+                    key={name || 'none'}
+                    type="button"
+                    aria-pressed={shown}
+                    onClick={() => toggleCategory(name)}
+                    style={{ ...chipStyle(shown), minHeight: 34, padding: '0 10px', fontSize: 13, opacity: shown ? 1 : 0.55 }}
+                  >
+                    {name ? `${look.emoji} ${look.label}` : 'ללא קטגוריה'} · {count}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          {hidden.size > 0 && hiddenCount > 0 && (
+            <p style={{ ...mutedTextStyle, margin: '4px 2px 0' }}>הסכומים למעלה כוללים גם את ההוצאות המוסתרות.</p>
+          )}
+        </div>
+      )}
+
       {error && <p style={errorTextStyle}>שגיאה: {error}</p>}
       {!data && !error && <SkeletonCards count={4} label="טוען" />}
 
@@ -298,21 +380,36 @@ export function FinancesPage() {
 
       {data && data.items.length > 0 && (
         <div style={{ paddingBottom: 90 }}>
-          {groupItems(data.items, type === 'expense').map((group) => (
-            <section key={group.title ?? 'all'}>
-              {group.title && (
-                <h2 style={groupHeadingStyle}>
-                  <span>{group.title}</span>
-                  <span dir="ltr">{formatMoney(group.total)}</span>
-                </h2>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {group.items.map((item) => (
-                  <FinanceRow key={`${item.kind}-${item.id}-${item.date}`} item={item} onOpen={() => void openRow(item)} />
-                ))}
-              </div>
-            </section>
-          ))}
+          {visibleItems.length === 0 && <p style={mutedTextStyle}>כל ההוצאות בתקופה הזו מוסתרות. אפשר להציג אותן מ"קטגוריות הוצאה".</p>}
+          {groupItems(visibleItems, type === 'expense').map((group) => {
+            const closed = group.title !== null && collapsed.has(group.title)
+            return (
+              <section key={group.title ?? 'all'}>
+                {group.title && (
+                  <h2 style={{ margin: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.title!)}
+                      aria-expanded={!closed}
+                      style={{ ...groupHeadingStyle, width: 'calc(100% - 8px)', border: 'none', background: 'transparent', cursor: 'pointer', font: 'inherit', fontWeight: 600 }}
+                    >
+                      <span>
+                        {closed ? '◂' : '▾'} {group.title} · {group.items.length}
+                      </span>
+                      <span dir="ltr">{formatMoney(group.total)}</span>
+                    </button>
+                  </h2>
+                )}
+                {!closed && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {group.items.map((item) => (
+                      <FinanceRow key={`${item.kind}-${item.id}-${item.date}`} item={item} onOpen={() => void openRow(item)} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })}
         </div>
       )}
 
