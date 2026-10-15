@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { apiJson } from '../api'
 import { monthName } from '../orders/dates'
 import { formatMoney } from '../products/format'
@@ -12,6 +12,7 @@ type Month = { month: number; income: number; expenses: number; salary: number; 
 type Slice = { name: string; amount: number; percent: number; count: number; previousAmount: number }
 type Pair = { group: string; category: string; amount: number; count: number; previousAmount: number }
 type Top = { name: string; revenue: number; quantity: number }
+type OrderSalary = { number: number; customer: string | null; hours: number; rate: number; salary: number }
 type Analysis = {
   year: number
   month: number | null
@@ -26,15 +27,21 @@ type Analysis = {
     incomePerHour: number | null
     fixedExpenses: number
     variableExpenses: number
+    orderCosts: number
+    homeExpenses: number
+    businessExpenses: number
   }
   byGroup: Slice[]
   byCategory: Slice[]
   byGroupCategory: Pair[]
   topProducts: Top[]
   topMaterials: Top[]
+  previous: { income: number; expenses: number }
+  trend: { year: number; month: number; income: number; expenses: number }[]
+  orderSalaries: OrderSalary[]
 }
 
-type View = 'expenses' | 'salary' | 'products'
+type View = 'overview' | 'expenses' | 'pay' | 'products'
 
 const hoursFormat = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 1 })
 
@@ -44,14 +51,23 @@ const PALETTE = ['#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#BA7517', '#D4537E
 // Name the server gives to expenses (or categories) that belong to no group.
 const NO_GROUP = 'ללא קבוצה'
 
-// Understanding the money in one glance: income, expenses and what is left; then where the money went,
-// by group, opening a group shows its categories.
+const whole = (value: number) => formatMoney(Math.round(value))
+
+// A change against the period before, as a percentage; null when there is nothing to compare with.
+function changePercent(current: number, previous: number): number | null {
+  if (previous <= 0) return null
+  return Math.round(((current - previous) / previous) * 100)
+}
+
+// The whole picture in four tabs: an overview, where the money went, what she can draw and what the
+// business earns, and what sold.
 export function AnalysisPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState<number | null>(now.getMonth() + 1)
-  const [view, setView] = useState<View>('expenses')
+  const [view, setView] = useState<View>('overview')
   const [openGroup, setOpenGroup] = useState<string | null>(null)
+  const [showAllOrders, setShowAllOrders] = useState(false)
   const [data, setData] = useState<Analysis | null>(null)
   const [years, setYears] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -65,6 +81,7 @@ export function AnalysisPage() {
         setData(result)
         setError(null)
         setOpenGroup(null)
+        setShowAllOrders(false)
       })
       .catch((err) => {
         if (current) setError(err instanceof Error ? err.message : String(err))
@@ -78,7 +95,7 @@ export function AnalysisPage() {
     apiJson<number[]>('/finances/years').then(setYears).catch(() => setYears([]))
   }, [])
 
-  // The categories of each group, biggest first, with their share of the group.
+  // The categories of each group, biggest first.
   const categoriesByGroup = useMemo(() => {
     const map = new Map<string, Slice[]>()
     for (const pair of data?.byGroupCategory ?? []) {
@@ -87,27 +104,22 @@ export function AnalysisPage() {
         { name: pair.category, amount: pair.amount, count: pair.count, previousAmount: pair.previousAmount, percent: 0 },
       ])
     }
-    for (const [group, list] of map) {
-      const total = list.reduce((sum, s) => sum + s.amount, 0)
-      map.set(
-        group,
-        list
-          .map((s) => ({ ...s, percent: total > 0 ? Math.round((s.amount / total) * 100) : 0 }))
-          .sort((a, b) => b.amount - a.amount),
-      )
-    }
+    for (const [group, list] of map) map.set(group, list.sort((a, b) => b.amount - a.amount))
     return map
   }, [data])
 
   const yearOptions = [...new Set([...years, year, now.getFullYear()])].sort((a, b) => b - a)
   const totals = data?.totals
   const net = totals ? totals.income - totals.expenses : 0
-  const maxSalary = data ? Math.max(1, ...data.months.map((m) => m.salary)) : 1
+  const previousNet = data ? data.previous.income - data.previous.expenses : 0
   const periodLabel = month === null ? `שנת ${year}` : `${monthName(month)} ${year}`
+  const previousLabel = month === null ? `${year - 1}` : month === 1 ? `דצמבר ${year - 1}` : monthName(month - 1)
 
-  // Last month's expenses, for the one comparison sentence. Not available for a whole year or January.
-  const previousExpenses = data && month !== null && month > 1 ? data.months[month - 2].expenses : null
-  const expensesDiff = totals && previousExpenses !== null ? totals.expenses - previousExpenses : null
+  // The business: income less what the orders cost and what the business spends. Home costs are paid
+  // from the salary, so they are not a cost of the business.
+  const profitBeforeSalary = totals ? totals.income - totals.orderCosts - totals.businessExpenses : 0
+  const profitAfterSalary = totals ? profitBeforeSalary - totals.salary : 0
+  const maxSalary = data ? Math.max(1, ...data.months.map((m) => m.salary)) : 1
 
   return (
     <div className="screen">
@@ -137,39 +149,52 @@ export function AnalysisPage() {
         </select>
       </div>
 
+      <div style={tabsStyle} role="tablist">
+        {(
+          [
+            ['overview', 'סקירה'],
+            ['expenses', 'הוצאות'],
+            ['pay', 'משכורת ורווח'],
+            ['products', 'מוצרים'],
+          ] as [View, string][]
+        ).map(([key, label]) => (
+          <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => setView(key)} style={tabStyle(view === key)}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       {error && <p style={errorTextStyle}>{error}</p>}
       {!data && !error && <p style={mutedTextStyle}>טוען...</p>}
 
       {data && totals && (
         <>
-          <section style={stripCardStyle} aria-label={`סיכום ${periodLabel}`}>
-            <div style={kpiGridStyle}>
-              <Kpi label="הכנסות" value={formatMoney(totals.income)} />
-              <Kpi label="הוצאות" value={formatMoney(totals.expenses)} />
-              <Kpi label="נשאר" value={formatMoney(net)} color={net < 0 ? 'var(--danger)' : 'var(--success)'} />
-            </div>
-          </section>
+          {view === 'overview' && (
+            <section aria-label={`סקירה ${periodLabel}`}>
+              <Card>
+                <div style={kpiGridStyle}>
+                  <Kpi label="הכנסות" value={whole(totals.income)} change={changePercent(totals.income, data.previous.income)} goodWhenUp />
+                  <Kpi label="הוצאות" value={whole(totals.expenses)} change={changePercent(totals.expenses, data.previous.expenses)} />
+                  <Kpi
+                    label="נשאר"
+                    value={whole(net)}
+                    color={net < 0 ? 'var(--danger)' : 'var(--success)'}
+                    change={changePercent(net, previousNet)}
+                    goodWhenUp
+                  />
+                </div>
+                <div style={{ ...smallMutedStyle, textAlign: 'center', marginTop: 6 }}>לעומת {previousLabel}</div>
+              </Card>
 
-          <div style={tabsStyle} role="tablist">
-            {(
-              [
-                ['expenses', 'הוצאות'],
-                ['salary', 'משכורת'],
-                ['products', 'מוצרים'],
-              ] as [View, string][]
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={view === key}
-                onClick={() => setView(key)}
-                style={tabStyle(view === key)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+              <Card title="הכנסות והוצאות, 6 חודשים אחרונים">
+                <TrendChart points={data.trend} />
+              </Card>
+
+              <Card title="שווה לשים לב">
+                <Insights data={data} profitBeforeSalary={profitBeforeSalary} previousLabel={previousLabel} />
+              </Card>
+            </section>
+          )}
 
           {view === 'expenses' && (
             <section>
@@ -177,11 +202,16 @@ export function AnalysisPage() {
 
               {data.byGroup.length > 0 && (
                 <>
-                  <div style={shareBarStyle} aria-hidden>
-                    {data.byGroup.map((g, i) => (
-                      <i key={g.name} style={{ width: `${g.percent}%`, background: colorOf(g, i) }} />
-                    ))}
-                  </div>
+                  <Card>
+                    <div style={shareBarStyle} aria-hidden>
+                      {data.byGroup.map((g, i) => (
+                        <i key={g.name} style={{ width: `${g.percent}%`, background: colorOf(g, i) }} />
+                      ))}
+                    </div>
+                    <div style={smallMutedStyle}>
+                      סך הכל {whole(totals.expenses)} · קבועות {whole(totals.fixedExpenses)} · משתנות {whole(totals.variableExpenses)}
+                    </div>
+                  </Card>
 
                   <div style={listStyle}>
                     {data.byGroup.map((g, i) => {
@@ -189,18 +219,13 @@ export function AnalysisPage() {
                       const categories = categoriesByGroup.get(g.name) ?? []
                       return (
                         <div key={g.name}>
-                          <button
-                            type="button"
-                            onClick={() => setOpenGroup(open ? null : g.name)}
-                            aria-expanded={open}
-                            style={groupRowStyle}
-                          >
+                          <button type="button" onClick={() => setOpenGroup(open ? null : g.name)} aria-expanded={open} style={groupRowStyle}>
                             <span style={{ ...dotStyle, background: colorOf(g, i) }} />
                             <span style={{ textAlign: 'right', fontWeight: 500 }}>
                               {g.name}
-                              {g.name === NO_GROUP && <span style={{ ...mutedTextStyle, fontSize: 12 }}> · {categories.length} קטגוריות</span>}
+                              {g.name === NO_GROUP && <span style={smallMutedStyle}> · {categories.length} קטגוריות</span>}
                             </span>
-                            <b style={{ fontWeight: 500 }}>{formatMoney(g.amount)}</b>
+                            <b style={{ fontWeight: 500 }}>{whole(g.amount)}</b>
                             <span style={percentStyle}>{g.percent}%</span>
                             <span aria-hidden style={{ color: 'var(--text-muted)', fontSize: 11 }}>
                               {open ? '▲' : '▼'}
@@ -225,66 +250,107 @@ export function AnalysisPage() {
                   </div>
                 </>
               )}
-
-              {expensesDiff !== null && expensesDiff !== 0 && (
-                <div style={{ ...mutedTextStyle, fontSize: 13, marginTop: 10 }}>
-                  בחודש שעבר הוצאת {formatMoney(previousExpenses ?? 0)}, החודש{' '}
-                  <b style={{ color: expensesDiff > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 500 }}>
-                    {formatMoney(Math.abs(expensesDiff))} {expensesDiff > 0 ? 'יותר' : 'פחות'}
-                  </b>
-                </div>
-              )}
             </section>
           )}
 
-          {view === 'salary' && (
+          {view === 'pay' && (
             <section>
-              <div style={{ ...stripCardStyle, marginBottom: 10 }}>
-                <div style={kpiGridStyle}>
-                  <Kpi label="משכורת" value={formatMoney(totals.salary)} />
-                  <Kpi label="אחרי משכורת" value={formatMoney(net - totals.salary)} />
-                  <Kpi
-                    label={`${hoursFormat.format(totals.workHours)} ש׳ · לשעה`}
-                    value={totals.incomePerHour === null ? '—' : formatMoney(totals.incomePerHour)}
-                  />
+              <Card title="המשכורת שמגיעה לך">
+                <div style={{ fontSize: 26, fontWeight: 600 }}>{whole(totals.salary)}</div>
+                <div style={smallMutedStyle}>
+                  {hoursFormat.format(totals.workHours)} שעות עבודה × תעריף השעה ששמור בכל הזמנה
                 </div>
-              </div>
-              <p style={{ ...mutedTextStyle, fontSize: 12, margin: '0 0 4px' }}>
-                שעות העבודה של ההזמנות כפול תעריף השעה ששמור בכל הזמנה. לחיצה על חודש פותחת את ההוצאות שלו.
-              </p>
-              {data.months.map((m) => (
-                <button
-                  key={m.month}
-                  type="button"
-                  onClick={() => {
-                    setMonth(m.month)
-                    setView('expenses')
-                  }}
-                  style={salaryRowStyle}
-                >
-                  <span style={{ textAlign: 'right' }}>{monthName(m.month).slice(0, 5)}</span>
-                  <span style={salaryTrackStyle}>
-                    <i style={{ display: 'block', height: '100%', width: `${(m.salary / maxSalary) * 100}%`, background: 'var(--accent)' }} />
-                  </span>
-                  <b style={{ fontWeight: 500 }}>{m.salary > 0 ? formatMoney(m.salary) : '—'}</b>
-                  <span style={{ ...mutedTextStyle, fontSize: 11 }}>
-                    {m.workHours > 0 ? `${hoursFormat.format(m.workHours)} ש׳` : ''}
-                  </span>
-                </button>
-              ))}
+
+                {data.orderSalaries.length > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    {(showAllOrders ? data.orderSalaries : data.orderSalaries.slice(0, 5)).map((o) => (
+                      <div key={o.number} style={lineStyle}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          הזמנה {o.number}
+                          {o.customer ? ` · ${o.customer}` : ''}
+                        </span>
+                        <span style={smallMutedStyle}>
+                          {hoursFormat.format(o.hours)} ש׳ × {formatMoney(o.rate)} = <b style={{ color: 'var(--text)', fontWeight: 500 }}>{whole(o.salary)}</b>
+                        </span>
+                      </div>
+                    ))}
+                    {data.orderSalaries.length > 5 && (
+                      <button type="button" onClick={() => setShowAllOrders((v) => !v)} style={linkButtonStyle}>
+                        {showAllOrders ? 'הצגת פחות' : `עוד ${data.orderSalaries.length - 5} הזמנות`}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {data.orderSalaries.length === 0 && <p style={{ ...mutedTextStyle, margin: '8px 0 0' }}>אין הזמנות עם שעות עבודה בתקופה הזו.</p>}
+              </Card>
+
+              <Card title="כמה העסק מרוויח">
+                <div style={lineStyle}>
+                  <span>הכנסות</span>
+                  <b style={moneyStyle}>{whole(totals.income)}</b>
+                </div>
+                <div style={lineStyle}>
+                  <span>עלות חומרים להזמנות</span>
+                  <b style={moneyStyle}>− {whole(totals.orderCosts)}</b>
+                </div>
+                <div style={lineStyle}>
+                  <span>הוצאות עסק</span>
+                  <b style={moneyStyle}>− {whole(totals.businessExpenses)}</b>
+                </div>
+                <Result label="רווח העסק, לפני משכורת" value={profitBeforeSalary} note="מה שהעסק מרוויח בלי קשר למשכורת" />
+                <div style={{ ...lineStyle, marginTop: 8 }}>
+                  <span>משכורת לפי שעות</span>
+                  <b style={moneyStyle}>− {whole(totals.salary)}</b>
+                </div>
+                <Result label="רווח העסק, אחרי משכורת" value={profitAfterSalary} note="מה שנשאר בעסק אחרי שאת מושכת את כל המשכורת" />
+                {totals.orderCosts === 0 && totals.income > 0 && (
+                  <p style={noteStyle}>אין הוצאות מקושרות להזמנות בתקופה הזו, אז הרווח נראה גבוה מהמציאות. כדאי לוודא שקניות החומר נרשמו.</p>
+                )}
+                {totals.homeExpenses > 0 && (
+                  <p style={{ ...smallMutedStyle, margin: '8px 0 0' }}>
+                    הוצאות הבית ({whole(totals.homeExpenses)}) משולמות מהמשכורת ולא נספרות כהוצאת עסק.
+                  </p>
+                )}
+              </Card>
+
+              <Card title="כמה אפשר למשוך">
+                <Withdraw salary={totals.salary} profit={profitBeforeSalary} home={totals.homeExpenses} />
+              </Card>
+
+              {month === null && (
+                <Card title="משכורת לפי חודש">
+                  {data.months.map((m) => (
+                    <button
+                      key={m.month}
+                      type="button"
+                      onClick={() => setMonth(m.month)}
+                      style={salaryRowStyle}
+                      aria-label={`${monthName(m.month)}, משכורת ${whole(m.salary)}`}
+                    >
+                      <span style={{ textAlign: 'right' }}>{monthName(m.month).slice(0, 5)}</span>
+                      <span style={salaryTrackStyle}>
+                        <i style={{ display: 'block', height: '100%', width: `${(m.salary / maxSalary) * 100}%`, background: 'var(--accent)' }} />
+                      </span>
+                      <b style={{ fontWeight: 500 }}>{m.salary > 0 ? whole(m.salary) : '—'}</b>
+                      <span style={smallMutedStyle}>{m.workHours > 0 ? `${hoursFormat.format(m.workHours)} ש׳` : ''}</span>
+                    </button>
+                  ))}
+                </Card>
+              )}
             </section>
           )}
 
           {view === 'products' && (
             <section>
-              {totals.orders > 0 && (
-                <p style={{ ...mutedTextStyle, fontSize: 13, margin: '0 0 8px' }}>
-                  {totals.orders} הזמנות · ממוצע להזמנה {formatMoney(totals.averageOrder)}
-                </p>
-              )}
-              <TopList title="מוצרים" items={data.topProducts} />
-              <TopList title="חומרים" items={data.topMaterials} />
+              <Card>
+                <div style={{ ...kpiGridStyle, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                  <Kpi label="הזמנות" value={String(totals.orders)} />
+                  <Kpi label="ממוצע להזמנה" value={totals.orders > 0 ? whole(totals.averageOrder) : '—'} />
+                </div>
+              </Card>
               {data.topProducts.length === 0 && <p style={mutedTextStyle}>אין הזמנות בתקופה הזו.</p>}
+              <TopList title="מוצרים מובילים" items={data.topProducts} />
+              <TopList title="חומרים" items={data.topMaterials} showShare />
             </section>
           )}
         </>
@@ -297,12 +363,167 @@ function colorOf(group: Slice, index: number): string {
   return group.name === NO_GROUP ? PALETTE[PALETTE.length - 1] : PALETTE[Math.min(index, PALETTE.length - 2)]
 }
 
-function Kpi({ label, value, color }: { label: string; value: string; color?: string }) {
+function Card({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <div style={cardStyle}>
+      {title && <div style={cardTitleStyle}>{title}</div>}
+      {children}
+    </div>
+  )
+}
+
+// A number with its label and, when there is a previous period, how much it moved.
+function Kpi({
+  label,
+  value,
+  color,
+  change,
+  goodWhenUp,
+}: {
+  label: string
+  value: string
+  color?: string
+  change?: number | null
+  goodWhenUp?: boolean
+}) {
+  const better = change !== null && change !== undefined && (goodWhenUp ? change > 0 : change < 0)
   return (
     <div style={{ textAlign: 'center', minWidth: 0 }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: color ?? 'var(--text)', whiteSpace: 'nowrap' }}>{value}</div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+      {change !== null && change !== undefined && change !== 0 && (
+        <div style={{ fontSize: 11, color: better ? 'var(--success)' : 'var(--danger)' }}>
+          {change > 0 ? '▲' : '▼'} {Math.abs(change)}%
+        </div>
+      )}
     </div>
+  )
+}
+
+// A line of the profit statement: a bold total with a plain-words explanation under it.
+function Result({ label, value, note }: { label: string; value: number; note: string }) {
+  return (
+    <div style={{ ...resultStyle, background: value < 0 ? 'var(--danger-bg)' : 'var(--accent-bg)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <span style={{ fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 17, fontWeight: 600, color: value < 0 ? 'var(--danger)' : 'var(--text)' }}>{whole(value)}</span>
+      </div>
+      <div style={smallMutedStyle}>{note}</div>
+    </div>
+  )
+}
+
+// How much of the salary the business can actually pay out.
+function Withdraw({ salary, profit, home }: { salary: number; profit: number; home: number }) {
+  if (salary <= 0) return <p style={{ ...mutedTextStyle, margin: 0 }}>אין משכורת בתקופה הזו.</p>
+
+  const canPay = Math.max(0, Math.min(salary, profit))
+  const share = Math.round((canPay / salary) * 100)
+  const covers = profit >= salary
+  return (
+    <>
+      <div style={trackStyle} aria-hidden>
+        <i style={{ display: 'block', height: '100%', width: `${share}%`, background: covers ? 'var(--success)' : 'var(--warning)' }} />
+      </div>
+      <div style={{ ...lineStyle, borderBottom: 'none' }}>
+        <span>{covers ? 'העסק יכול לשלם את כל המשכורת' : profit <= 0 ? 'העסק לא מרוויח מספיק כדי לשלם משכורת' : 'העסק יכול לשלם רק חלק מהמשכורת'}</span>
+        <b style={moneyStyle}>
+          {whole(canPay)} מתוך {whole(salary)}
+        </b>
+      </div>
+      {home > 0 && (
+        <div style={smallMutedStyle}>
+          אחרי הוצאות הבית ({whole(home)}) נשארים {whole(canPay - home)} מהמשכורת
+        </div>
+      )}
+    </>
+  )
+}
+
+function TrendChart({ points }: { points: Analysis['trend'] }) {
+  const max = Math.max(1, ...points.flatMap((p) => [p.income, p.expenses]))
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 70 }}>
+        {points.map((p) => (
+          <div
+            key={`${p.year}-${p.month}`}
+            style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 2 }}
+            title={`${monthName(p.month)}: הכנסות ${whole(p.income)}, הוצאות ${whole(p.expenses)}`}
+          >
+            <i style={{ width: 9, height: `${(p.income / max) * 100}%`, minHeight: p.income > 0 ? 2 : 0, background: 'var(--accent)' }} />
+            <i style={{ width: 9, height: `${(p.expenses / max) * 100}%`, minHeight: p.expenses > 0 ? 2 : 0, background: 'var(--text-muted)' }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        {points.map((p) => (
+          <span key={`${p.year}-${p.month}`} style={{ flex: 1, textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
+            {monthName(p.month).slice(0, 3)}
+          </span>
+        ))}
+      </div>
+      <div style={{ ...smallMutedStyle, marginTop: 6 }}>
+        <i style={{ display: 'inline-block', width: 8, height: 8, background: 'var(--accent)' }} /> הכנסות &nbsp;
+        <i style={{ display: 'inline-block', width: 8, height: 8, background: 'var(--text-muted)' }} /> הוצאות
+      </div>
+    </>
+  )
+}
+
+// Plain-language things that moved, picked by simple rules: nothing here is a guess.
+function Insights({ data, profitBeforeSalary, previousLabel }: { data: Analysis; profitBeforeSalary: number; previousLabel: string }) {
+  const items: ReactNode[] = []
+  const { totals, previous } = data
+
+  const expensesChange = changePercent(totals.expenses, previous.expenses)
+  if (expensesChange !== null && Math.abs(expensesChange) >= 5) {
+    items.push(
+      <>
+        ההוצאות {expensesChange > 0 ? 'עלו' : 'ירדו'} ב-{Math.abs(expensesChange)}% לעומת {previousLabel}
+      </>,
+    )
+  }
+
+  const rising = [...data.byCategory]
+    .filter((c) => c.previousAmount > 0 && c.amount - c.previousAmount > 0)
+    .sort((a, b) => b.amount - b.previousAmount - (a.amount - a.previousAmount))[0]
+  if (rising) {
+    items.push(
+      <>
+        {categoryLook(rising.name).label} עלתה ב-{whole(rising.amount - rising.previousAmount)} לעומת {previousLabel}
+      </>,
+    )
+  }
+
+  if (totals.salary > 0) {
+    items.push(
+      profitBeforeSalary >= totals.salary ? (
+        <>העסק יכול לשלם את כל המשכורת ({whole(totals.salary)})</>
+      ) : (
+        <>העסק יכול לשלם רק {whole(Math.max(0, profitBeforeSalary))} מתוך משכורת של {whole(totals.salary)}</>
+      ),
+    )
+  }
+
+  const ungrouped = data.byGroup.find((g) => g.name === NO_GROUP)
+  if (ungrouped && ungrouped.amount > 0) {
+    items.push(
+      <>
+        {whole(ungrouped.amount)} הוצאות בלי קבוצה. <a href="#/settings" style={{ color: 'var(--accent)' }}>לשיוך בהגדרות</a>
+      </>,
+    )
+  }
+
+  if (items.length === 0) return <p style={{ ...mutedTextStyle, margin: 0 }}>אין שינויים בולטים בתקופה הזו.</p>
+  return (
+    <>
+      {items.map((item, i) => (
+        <div key={i} style={{ ...lineStyle, display: 'block' }}>
+          {item}
+        </div>
+      ))}
+    </>
   )
 }
 
@@ -317,49 +538,89 @@ function CategoryRow({ slice, month }: { slice: Slice; month: number | null }) {
         <span aria-hidden>{look.emoji} </span>
         {look.label}
       </span>
-      <b style={{ fontWeight: 500 }}>{formatMoney(slice.amount)}</b>
+      <b style={{ fontWeight: 500 }}>{whole(slice.amount)}</b>
       <span
         style={{ fontSize: 11, textAlign: 'left', color: diff > 0 ? 'var(--danger)' : 'var(--success)' }}
         title={hasPrevious ? `לעומת ${month === null ? 'השנה שעברה' : 'החודש הקודם'}` : undefined}
       >
-        {hasPrevious ? `${diff > 0 ? '▲' : '▼'} ${formatMoney(Math.abs(diff))}` : ''}
+        {hasPrevious ? `${diff > 0 ? '▲' : '▼'} ${whole(Math.abs(diff))}` : ''}
       </span>
     </div>
   )
 }
 
-function TopList({ title, items }: { title: string; items: Top[] }) {
+function TopList({ title, items, showShare }: { title: string; items: Top[]; showShare?: boolean }) {
   if (items.length === 0) return null
+  const total = items.reduce((sum, t) => sum + t.revenue, 0)
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ ...mutedTextStyle, fontSize: 12, margin: '2px 0' }}>{title}</div>
+    <Card title={title}>
       {items.map((t, i) => (
-        <div key={t.name} style={{ ...categoryRowStyle, gridTemplateColumns: 'minmax(0, 1fr) auto 44px', paddingInline: 0 }}>
-          <span style={{ textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div key={t.name} style={lineStyle}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {i + 1}. {t.name}
           </span>
-          <b style={{ fontWeight: 500 }}>{formatMoney(t.revenue)}</b>
-          <span style={{ ...mutedTextStyle, fontSize: 11 }}>{t.quantity} יח׳</span>
+          <span>
+            <b style={moneyStyle}>{whole(t.revenue)}</b>{' '}
+            <span style={smallMutedStyle}>
+              {showShare && total > 0 ? `${Math.round((t.revenue / total) * 100)}%` : `${t.quantity} יח׳`}
+            </span>
+          </span>
         </div>
       ))}
-    </div>
+    </Card>
   )
 }
 
-const stripCardStyle: CSSProperties = {
+const cardStyle: CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',
   borderRadius: 12,
-  padding: '12px 10px',
+  padding: '12px',
+  marginBottom: 10,
 }
+
+const cardTitleStyle: CSSProperties = { fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }
+
+const smallMutedStyle: CSSProperties = { fontSize: 12, color: 'var(--text-muted)' }
 
 const kpiGridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 4 }
 
+const lineStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'baseline',
+  gap: 8,
+  padding: '7px 0',
+  borderBottom: '1px solid var(--border)',
+  fontSize: 14,
+}
+
+const moneyStyle: CSSProperties = { fontWeight: 500, whiteSpace: 'nowrap' }
+
+const resultStyle: CSSProperties = { marginTop: 6, padding: '8px 10px', borderRadius: 10 }
+
+const noteStyle: CSSProperties = {
+  margin: '8px 0 0',
+  padding: '6px 8px',
+  borderRadius: 8,
+  background: 'var(--warning-bg)',
+  fontSize: 12,
+}
+
+const linkButtonStyle: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--accent)',
+  fontSize: 13,
+  padding: '8px 0 0',
+  cursor: 'pointer',
+}
+
 const tabsStyle: CSSProperties = {
   display: 'flex',
-  gap: 4,
+  gap: 2,
   padding: 3,
-  margin: '12px 0',
+  margin: '0 0 12px',
   borderRadius: 10,
   background: 'var(--border)',
 }
@@ -367,10 +628,10 @@ const tabsStyle: CSSProperties = {
 function tabStyle(active: boolean): CSSProperties {
   return {
     flex: 1,
-    minHeight: 34,
+    minHeight: 36,
     border: 'none',
     borderRadius: 8,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: active ? 700 : 400,
     cursor: 'pointer',
     background: active ? 'var(--surface)' : 'transparent',
@@ -386,6 +647,8 @@ const shareBarStyle: CSSProperties = {
   background: 'var(--border)',
   margin: '2px 0 8px',
 }
+
+const trackStyle: CSSProperties = { height: 8, borderRadius: 4, background: 'var(--border)', overflow: 'hidden', marginBottom: 6 }
 
 const listStyle: CSSProperties = {
   background: 'var(--surface)',
