@@ -10,7 +10,7 @@ export type Route =
   // custom + returnTo: the calculator was opened from an order to make a one-off item.
   | { page: 'product-form'; productId: string | null; custom: boolean; returnTo: string | null }
   // view: the movements list, or the invoices view (expenses and whether each has an invoice).
-  | { page: 'finances'; view: 'all' | 'invoices' | 'analysis' | 'receipts' | 'groups' }
+  | { page: 'finances'; view: 'all' | 'invoices' | 'analysis' | 'receipts' }
   | { page: 'tasks' }
   // Bring the online store's products next to the catalog and tie them together.
   | { page: 'shopify' }
@@ -41,7 +41,7 @@ function parse(hash: string): Route {
       return {
         page: 'finances',
         view:
-          parts[1] === 'invoices' ? 'invoices' : parts[1] === 'analysis' ? 'analysis' : parts[1] === 'receipts' ? 'receipts' : parts[1] === 'groups' ? 'groups' : 'all',
+          parts[1] === 'invoices' ? 'invoices' : parts[1] === 'analysis' ? 'analysis' : parts[1] === 'receipts' ? 'receipts' : 'all',
       }
     case 'tasks':
       return { page: 'tasks' }

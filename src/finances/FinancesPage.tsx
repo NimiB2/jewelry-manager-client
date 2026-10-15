@@ -166,6 +166,24 @@ export function FinancesPage() {
         <h1 style={{ margin: 0 }}>כספים</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <SearchButton />
+          <a
+            href="#/finances/receipts"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              minHeight: 40,
+              padding: '0 12px',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              fontSize: 14,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ייבוא קבלות
+          </a>
           <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 40 }}>
             + הוספה
           </button>

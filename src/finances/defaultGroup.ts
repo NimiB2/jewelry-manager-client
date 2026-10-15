@@ -43,9 +43,13 @@ export function ordersGroupOf(groups: string[]): string {
 }
 
 // Returns the name of one of her groups, or '' when the category matches no rule or the group is missing.
-export function defaultGroupFor(typeName: string, groups: string[]): string {
+// `typeGroups` is the category-to-group choice saved in her settings; it wins over everything else.
+export function defaultGroupFor(typeName: string, groups: string[], typeGroups: Record<string, string> = {}): string {
   const name = typeName.trim()
   if (!name) return ''
+
+  const saved = typeGroups[name]
+  if (saved && groups.includes(saved)) return saved
 
   const chosen = loadCategoryGroups()[name]
   if (chosen && groups.includes(chosen)) return chosen

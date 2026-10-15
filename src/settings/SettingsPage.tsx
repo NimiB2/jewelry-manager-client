@@ -18,6 +18,7 @@ type SettingsData = {
   discountPresets?: number[]
   testOrderPrefix?: string
   expenseTypes?: string[]
+  expenseTypeGroups?: Record<string, string>
   expenseSuppliers?: string[]
   expenseGroups?: string[]
   taskCategories?: string[]
@@ -88,6 +89,7 @@ export function SettingsPage() {
           discountPresets={settings.data.discountPresets ?? []}
           testOrderPrefix={settings.data.testOrderPrefix ?? ''}
           expenseTypes={settings.data.expenseTypes ?? []}
+          expenseTypeGroups={settings.data.expenseTypeGroups ?? {}}
           expenseSuppliers={settings.data.expenseSuppliers ?? []}
           expenseGroups={settings.data.expenseGroups ?? []}
           taskCategories={settings.data.taskCategories ?? []}

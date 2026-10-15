@@ -8,6 +8,7 @@ import { InvoiceSection } from './InvoiceSection'
 import { categoryLook } from './categoryEmoji'
 import { STOCK_GROUP, defaultGroupFor, ordersGroupOf } from './defaultGroup'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
+import { typeForSupplier } from './supplierMatch'
 import {
   INCOME_CATEGORY_LABELS,
   type FinanceItem,
@@ -68,6 +69,11 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
   const [groupName, setGroupName] = useState(item?.groupName ?? '')
   const [expenseGroups, setExpenseGroups] = useState<string[]>([])
   const [expenseTypes, setExpenseTypes] = useState<string[]>([])
+  const [typeGroups, setTypeGroups] = useState<Record<string, string>>({})
+  const [supplierTypes, setSupplierTypes] = useState<Record<string, string>>({})
+  // Once she picks a category herself, the supplier no longer chooses one for her.
+  const [typeTouched, setTypeTouched] = useState(false)
+  const [attempted, setAttempted] = useState(false)
   const [suppliers, setSuppliers] = useState<string[]>([])
   const [orders, setOrders] = useState<OrderOption[]>([])
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -80,16 +86,18 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
     repeat === 'once' ? null : repeat === 'other' ? Math.min(24, Math.max(1, Math.round(Number(every)) || 1)) : Number(repeat)
 
   useEffect(() => {
-    apiJson<{ data: { expenseTypes?: string[]; expenseGroups?: string[] } }>('/settings')
+    apiJson<{ data: { expenseTypes?: string[]; expenseGroups?: string[]; expenseTypeGroups?: Record<string, string> } }>('/settings')
       .then((s) => {
         setExpenseTypes(s.data.expenseTypes ?? [])
         setExpenseGroups(s.data.expenseGroups ?? [])
+        setTypeGroups(s.data.expenseTypeGroups ?? {})
       })
       .catch(() => {
         setExpenseTypes([])
         setExpenseGroups([])
       })
     apiJson<string[]>('/expenses/suppliers').then(setSuppliers).catch(() => setSuppliers([]))
+    apiJson<Record<string, string>>('/expenses/supplier-types').then(setSupplierTypes).catch(() => setSupplierTypes({}))
     isInvoiceReaderAvailable().then(setReaderAvailable).catch(() => setReaderAvailable(false))
     apiJson<OrdersList>('/orders?status=all')
       .then((list) =>
@@ -107,11 +115,19 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
   // and a purchase marked as stock stays stock when the category changes between materials.
   useEffect(() => {
     if (editing && typeName === item?.typeName) return
-    const wanted = defaultGroupFor(typeName, expenseGroups)
+    const wanted = defaultGroupFor(typeName, expenseGroups, typeGroups)
     if (!wanted) return
     setGroupName((current) => (current === STOCK_GROUP && wanted === ordersGroupOf(expenseGroups) ? current : wanted))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeName, expenseGroups])
+  }, [typeName, expenseGroups, typeGroups])
+
+  // A supplier she has bought from before brings its usual category, which she can still change.
+  useEffect(() => {
+    if (editing || typeTouched || typeName !== '' || !supplier.trim()) return
+    const usual = typeForSupplier(supplierTypes, supplier)
+    if (usual && expenseTypes.includes(usual)) setTypeName(usual)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplier, supplierTypes, expenseTypes])
 
   // The invoice is the first thing she adds. When a reader is connected it fills the form from the
   // invoice; whatever she already typed is kept, and she can change everything before saving.
@@ -130,7 +146,10 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       if (found.date) setDate(found.date)
       if (found.supplier) setSupplier((current) => (current.trim() === '' ? found.supplier! : current))
       if (found.description) setDescription((current) => (current.trim() === '' ? found.description! : current))
-      if (found.typeName) setTypeName((current) => (current === '' ? found.typeName! : current))
+      // The supplier's usual category is a better guess than the reader's.
+      const usual = found.supplier ? typeForSupplier(supplierTypes, found.supplier) : ''
+      const guessed = usual || found.typeName
+      if (guessed) setTypeName((current) => (current === '' ? guessed : current))
       setReadNote('הפרטים מולאו מהחשבונית. כדאי לבדוק לפני שמירה.')
     } catch {
       setReadNote('הקריאה האוטומטית לא זמינה כרגע, אפשר למלא ידנית.')
@@ -180,14 +199,21 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
     }
   }
 
-  function save() {
-    const value = Number(amount)
-    if (!Number.isFinite(value) || value <= 0) return setError('צריך להזין סכום')
-    if (!date) return setError('צריך לבחור תאריך')
+  // What still blocks saving. The name is optional: the category stands in for it.
+  const amountValue = Number(amount)
+  const missing: string[] = []
+  if (!Number.isFinite(amountValue) || amountValue <= 0) missing.push('סכום')
+  if (!date) missing.push('תאריך')
+  if (isExpense && !typeName && !description.trim()) missing.push('קטגוריה או שם')
 
-    // The name is optional: the category stands in for it.
+  function save() {
+    if (missing.length > 0) {
+      setAttempted(true)
+      return
+    }
+
+    const value = amountValue
     const text = description.trim() || (isExpense ? typeName : INCOME_CATEGORY_LABELS[incomeCategory])
-    if (!text) return setError('בחרי קטגוריה או כתבי שם')
 
     if (isExpense) {
       void submit(() => saveExpense(value, text))
@@ -243,11 +269,21 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
   const incomeCategories = Object.keys(INCOME_CATEGORY_LABELS) as IncomeCategory[]
   const showOrderPicker = isExpense && !repeatMonths && !inSeries
   const showRepeatPicker = isExpense && !editing
+  // Material purchases choose their order in the purpose box above; other categories keep the small field.
+  const showSmallOrder = showOrderPicker && !isOrderCategory
 
   // The categories, as plain words on one line that scrolls sideways.
   const strip: { key: string; label: string; active: boolean; pick: () => void }[] = isExpense
     ? [
-        ...expenseTypes.map((t) => ({ key: t, label: t, active: typeName === t, pick: () => setTypeName(typeName === t ? '' : t) })),
+        ...expenseTypes.map((t) => ({
+          key: t,
+          label: t,
+          active: typeName === t,
+          pick: () => {
+            setTypeTouched(true)
+            setTypeName(typeName === t ? '' : t)
+          },
+        })),
         // A category that was removed from the settings still shows on the expense that has it.
         ...(typeName && !expenseTypes.includes(typeName) ? [{ key: typeName, label: typeName, active: true, pick: () => setTypeName('') }] : []),
       ]
@@ -284,7 +320,7 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       )}
 
       {/* The amount is the one thing she always fills in by hand, so it is the big field. */}
-      <div style={amountBoxStyle}>
+      <div style={{ ...amountBoxStyle, ...(attempted && missing.includes('סכום') ? { borderColor: 'var(--danger)' } : {}) }}>
         <label style={{ flex: 1, minWidth: 0 }}>
           <span style={tinyLabelStyle}>סכום</span>
           <input
@@ -302,22 +338,6 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
         </label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="תאריך" style={dateStyle} />
       </div>
-
-      {/* The group follows the category by itself. Only a material or stone purchase asks one more thing:
-          is it for orders, or stock for new pieces (no specific order needed). */}
-      {isExpense && isOrderCategory && (
-        <>
-          <p style={subTitleStyle}>הרכישה היא</p>
-          <div style={stripStyle} role="group" aria-label="להזמנות או למלאי">
-            <button type="button" aria-pressed={!forStock} onClick={() => setGroupName(ordersGroup)} style={stripItemStyle(!forStock)}>
-              להזמנות
-            </button>
-            <button type="button" aria-pressed={forStock} onClick={() => void chooseStock()} style={stripItemStyle(forStock)}>
-              למלאי
-            </button>
-          </div>
-        </>
-      )}
 
       {strip.length > 0 ? (
         <>
@@ -348,6 +368,52 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
         </>
       ) : (
         isExpense && <p style={hintStyle}>אפשר להגדיר קטגוריות הוצאה (חומרים, אריזה, שיווק) בהגדרות האישיות.</p>
+      )}
+
+      {/* Under the categories, so picking one never moves them. A material or stone purchase asks one more
+          thing: is it for orders, or stock for new pieces (no specific order needed). */}
+      {isExpense && isOrderCategory && (
+        <div style={purposeBoxStyle}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>החומר הזה הוא עבור:</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }} role="group" aria-label="להזמנות או למלאי">
+            <button type="button" aria-pressed={!forStock} onClick={() => setGroupName(ordersGroup)} style={purposeButtonStyle(!forStock)}>
+              הזמנה
+            </button>
+            <button type="button" aria-pressed={forStock} onClick={() => void chooseStock()} style={purposeButtonStyle(forStock)}>
+              מלאי
+            </button>
+          </div>
+          {!forStock && showOrderPicker && (
+            <select
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              aria-label="הזמנה"
+              style={{ ...bareSelectStyle, marginTop: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)' }}
+            >
+              <option value="">איזו הזמנה? (לא חובה)</option>
+              {item?.orderId && !orders.some((o) => o.id === item.orderId) && <option value={item.orderId}>#{item.orderNumber}</option>}
+              {orders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
+      {/* A category with no default group (a new one): ask once here, instead of leaving the expense ungrouped. */}
+      {isExpense && typeName && !groupName && !isOrderCategory && expenseGroups.length > 0 && (
+        <>
+          <p style={subTitleStyle}>לאיזו קבוצה זה שייך?</p>
+          <div style={stripStyle} role="group" aria-label="קבוצה">
+            {expenseGroups.map((g) => (
+              <button key={g} type="button" aria-pressed={false} onClick={() => setGroupName(g)} style={stripItemStyle(false)}>
+                {g}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Name, supplier and a note: one under the other, each smaller than the one above it. */}
@@ -408,9 +474,9 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
         )}
       </div>
 
-      {isExpense && (showOrderPicker || showRepeatPicker || (editing && inSeries)) && (
-        <div style={{ display: 'grid', gridTemplateColumns: showOrderPicker && (showRepeatPicker || inSeries) ? '1fr 1fr' : '1fr', gap: 8, marginTop: 10 }}>
-          {showOrderPicker && (
+      {isExpense && (showSmallOrder || showRepeatPicker || (editing && inSeries)) && (
+        <div style={{ display: 'grid', gridTemplateColumns: showSmallOrder && (showRepeatPicker || inSeries) ? '1fr 1fr' : '1fr', gap: 8, marginTop: 10 }}>
+          {showSmallOrder && (
             <SmallField label="הזמנה">
               <select value={orderId} onChange={(e) => setOrderId(e.target.value)} aria-label="הזמנה" style={bareSelectStyle}>
                 <option value="">ללא</option>
@@ -470,15 +536,29 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
 
       {error && <p style={{ ...errorTextStyle, margin: '8px 0 0' }}>{error}</p>}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        <button type="button" onClick={save} disabled={busy} style={{ ...primaryButtonStyle, flex: 1, minHeight: 48 }}>
-          {busy ? 'שומר...' : 'שמירה'}
-        </button>
-        {!editing && (
-          <button type="button" onClick={onCancel} disabled={busy} style={secondaryButtonStyle}>
-            ביטול
-          </button>
+      {/* Always in view at the bottom of the window, so saving never needs a scroll. */}
+      <div style={saveBarStyle}>
+        {missing.length > 0 && (
+          <p style={{ margin: '0 0 6px', fontSize: 12, color: attempted ? 'var(--danger)' : 'var(--text-muted)' }}>
+            חסר: {missing.join(', ')}
+          </p>
         )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy}
+            aria-disabled={missing.length > 0}
+            style={{ ...primaryButtonStyle, flex: 1, minHeight: 48, opacity: missing.length > 0 ? 0.5 : 1 }}
+          >
+            {busy ? 'שומר...' : 'שמירה'}
+          </button>
+          {!editing && (
+            <button type="button" onClick={onCancel} disabled={busy} style={secondaryButtonStyle}>
+              ביטול
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Deleting sits right under Save, in plain view, and always asks first. */}
@@ -531,6 +611,38 @@ function SmallField({ label, children }: { label: string; children: ReactNode })
       {children}
     </div>
   )
+}
+
+// Sticks to the bottom edge of the scrolling window; the negative margin makes it span the window's full width.
+const saveBarStyle: React.CSSProperties = {
+  position: 'sticky',
+  bottom: 0,
+  zIndex: 2,
+  margin: '12px -16px -16px',
+  padding: '10px 16px 14px',
+  background: 'var(--bg)',
+  borderTop: '1px solid var(--border)',
+}
+
+const purposeBoxStyle: React.CSSProperties = {
+  marginTop: 10,
+  padding: '10px 12px',
+  borderRadius: 12,
+  border: '1px solid var(--border)',
+  background: 'var(--surface)',
+}
+
+function purposeButtonStyle(active: boolean): React.CSSProperties {
+  return {
+    minHeight: 44,
+    borderRadius: 10,
+    fontSize: 15,
+    fontWeight: active ? 700 : 500,
+    cursor: 'pointer',
+    border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+    background: active ? 'var(--accent-bg)' : 'transparent',
+    color: active ? 'var(--accent)' : 'var(--text)',
+  }
 }
 
 const hintStyle: React.CSSProperties = {

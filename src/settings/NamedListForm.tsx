@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { apiFetch } from '../api'
 import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 import { addRowButtonStyle, nameInputStyle, statusTextStyle } from './formStyles'
@@ -18,10 +19,12 @@ type NamedListFormProps = {
   placeholder: string
   addLabel: string
   initialNames: string[]
+  // Called with the current names, so another section can offer them as choices.
+  onNamesChange?: (names: string[]) => void
 }
 
 // A plain list of names she can add to, rename, reorder and remove; saves by itself.
-export function NamedListForm({ field, title, description, placeholder, addLabel, initialNames }: NamedListFormProps) {
+export function NamedListForm({ field, title, description, placeholder, addLabel, initialNames, onNamesChange }: NamedListFormProps) {
   const { value: names, setValue: setNames, status, valid, hasChanges, undo } = useAutosaveSection(
     initialNames,
     (list: string[]) =>
@@ -35,8 +38,13 @@ export function NamedListForm({ field, title, description, placeholder, addLabel
 
   const reorder = useDragReorder(setNames)
 
+  useEffect(() => {
+    if (valid) onNamesChange?.(names.map((n) => n.trim()))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [names, valid])
+
   return (
-    <Section title={title} action={<UndoButton hasChanges={hasChanges} onUndo={undo} />}>
+    <Section title={title} count={names.length} action={<UndoButton hasChanges={hasChanges} onUndo={undo} />}>
       <p style={{ ...statusTextStyle, marginTop: 0 }}>{description}</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

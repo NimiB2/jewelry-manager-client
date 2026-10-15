@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ConversionRatiosTable } from './ConversionRatiosTable'
 import { CollectionsForm } from './CollectionsForm'
 import { PreparationStagesForm } from './PreparationStagesForm'
@@ -9,6 +10,7 @@ import { ExpenseTypesForm } from './ExpenseTypesForm'
 import { ExpenseSuppliersForm } from './ExpenseSuppliersForm'
 import { NotificationsCard } from './NotificationsCard'
 import { NamedListForm } from './NamedListForm'
+import { SectionAccordion, SectionGroupTitle } from './Section'
 
 type PersonalSettingsPageProps = {
   expenseGroups: string[]
@@ -18,9 +20,11 @@ type PersonalSettingsPageProps = {
   discountPresets: number[]
   testOrderPrefix: string
   expenseTypes: string[]
+  expenseTypeGroups: Record<string, string>
   expenseSuppliers: string[]
 }
 
+// Closed rows in three groups, one open at a time, so the page stays short however long a list gets.
 export function PersonalSettingsPage({
   expenseGroups,
   taskCategories,
@@ -29,15 +33,15 @@ export function PersonalSettingsPage({
   discountPresets,
   testOrderPrefix,
   expenseTypes,
+  expenseTypeGroups,
   expenseSuppliers,
 }: PersonalSettingsPageProps) {
+  // The group list as she edits it, so a new group is a choice for the categories right away.
+  const [groups, setGroups] = useState(expenseGroups)
+
   return (
-    <>
-      <NotificationsCard />
-      <ConversionRatiosTable />
-      <CollectionsForm />
-      <PreparationStagesForm initialStages={preparationStages} />
-      <ProductAdditionsForm initialTypes={productAdditionTypes} />
+    <SectionAccordion>
+      <SectionGroupTitle>כספים</SectionGroupTitle>
       <NamedListForm
         field="expenseGroups"
         title="קבוצות הוצאה"
@@ -45,8 +49,21 @@ export function PersonalSettingsPage({
         placeholder="לדוגמה: הוצאות בית"
         addLabel="+ הוספת קבוצה"
         initialNames={expenseGroups}
+        onNamesChange={setGroups}
       />
-      <ExpenseTypesForm initialTypes={expenseTypes} />
+      <ExpenseTypesForm initialTypes={expenseTypes} initialGroups={expenseTypeGroups} groups={groups} />
+      <ExpenseSuppliersForm initialSuppliers={expenseSuppliers} />
+
+      <SectionGroupTitle>הזמנות ומוצרים</SectionGroupTitle>
+      <CollectionsForm />
+      <PreparationStagesForm initialStages={preparationStages} />
+      <ProductAdditionsForm initialTypes={productAdditionTypes} />
+      <ConversionRatiosTable />
+      <DiscountPresetsForm initialPercents={discountPresets} />
+      <TestOrderPrefixForm initialPrefix={testOrderPrefix} />
+
+      <SectionGroupTitle>כללי</SectionGroupTitle>
+      <NotificationsCard />
       <NamedListForm
         field="taskCategories"
         title="קטגוריות משימות"
@@ -55,10 +72,7 @@ export function PersonalSettingsPage({
         addLabel="+ הוספת קטגוריה"
         initialNames={taskCategories}
       />
-      <ExpenseSuppliersForm initialSuppliers={expenseSuppliers} />
-      <DiscountPresetsForm initialPercents={discountPresets} />
-      <TestOrderPrefixForm initialPrefix={testOrderPrefix} />
       <EmployeesTable />
-    </>
+    </SectionAccordion>
   )
 }

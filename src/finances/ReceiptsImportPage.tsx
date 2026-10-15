@@ -3,11 +3,10 @@ import { apiJson } from '../api'
 import { todayIso } from '../orders/dates'
 import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
-import { SubNav } from '../shell/SubNav'
-import { subItemsOf } from '../shell/navItems'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
 import { defaultGroupFor } from './defaultGroup'
 import { loadStash, saveStash } from './receiptStash'
+import { typeForSupplier } from './supplierMatch'
 import type { FinanceList } from './types'
 
 type RowStatus = 'reading' | 'ready' | 'saving' | 'saved' | 'failed'
@@ -48,6 +47,9 @@ export function ReceiptsImportPage() {
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<string | null>(null)
   const [restored, setRestored] = useState(false)
+  const [typeGroups, setTypeGroups] = useState<Record<string, string>>({})
+  // Read through a ref because the reader callbacks outlive the render that started them.
+  const supplierTypes = useRef<Record<string, string>>({})
   const queue = useRef<Row[]>([])
   const running = useRef(0)
 
@@ -81,14 +83,14 @@ export function ReceiptsImportPage() {
       let changed = false
       const next = current.map((r) => {
         if (r.status === 'saved' || r.groupManual) return r
-        const wanted = defaultGroupFor(r.typeName, groups)
+        const wanted = defaultGroupFor(r.typeName, groups, typeGroups)
         if (!wanted || wanted === r.groupName) return r
         changed = true
         return { ...r, groupName: wanted }
       })
       return changed ? next : current
     })
-  }, [rows, groups])
+  }, [rows, groups, typeGroups])
 
   useEffect(() => {
     if (!restored) return
@@ -98,10 +100,16 @@ export function ReceiptsImportPage() {
 
   useEffect(() => {
     isInvoiceReaderAvailable().then(setReaderAvailable).catch(() => setReaderAvailable(false))
-    apiJson<{ data: { expenseTypes?: string[]; expenseGroups?: string[] } }>('/settings')
+    apiJson<{ data: { expenseTypes?: string[]; expenseGroups?: string[]; expenseTypeGroups?: Record<string, string> } }>('/settings')
       .then((s) => {
         setTypes(s.data.expenseTypes ?? [])
         setGroups(s.data.expenseGroups ?? [])
+        setTypeGroups(s.data.expenseTypeGroups ?? {})
+      })
+      .catch(() => {})
+    apiJson<Record<string, string>>('/expenses/supplier-types')
+      .then((map) => {
+        supplierTypes.current = map
       })
       .catch(() => {})
   }, [])
@@ -163,7 +171,8 @@ export function ReceiptsImportPage() {
         date: found.date ?? row.date,
         supplier: found.supplier ?? '',
         description: found.description ?? '',
-        typeName: found.typeName ?? '',
+        // A supplier she has bought from before brings its usual category; the reader's guess is the fallback.
+        typeName: (found.supplier ? typeForSupplier(supplierTypes.current, found.supplier) : '') || (found.typeName ?? ''),
         note: found.amount === null ? 'הסכום לא נקרא, צריך למלא' : null,
       })
     } catch {
@@ -277,8 +286,10 @@ export function ReceiptsImportPage() {
 
   return (
     <div className="screen">
-      <h1 style={{ margin: '0 0 8px' }}>כספים</h1>
-      <SubNav items={subItemsOf('finances', { page: 'finances', view: 'receipts' })} />
+      <a href="#/finances" style={{ color: 'var(--accent)', fontSize: 14, textDecoration: 'none' }}>
+        → חזרה לכספים
+      </a>
+      <h1 style={{ margin: '4px 0 8px' }}>ייבוא קבלות</h1>
 
       <div style={{ ...cardStyle, margin: '10px 0' }}>
         <div style={{ fontWeight: 600, marginBottom: 4 }}>ייבוא קבלות</div>

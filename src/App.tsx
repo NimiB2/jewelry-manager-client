@@ -4,7 +4,6 @@ import { FinancesPage } from './finances/FinancesPage'
 import { HomePage } from './home/HomePage'
 import { SearchPage } from './search/SearchPage'
 import { AnalysisPage } from './finances/AnalysisPage'
-import { GroupMappingPage } from './finances/GroupMappingPage'
 import { InvoicesPage } from './finances/InvoicesPage'
 import { ReceiptsImportPage } from './finances/ReceiptsImportPage'
 import { AppShell } from './shell/AppShell'
@@ -50,7 +49,6 @@ function App() {
       {route.page === 'finances' && route.view === 'invoices' && <InvoicesPage />}
       {route.page === 'finances' && route.view === 'analysis' && <AnalysisPage />}
       {route.page === 'finances' && route.view === 'receipts' && <ReceiptsImportPage />}
-      {route.page === 'finances' && route.view === 'groups' && <GroupMappingPage />}
       {route.page === 'finances' && route.view === 'all' && <FinancesPage />}
       {route.page === 'tasks' && <TasksPage />}
       {route.page === 'shopify' && <ShopifyImportPage />}
