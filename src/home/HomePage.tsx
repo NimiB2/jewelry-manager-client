@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../api'
 import { downloadFile } from '../finances/invoiceApi'
-import type { FinanceList } from '../finances/types'
 import { useOrdersAttention } from '../orders/attention'
 import { SearchButton } from '../search/SearchButton'
 import { Skeleton } from '../shell/Skeleton'
@@ -13,12 +12,25 @@ import { ENGAGEMENT_RINGS } from '../shell/navItems'
 import { navigate } from '../shell/useRoute'
 import type { Task } from '../tasks/types'
 
+// What the month looks like for the business: profit before the salary, the salary itself, and how
+// much of it the business can pay out.
+type Totals = {
+  income: number
+  expenses: number
+  salary: number
+  workHours: number
+  orderCosts: number
+  homeExpenses: number
+  businessExpenses: number
+}
+
 type HomeData = {
   income: number | null
-  expenses: number | null
-  netProfit: number | null
+  businessCosts: number | null
+  profitBeforeSalary: number | null
   salary: number | null
   workHours: number | null
+  homeExpenses: number | null
   inProgress: number | null
   ready: number | null
   notStarted: number | null
@@ -39,25 +51,21 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
   const now = new Date()
 
   useEffect(() => {
-    const range = periodRange(now.getFullYear(), now.getMonth() + 1)
-    const params = new URLSearchParams({ from: range!.from, to: range!.to })
-
     // Each number loads on its own, so one failing call doesn't blank the whole screen.
     Promise.allSettled([
-      apiJson<FinanceList>(`/finances?${params}`),
       apiJson<OrdersList>('/orders?status=active'),
       apiJson<Task[]>('/tasks'),
-      apiJson<{ totals: { salary: number; workHours: number } }>(
-        `/finances/analysis?year=${now.getFullYear()}&month=${now.getMonth() + 1}`,
-      ),
-    ]).then(([finances, orders, tasks, analysis]) => {
+      apiJson<{ totals: Totals }>(`/finances/analysis?year=${now.getFullYear()}&month=${now.getMonth() + 1}`),
+    ]).then(([orders, tasks, analysis]) => {
       const list = orders.status === 'fulfilled' ? orders.value.orders : null
+      const t = analysis.status === 'fulfilled' ? analysis.value.totals : null
       setData({
-        income: finances.status === 'fulfilled' ? finances.value.summary.totalIncome : null,
-        expenses: finances.status === 'fulfilled' ? finances.value.summary.totalExpenses : null,
-        netProfit: finances.status === 'fulfilled' ? finances.value.summary.netProfit : null,
-        salary: analysis.status === 'fulfilled' ? analysis.value.totals.salary : null,
-        workHours: analysis.status === 'fulfilled' ? analysis.value.totals.workHours : null,
+        income: t ? t.income : null,
+        businessCosts: t ? t.orderCosts + t.businessExpenses : null,
+        profitBeforeSalary: t ? t.income - t.orderCosts - t.businessExpenses : null,
+        salary: t ? t.salary : null,
+        workHours: t ? t.workHours : null,
+        homeExpenses: t ? t.homeExpenses : null,
         notStarted: list ? list.filter((o) => o.status === 'NEW').length : null,
         inProgress: list ? list.filter((o) => o.status === 'IN_PROGRESS').length : null,
         ready: list ? list.filter((o) => o.status === 'READY').length : null,
@@ -67,6 +75,9 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // The business can pay the salary only up to what it earns before the salary.
+  const withdrawable =
+    data?.salary != null && data?.profitBeforeSalary != null ? Math.max(0, Math.min(data.salary, data.profitBeforeSalary)) : null
   const activeCount = data && data.notStarted !== null ? data.notStarted + (data.inProgress ?? 0) + (data.ready ?? 0) : null
   const needs: string[] = []
   if (attention) {
@@ -98,37 +109,46 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
         </button>
       )}
 
-      <button type="button" onClick={() => navigate('/finances')} style={{ ...cardStyle, ...monthCardStyle }}>
-        <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>רווח נקי החודש</span>
+      <button type="button" onClick={() => navigate('/finances/analysis')} style={{ ...cardStyle, ...monthCardStyle }}>
+        <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>רווח העסק החודש, לפני משכורת</span>
         <span
           dir="ltr"
           style={{
             fontSize: 32,
             fontWeight: 700,
             textAlign: 'right',
-            color: data?.netProfit != null && data.netProfit < 0 ? 'var(--danger)' : 'var(--success)',
+            color: data?.profitBeforeSalary != null && data.profitBeforeSalary < 0 ? 'var(--danger)' : 'var(--success)',
           }}
         >
-          {data?.netProfit == null ? <Skeleton width={120} height={34} /> : formatMoney(data.netProfit)}
+          {data?.profitBeforeSalary == null ? <Skeleton width={120} height={34} /> : formatMoney(Math.round(data.profitBeforeSalary))}
         </span>
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          {data?.income == null || data?.expenses == null ? (
+          {data?.income == null || data?.businessCosts == null ? (
             <Skeleton width={200} height={13} style={{ marginTop: 4 }} />
           ) : (
-            `הכנסות ${formatMoney(data.income)} · הוצאות ${formatMoney(data.expenses)}`
+            `הכנסות ${formatMoney(Math.round(data.income))} · הוצאות עסק ${formatMoney(Math.round(data.businessCosts))}`
           )}
         </span>
       </button>
 
-      <button type="button" onClick={() => navigate('/finances/analysis')} style={{ ...cardStyle, ...tileStyle, width: '100%', marginTop: 10 }}>
-        <span style={tileLabelStyle}>משכורת החודש</span>
-        <span style={tileValueStyle}>{data?.salary == null ? <Skeleton width={90} height={26} /> : formatMoney(data.salary)}</span>
-        {data?.workHours != null && data?.netProfit != null && data?.salary != null && (
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            {Math.round(data.workHours * 10) / 10} שעות · רווח אחרי משכורת {formatMoney(data.netProfit - data.salary)}
-          </span>
-        )}
-      </button>
+      <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+        <button type="button" onClick={() => navigate('/finances/analysis')} style={{ ...cardStyle, ...tileStyle }}>
+          <span style={tileLabelStyle}>משכורת החודש</span>
+          <span style={tileValueStyle}>{data?.salary == null ? <Skeleton width={90} height={26} /> : formatMoney(Math.round(data.salary))}</span>
+          {data?.workHours != null && (
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{Math.round(data.workHours * 10) / 10} שעות עבודה</span>
+          )}
+        </button>
+        <button type="button" onClick={() => navigate('/finances/analysis')} style={{ ...cardStyle, ...tileStyle }}>
+          <span style={tileLabelStyle}>אפשר למשוך</span>
+          <span style={tileValueStyle}>{withdrawable === null ? <Skeleton width={90} height={26} /> : formatMoney(Math.round(withdrawable))}</span>
+          {data?.salary != null && withdrawable !== null && (
+            <span style={{ fontSize: 12, color: withdrawable < data.salary ? 'var(--warning)' : 'var(--text-muted)' }}>
+              {data.salary <= 0 ? 'אין משכורת החודש' : withdrawable >= data.salary ? 'כל המשכורת' : `מתוך ${formatMoney(Math.round(data.salary))}`}
+            </span>
+          )}
+        </button>
+      </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
         <button type="button" onClick={() => navigate('/orders')} style={{ ...cardStyle, ...tileStyle }}>
