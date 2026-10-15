@@ -6,6 +6,7 @@ import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButt
 import { SubNav } from '../shell/SubNav'
 import { subItemsOf } from '../shell/navItems'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
+import { loadStash, saveStash } from './receiptStash'
 import type { FinanceList } from './types'
 
 type RowStatus = 'reading' | 'ready' | 'saving' | 'saved' | 'failed'
@@ -43,8 +44,32 @@ export function ReceiptsImportPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<string | null>(null)
+  const [restored, setRestored] = useState(false)
   const queue = useRef<Row[]>([])
   const running = useRef(0)
+
+  // Receipts left over from an earlier visit come back, so nothing has to be uploaded twice.
+  useEffect(() => {
+    loadStash<Row>()
+      .then((stashed) => {
+        if (stashed.length === 0) return
+        const pending = stashed.filter((r) => r.status !== 'saved')
+        // One that was still being read when the screen closed is read again.
+        const revived = pending.map((r) => (r.status === 'saving' ? { ...r, status: 'ready' as const } : r))
+        setRows(revived)
+        setChecked(false)
+        queue.current.push(...revived.filter((r) => r.status === 'reading'))
+        pump()
+      })
+      .finally(() => setRestored(true))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!restored) return
+    const timer = window.setTimeout(() => void saveStash(rows.filter((r) => r.status !== 'saved')), 500)
+    return () => window.clearTimeout(timer)
+  }, [rows, restored])
 
   useEffect(() => {
     isInvoiceReaderAvailable().then(setReaderAvailable).catch(() => setReaderAvailable(false))
@@ -132,13 +157,14 @@ export function ReceiptsImportPage() {
       .then((list) => {
         const existing = list.items.filter((i) => i.kind === 'EXPENSE')
         setRows((current) =>
-          current.map((r) => ({
-            ...r,
-            duplicate:
+          current.map((r) => {
+            const duplicate =
               r.status === 'ready' &&
               Number(r.amount) > 0 &&
-              existing.some((e) => e.date === r.date && Math.abs(e.amount - Number(r.amount)) < 0.005),
-          })),
+              existing.some((e) => e.date === r.date && Math.abs(e.amount - Number(r.amount)) < 0.005)
+            // A suspected duplicate starts unchecked, so saving everything does not add it twice.
+            return { ...r, duplicate, include: duplicate && !r.duplicate ? false : r.include }
+          }),
         )
       })
       .catch(() => {})
@@ -199,10 +225,24 @@ export function ReceiptsImportPage() {
     }
 
     setSaving(false)
+    // What was saved leaves the list; only receipts that still need her attention stay.
+    setRows((current) => current.filter((r) => r.status !== 'saved'))
     const parts = [`נשמרו ${saved} הוצאות`]
     if (attachFailed > 0) parts.push(`${attachFailed} בלי קובץ מצורף`)
     if (failed > 0) parts.push(`${failed} לא נשמרו, אפשר לתקן ולנסות שוב`)
     setSummary(parts.join(' · '))
+  }
+
+  function remove(key: string) {
+    queue.current = queue.current.filter((r) => r.key !== key)
+    setRows((current) => current.filter((r) => r.key !== key))
+  }
+
+  function clearAll() {
+    if (!window.confirm('להסיר את כל הקבלות שברשימה? ההוצאות שכבר נשמרו לא יושפעו.')) return
+    queue.current = []
+    setRows([])
+    setSummary(null)
   }
 
   const pending = rows.filter((r) => r.status !== 'saved')
@@ -271,6 +311,13 @@ export function ReceiptsImportPage() {
             </select>
           </div>
 
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 13 }}>{rows.length} קבלות ממתינות</span>
+            <button type="button" onClick={clearAll} disabled={saving} style={{ ...mutedTextStyle, border: 'none', background: 'transparent', cursor: 'pointer', textDecoration: 'underline' }}>
+              ניקוי הרשימה
+            </button>
+          </div>
+
           {readingCount > 0 && <p style={mutedTextStyle}>קורא קבלות... נשארו {readingCount}</p>}
 
           {rows.map((row) => (
@@ -281,6 +328,7 @@ export function ReceiptsImportPage() {
               groups={groups}
               disabled={saving}
               onChange={(changes) => patch(row.key, { ...changes, duplicate: false })}
+              onRemove={() => remove(row.key)}
             />
           ))}
 
@@ -316,9 +364,10 @@ type CardProps = {
   groups: string[]
   disabled: boolean
   onChange: (changes: Partial<Row>) => void
+  onRemove: () => void
 }
 
-function ReceiptCard({ row, types, groups, disabled, onChange }: CardProps) {
+function ReceiptCard({ row, types, groups, disabled, onChange, onRemove }: CardProps) {
   const locked = disabled || row.status === 'reading' || row.status === 'saving' || row.status === 'saved'
   const border =
     row.status === 'failed' ? 'var(--danger)' : row.duplicate ? 'var(--warning)' : 'transparent'
@@ -338,6 +387,15 @@ function ReceiptCard({ row, types, groups, disabled, onChange }: CardProps) {
           {row.file.name}
         </span>
         <span style={{ ...mutedTextStyle, whiteSpace: 'nowrap' }}>{STATUS_LABEL[row.status]}</span>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={row.status === 'saving'}
+          aria-label="הסרת הקבלה מהרשימה"
+          style={{ border: 'none', background: 'transparent', fontSize: 20, lineHeight: 1, cursor: 'pointer', color: 'var(--text-muted)', padding: '0 4px' }}
+        >
+          ×
+        </button>
       </div>
 
       {row.status !== 'reading' && (
@@ -392,7 +450,7 @@ function ReceiptCard({ row, types, groups, disabled, onChange }: CardProps) {
       )}
 
       {row.duplicate && (
-        <p style={{ ...mutedTextStyle, color: 'var(--warning)', margin: '6px 0 0' }}>נראית כמו הוצאה שכבר קיימת (אותו תאריך וסכום).</p>
+        <p style={{ ...mutedTextStyle, color: 'var(--warning)', margin: '6px 0 0' }}>נראית כמו הוצאה שכבר קיימת (אותו תאריך וסכום), לכן לא סומנה לשמירה.</p>
       )}
       {row.note && <p style={{ ...errorTextStyle, margin: '6px 0 0' }}>{row.note}</p>}
     </div>
