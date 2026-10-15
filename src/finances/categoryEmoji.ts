@@ -1,8 +1,20 @@
 // Picks a small picture for an expense category so all categories fit on screen without scrolling.
 // A category she names with her own emoji first ("📦 אריזה") keeps it; otherwise a keyword decides.
 
+// The first match wins, so the more specific words come first ("יהלומים" must not fall to "מים").
 const KEYWORDS: [string, string][] = [
-  ['חומר', '💎'],
+  ['יהלומ', '💎'],
+  ['חומר', '🥇'],
+  ['אבנ', '🔷'],
+  ['שיבוץ', '💍'],
+  ['ציפוי', '✨'],
+  ['יציקה', '🔥'],
+  ['קידום', '📈'],
+  ['רכב', '🚗'],
+  ['עמלות', '💳'],
+  ['מערכ', '💳'],
+  ['ועד בית', '🏢'],
+  ['תרומה', '🤝'],
   ['זהב', '🥇'],
   ['כסף', '🪙'],
   ['אבן', '💎'],

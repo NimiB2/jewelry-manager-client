@@ -6,7 +6,7 @@ import type { OrdersList } from '../orders/types'
 import { errorTextStyle, fieldInputStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import { InvoiceSection } from './InvoiceSection'
 import { categoryLook } from './categoryEmoji'
-import { defaultGroupFor } from './defaultGroup'
+import { STOCK_GROUP, defaultGroupFor, ordersGroupOf } from './defaultGroup'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
 import {
   INCOME_CATEGORY_LABELS,
@@ -103,11 +103,13 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       .catch(() => setOrders([]))
   }, [])
 
-  // A new expense's group follows its category until she picks one herself.
+  // The group follows the category. An edited expense keeps its stored group until its category changes,
+  // and a purchase marked as stock stays stock when the category changes between materials.
   useEffect(() => {
-    if (editing || groupName !== '') return
+    if (editing && typeName === item?.typeName) return
     const wanted = defaultGroupFor(typeName, expenseGroups)
-    if (wanted) setGroupName(wanted)
+    if (!wanted) return
+    setGroupName((current) => (current === STOCK_GROUP && wanted === ordersGroupOf(expenseGroups) ? current : wanted))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeName, expenseGroups])
 
@@ -219,6 +221,25 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
     })
   }
 
+  const ordersGroup = ordersGroupOf(expenseGroups)
+  const forStock = groupName === STOCK_GROUP
+  // Materials and stones are the purchases that can go to orders or to stock.
+  const isOrderCategory = Boolean(ordersGroup) && (forStock || defaultGroupFor(typeName, expenseGroups) === ordersGroup)
+
+  // The stock group is added to her list the first time it is used.
+  async function chooseStock() {
+    if (!expenseGroups.includes(STOCK_GROUP)) {
+      const next = [...expenseGroups, STOCK_GROUP]
+      try {
+        await apiJson('/settings', { method: 'PATCH', body: JSON.stringify({ expenseGroups: next }) })
+        setExpenseGroups(next)
+      } catch {
+        // The group name is still saved on the expense; it only misses from the settings list.
+      }
+    }
+    setGroupName(STOCK_GROUP)
+  }
+
   const incomeCategories = Object.keys(INCOME_CATEGORY_LABELS) as IncomeCategory[]
   const showOrderPicker = isExpense && !repeatMonths && !inSeries
   const showRepeatPicker = isExpense && !editing
@@ -282,24 +303,20 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="תאריך" style={dateStyle} />
       </div>
 
-      {/* The main group comes first: orders, business, home. The category below is the detail. */}
-      {isExpense && expenseGroups.length > 0 && (
-        <p style={subTitleStyle}>סוג הוצאה</p>
-      )}
-      {isExpense && expenseGroups.length > 0 && (
-        <div style={stripStyle} role="group" aria-label="קבוצה">
-          {[...expenseGroups, ...(groupName && !expenseGroups.includes(groupName) ? [groupName] : [])].map((g) => (
-            <button
-              key={g}
-              type="button"
-              aria-pressed={groupName === g}
-              onClick={() => setGroupName(groupName === g ? '' : g)}
-              style={stripItemStyle(groupName === g)}
-            >
-              {g}
+      {/* The group follows the category by itself. Only a material or stone purchase asks one more thing:
+          is it for orders, or stock for new pieces (no specific order needed). */}
+      {isExpense && isOrderCategory && (
+        <>
+          <p style={subTitleStyle}>הרכישה היא</p>
+          <div style={stripStyle} role="group" aria-label="להזמנות או למלאי">
+            <button type="button" aria-pressed={!forStock} onClick={() => setGroupName(ordersGroup)} style={stripItemStyle(!forStock)}>
+              להזמנות
             </button>
-          ))}
-        </div>
+            <button type="button" aria-pressed={forStock} onClick={() => void chooseStock()} style={stripItemStyle(forStock)}>
+              למלאי
+            </button>
+          </div>
+        </>
       )}
 
       {strip.length > 0 ? (

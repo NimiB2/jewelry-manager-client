@@ -1,13 +1,24 @@
 // The group an expense belongs to by default, decided from its category name. It is only a starting
-// choice: she can change the group on every expense.
+// choice: the grouping screen can change whole categories at once.
 
-// Costs of making an order (materials, stones, setting, plating).
-const ORDER_WORDS = ['חומר', 'זהב', 'כסף', 'חוט', 'פנינ', 'יהלומ', 'אבנ', 'שיבוץ', 'ציפוי']
+// Costs of making an order (materials, stones, setting, plating, casting).
+const ORDER_WORDS = ['חומר', 'זהב', 'כסף', 'חוט', 'פנינ', 'יהלומ', 'אבנ', 'שיבוץ', 'ציפוי', 'יציקה']
 
 // Costs of running the business.
-const BUSINESS_WORDS = ['אריז', 'שיווק', 'משלוח', 'רכב', 'עמלה', 'עמלות', 'מערכת', 'מערכות']
+const BUSINESS_WORDS = ['אריז', 'שיווק', 'קידום', 'משלוח', 'עמלה', 'עמלות', 'מערכת', 'מערכות']
 
-const STORAGE_KEY = 'expense-category-groups'
+// Household costs, and the car.
+const HOME_WORDS = ['חשמל', 'ארנונה', 'ועד בית', 'רכב']
+
+// Matched as a whole word, because "מים" is also the end of "יהלומים".
+const HOME_EXACT_WORDS = ['מים']
+
+const OTHER_WORDS = ['תרומה']
+
+// Materials and stones bought to make new pieces for the business, not for a particular order.
+export const STOCK_GROUP = 'הוצאות מלאי'
+
+const STORAGE_KEY = 'expense-category-groups-v2'
 
 // Her own choices from the grouping screen, per category. They are kept on this device and win over the words.
 export function loadCategoryGroups(): Record<string, string> {
@@ -26,6 +37,11 @@ export function saveCategoryGroups(map: Record<string, string>): void {
   }
 }
 
+// The orders group of her list, by name.
+export function ordersGroupOf(groups: string[]): string {
+  return groups.find((g) => g.includes('הזמנות')) ?? ''
+}
+
 // Returns the name of one of her groups, or '' when the category matches no rule or the group is missing.
 export function defaultGroupFor(typeName: string, groups: string[]): string {
   const name = typeName.trim()
@@ -34,7 +50,12 @@ export function defaultGroupFor(typeName: string, groups: string[]): string {
   const chosen = loadCategoryGroups()[name]
   if (chosen && groups.includes(chosen)) return chosen
 
-  if (ORDER_WORDS.some((w) => name.includes(w))) return groups.find((g) => g.includes('הזמנות')) ?? ''
-  if (BUSINESS_WORDS.some((w) => name.includes(w))) return groups.find((g) => g.includes('עסק')) ?? ''
+  const words = name.split(/[\s/()]+/)
+  const has = (list: string[]) => list.some((w) => name.includes(w))
+
+  if (has(ORDER_WORDS)) return ordersGroupOf(groups)
+  if (has(BUSINESS_WORDS)) return groups.find((g) => g.includes('עסק')) ?? ''
+  if (has(HOME_WORDS) || HOME_EXACT_WORDS.some((w) => words.includes(w))) return groups.find((g) => g.includes('בית')) ?? ''
+  if (has(OTHER_WORDS)) return groups.find((g) => g.includes('אחר')) ?? ''
   return ''
 }
