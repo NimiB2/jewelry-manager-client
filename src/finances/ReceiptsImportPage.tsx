@@ -6,6 +6,7 @@ import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButt
 import { SubNav } from '../shell/SubNav'
 import { subItemsOf } from '../shell/navItems'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
+import { defaultGroupFor } from './defaultGroup'
 import { loadStash, saveStash } from './receiptStash'
 import type { FinanceList } from './types'
 
@@ -22,6 +23,8 @@ type Row = {
   supplier: string
   typeName: string
   groupName: string
+  // She chose the group herself, so the category-based default must not overwrite it.
+  groupManual?: boolean
   // Why the row needs attention: a failed read or save, or a looks-like-a-duplicate hint.
   note: string | null
   duplicate: boolean
@@ -64,6 +67,23 @@ export function ReceiptsImportPage() {
       .finally(() => setRestored(true))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // The group follows the category (materials and stones are order costs, packaging and shipping are
+  // business costs) until she picks one herself. This also covers receipts restored from before.
+  useEffect(() => {
+    if (groups.length === 0) return
+    setRows((current) => {
+      let changed = false
+      const next = current.map((r) => {
+        if (r.status === 'saved' || r.groupManual) return r
+        const wanted = defaultGroupFor(r.typeName, groups)
+        if (!wanted || wanted === r.groupName) return r
+        changed = true
+        return { ...r, groupName: wanted }
+      })
+      return changed ? next : current
+    })
+  }, [rows, groups])
 
   useEffect(() => {
     if (!restored) return
@@ -173,7 +193,7 @@ export function ReceiptsImportPage() {
 
   function applyBulkGroup(value: string) {
     setBulkGroup(value)
-    setRows((current) => current.map((r) => (r.status === 'saved' ? r : { ...r, groupName: value })))
+    setRows((current) => current.map((r) => (r.status === 'saved' ? r : { ...r, groupName: value, groupManual: value !== '' })))
   }
 
   async function saveAll() {
@@ -437,7 +457,7 @@ function ReceiptCard({ row, types, groups, disabled, onChange, onRemove }: CardP
                 </option>
               ))}
             </select>
-            <select value={row.groupName} disabled={locked} onChange={(e) => onChange({ groupName: e.target.value })} style={smallField}>
+            <select value={row.groupName} disabled={locked} onChange={(e) => onChange({ groupName: e.target.value, groupManual: true })} style={smallField}>
               <option value="">ללא קבוצה</option>
               {groups.map((g) => (
                 <option key={g} value={g}>

@@ -6,6 +6,7 @@ import type { OrdersList } from '../orders/types'
 import { errorTextStyle, fieldInputStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import { InvoiceSection } from './InvoiceSection'
 import { categoryLook } from './categoryEmoji'
+import { defaultGroupFor } from './defaultGroup'
 import { attachInvoice, isInvoiceReaderAvailable, readInvoice } from './invoiceApi'
 import {
   INCOME_CATEGORY_LABELS,
@@ -101,6 +102,14 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       )
       .catch(() => setOrders([]))
   }, [])
+
+  // A new expense's group follows its category until she picks one herself.
+  useEffect(() => {
+    if (editing || groupName !== '') return
+    const wanted = defaultGroupFor(typeName, expenseGroups)
+    if (wanted) setGroupName(wanted)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeName, expenseGroups])
 
   // The invoice is the first thing she adds. When a reader is connected it fills the form from the
   // invoice; whatever she already typed is kept, and she can change everything before saving.
