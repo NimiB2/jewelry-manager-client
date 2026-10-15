@@ -4,6 +4,7 @@ import { monthName } from '../orders/dates'
 import { formatMoney } from '../products/format'
 import { errorTextStyle, mutedTextStyle } from '../products/productStyles'
 import { SubNav } from '../shell/SubNav'
+import { navigate } from '../shell/useRoute'
 import { subItemsOf } from '../shell/navItems'
 import { categoryLook } from './categoryEmoji'
 import { selectStyle } from './styles'
@@ -179,6 +180,14 @@ export function AnalysisPage() {
           {view === 'expenses' && (
             <section>
               {rows.length === 0 && <p style={mutedTextStyle}>אין הוצאות בתקופה הזו.</p>}
+
+              <button
+                type="button"
+                onClick={() => navigate('/finances/groups')}
+                style={{ border: 'none', background: 'transparent', color: 'var(--accent)', padding: 0, fontSize: 13, cursor: 'pointer', marginBottom: 6 }}
+              >
+                שיוך קטגוריות לקבוצות ←
+              </button>
 
               {data.byGroup.length > 0 && (
                 <div style={{ ...stripCardStyle, marginBottom: 10 }}>

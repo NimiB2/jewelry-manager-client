@@ -58,7 +58,12 @@ export function ReceiptsImportPage() {
         if (stashed.length === 0) return
         const pending = stashed.filter((r) => r.status !== 'saved')
         // One that was still being read when the screen closed is read again.
-        const revived = pending.map((r) => (r.status === 'saving' ? { ...r, status: 'ready' as const } : r))
+        // Earlier group choices are dropped here once, so the category rules apply to all of them.
+        const revived = pending.map((r) => ({
+          ...r,
+          groupManual: false,
+          status: r.status === 'saving' ? ('ready' as const) : r.status,
+        }))
         setRows(revived)
         setChecked(false)
         queue.current.push(...revived.filter((r) => r.status === 'reading'))
