@@ -4,7 +4,13 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, linkButtonStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import type { StatementLine } from './types'
 
-type CreateBody = { description: string | null; typeName: string | null; groupName: string | null; supplier: string | null }
+type CreateBody = {
+  description: string | null
+  typeName: string | null
+  groupName: string | null
+  supplier: string | null
+  repeatEveryMonths: number | null
+}
 
 type Props = {
   line: StatementLine
@@ -23,10 +29,12 @@ type Props = {
 export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgnore, onSettlement, onReset, onDeleteExpense }: Props) {
   const [creating, setCreating] = useState(false)
   // The bank's own words may be missing or cryptic, so the name of the expense is hers to write.
-  const [description, setDescription] = useState(line.description === 'ללא תיאור' ? '' : line.description)
-  const [typeName, setTypeName] = useState('')
-  const [groupName, setGroupName] = useState('')
-  const [supplier, setSupplier] = useState('')
+  const learned = line.learned
+  const [description, setDescription] = useState(learned?.description ?? (line.description === 'ללא תיאור' ? '' : line.description))
+  const [repeat, setRepeat] = useState(line.looksRecurring)
+  const [typeName, setTypeName] = useState(learned?.typeName ?? '')
+  const [groupName, setGroupName] = useState(learned?.groupName ?? '')
+  const [supplier, setSupplier] = useState(learned?.supplier ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,10 +101,37 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
         </div>
       )}
 
+      {pending && !creating && learned && (
+        <p style={{ ...mutedTextStyle, margin: '8px 0 0' }}>
+          כמו בפעם הקודמת: {learned.description}
+          {learned.typeName ? ` · ${learned.typeName}` : ''}
+          {line.looksRecurring ? ' · נראית חוזרת כל חודש' : ''}
+        </p>
+      )}
+
       {pending && !creating && (
         <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-          <button type="button" disabled={disabled} onClick={() => setCreating(true)} style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, flex: 1 }}>
-            הוספה כהוצאה
+          {learned ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                void run(() =>
+                  onCreate({ description: learned.description, typeName: learned.typeName, groupName: learned.groupName, supplier: learned.supplier, repeatEveryMonths: null }),
+                )
+              }
+              style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, flex: 1 }}
+            >
+              {busy ? 'שומר...' : 'הוספה כמו קודם'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setCreating(true)}
+            style={{ ...(learned ? secondaryButtonStyle : primaryButtonStyle), minHeight: 40, fontSize: 14, flex: learned ? undefined : 1 }}
+          >
+            {learned ? 'עריכה' : 'הוספה כהוצאה'}
           </button>
           <button type="button" disabled={disabled} onClick={() => void run(onIgnore)} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
             לא הוצאה
@@ -122,7 +157,7 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
               ))}
             </select>
             <select value={groupName} onChange={(e) => setGroupName(e.target.value)} style={smallField}>
-              <option value="">ללא קבוצה</option>
+              <option value="">קבוצה לפי הקטגוריה</option>
               {groups.map((g) => (
                 <option key={g} value={g}>
                   {g}
@@ -131,11 +166,15 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
             </select>
           </div>
           <input placeholder="ספק (לא חובה)" value={supplier} onChange={(e) => setSupplier(e.target.value)} style={{ ...smallField, marginTop: 8 }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 14 }}>
+            <input type="checkbox" checked={repeat} onChange={(e) => setRepeat(e.target.checked)} style={{ width: 20, height: 20 }} />
+            הוצאה חוזרת, כל חודש
+          </label>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button
               type="button"
               disabled={disabled}
-              onClick={() => void run(() => onCreate({ description: description.trim() || null, typeName: typeName || null, groupName: groupName || null, supplier: supplier.trim() || null }))}
+              onClick={() => void run(() => onCreate({ description: description.trim() || null, typeName: typeName || null, groupName: groupName || null, supplier: supplier.trim() || null, repeatEveryMonths: repeat ? 1 : null }))}
               style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, flex: 1 }}
             >
               {busy ? 'שומר...' : 'שמירה'}

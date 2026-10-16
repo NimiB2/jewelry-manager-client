@@ -22,6 +22,9 @@ export type StatementLine = {
   expenseDescription: string | null
   coveredByCardStatement: boolean
   suggestions: Suggestion[]
+  // What earlier expenses of the same payee were filed under.
+  learned: { description: string; typeName: string | null; groupName: string | null; supplier: string | null } | null
+  looksRecurring: boolean
 }
 
 export type StatementFile = {
@@ -44,6 +47,7 @@ export type UploadResult = {
   cardSettlements: number
   autoIgnored: number
   pending: number
+  autoMatched: number
 }
 
 export type MonthCheck = {

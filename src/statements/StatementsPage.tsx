@@ -71,6 +71,7 @@ export function StatementsPage() {
       const parts = [`נקראו ${r.added} שורות חדשות`]
       if (r.fileWasAlreadyUploaded) parts.unshift('הקובץ כבר הועלה, נקרא שוב')
       if (r.alreadyKnown > 0) parts.push(`${r.alreadyKnown} כבר היו מדף קודם`)
+      if (r.autoMatched > 0) parts.push(`${r.autoMatched} הותאמו לבד להוצאות שכבר הוזנו`)
       if (r.cardSettlements > 0) parts.push(`${r.cardSettlements} חיובי אשראי`)
       if (r.autoIgnored > 0) parts.push(`${r.autoIgnored} כסף שנכנס (הוזנו כ"לא הוצאה")`)
       parts.push(`${r.pending} ממתינות להחלטה`)
@@ -96,6 +97,27 @@ export function StatementsPage() {
       await reload()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'המחיקה נכשלה')
+    }
+  }
+
+  async function autoMatch() {
+    try {
+      const { matched } = await api.autoMatchMonth(month)
+      setNotice(matched > 0 ? `${matched} שורות הותאמו להוצאות שכבר הוזנו` : 'לא נמצאו התאמות ברורות נוספות')
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'הפעולה נכשלה')
+    }
+  }
+
+  async function addKnown(count: number) {
+    if (!window.confirm(`להוסיף ${count} הוצאות בבת אחת, באותה קטגוריה וקבוצה כמו בפעם הקודמת?`)) return
+    try {
+      const { created } = await api.applyKnown(month)
+      setNotice(`נוספו ${created} הוצאות`)
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ההוספה נכשלה')
     }
   }
 
@@ -139,7 +161,8 @@ export function StatementsPage() {
   const todo = lines.filter((l) => l.status === 'PENDING' || (l.status === 'CARD_SETTLEMENT' && !l.coveredByCardStatement))
   const done = lines.filter((l) => l.status === 'MATCHED' || l.status === 'CREATED' || (l.status === 'CARD_SETTLEMENT' && l.coveredByCardStatement))
   const ignored = lines.filter((l) => l.status === 'IGNORED')
-  const shown = tab === 'todo' ? todo : tab === 'done' ? done : ignored
+  const knownCount = todo.filter((l) => l.status === 'PENDING' && l.learned).length
+  const shown = tab ==='todo' ? todo : tab === 'done' ? done : ignored
   const locked = check?.isClosed ?? false
 
   return (
@@ -205,6 +228,19 @@ export function StatementsPage() {
           >
             {check.isClosed ? 'פתיחה מחדש' : 'סגירת החודש'}
           </button>
+        </div>
+      )}
+
+      {todo.some((l) => l.status === 'PENDING') && !locked && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+          <button type="button" onClick={() => void autoMatch()} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+            חיפוש התאמות אוטומטי
+          </button>
+          {knownCount > 0 && (
+            <button type="button" onClick={() => void addKnown(knownCount)} style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+              הוספת {knownCount} הוצאות מוכרות
+            </button>
+          )}
         </div>
       )}
 

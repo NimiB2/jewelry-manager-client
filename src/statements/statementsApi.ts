@@ -27,7 +27,7 @@ export const reopenMonth = (month: string) => apiJson<void>(`/statements/months/
 
 export const matchLine = (id: string, expenseId: string) =>
   apiJson<void>(`/statements/lines/${id}/match`, { method: 'POST', body: JSON.stringify({ expenseId }) })
-export const createExpenseFromLine = (id: string, body: { description: string | null; typeName: string | null; groupName: string | null; supplier: string | null }) =>
+export const createExpenseFromLine = (id: string, body: { description: string | null; typeName: string | null; groupName: string | null; supplier: string | null; repeatEveryMonths: number | null }) =>
   apiJson<unknown>(`/statements/lines/${id}/create-expense`, { method: 'POST', body: JSON.stringify(body) })
 export const ignoreLine = (id: string) => apiJson<void>(`/statements/lines/${id}/ignore`, { method: 'POST' })
 export const markSettlement = (id: string) => apiJson<void>(`/statements/lines/${id}/mark-settlement`, { method: 'POST' })
@@ -40,3 +40,6 @@ export const saveKeywords = (keywords: string[]) =>
 export const clearOpenLines = (month: string) => apiJson<{ deleted: number }>(`/statements/months/${month}/clear-open`, { method: 'POST' })
 // Deleting the expense sends its statement line back to pending.
 export const deleteExpense = (id: string) => apiJson<void>(`/expenses/${id}`, { method: 'DELETE' })
+
+export const autoMatchMonth = (month: string) => apiJson<{ matched: number }>(`/statements/months/${month}/auto-match`, { method: 'POST' })
+export const applyKnown = (month: string) => apiJson<{ created: number }>(`/statements/months/${month}/apply-known`, { method: 'POST' })
