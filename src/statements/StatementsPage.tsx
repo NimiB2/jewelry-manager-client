@@ -69,6 +69,7 @@ export function StatementsPage() {
     try {
       const r = await api.uploadStatement(file, source)
       const parts = [`נקראו ${r.added} שורות חדשות`]
+      if (r.fileWasAlreadyUploaded) parts.unshift('הקובץ כבר הועלה, נקרא שוב')
       if (r.alreadyKnown > 0) parts.push(`${r.alreadyKnown} כבר היו מדף קודם`)
       if (r.cardSettlements > 0) parts.push(`${r.cardSettlements} חיובי אשראי`)
       if (r.autoIgnored > 0) parts.push(`${r.autoIgnored} כסף שנכנס (הוזנו כ"לא הוצאה")`)
@@ -92,6 +93,17 @@ export function StatementsPage() {
     if (!window.confirm(`למחוק את "${f.fileName}"? הוצאות שנוצרו ממנו יישארו.`)) return
     try {
       await api.deleteFile(f.id)
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'המחיקה נכשלה')
+    }
+  }
+
+  async function clearOpen() {
+    if (!window.confirm('למחוק את כל השורות של החודש שעוד לא הפכו להוצאה (ממתינות ו"לא הוצאה")? אחר כך אפשר להעלות את הקובץ שוב. הוצאות לא נמחקות.')) return
+    try {
+      const { deleted } = await api.clearOpenLines(month)
+      setNotice(`נמחקו ${deleted} שורות. אפשר להעלות את הקובץ מחדש`)
       await reload()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'המחיקה נכשלה')
@@ -196,6 +208,12 @@ export function StatementsPage() {
         </div>
       )}
 
+      {lines.length > 0 && !locked && (
+        <button type="button" onClick={() => void clearOpen()} style={{ ...linkButtonStyle, color: 'var(--danger)', marginBottom: 8 }}>
+          ניקוי שורות החודש כדי להעלות את הקובץ מחדש
+        </button>
+      )}
+
       <FilterTabs<Tab>
         ariaLabel="סינון שורות"
         value={tab}
@@ -221,6 +239,7 @@ export function StatementsPage() {
             onIgnore={decide(() => api.ignoreLine(line.id))}
             onSettlement={decide(() => api.markSettlement(line.id))}
             onReset={decide(() => api.resetLine(line.id))}
+            onDeleteExpense={decide(() => api.deleteExpense(line.expenseId ?? ''))}
           />
         ))}
       </div>

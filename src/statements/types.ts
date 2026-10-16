@@ -38,6 +38,7 @@ export type StatementFile = {
 
 export type UploadResult = {
   fileId: string
+  fileWasAlreadyUploaded: boolean
   added: number
   alreadyKnown: number
   cardSettlements: number

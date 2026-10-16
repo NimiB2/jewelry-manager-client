@@ -4,7 +4,7 @@ import { formatMoney } from '../products/format'
 import { cardStyle, errorTextStyle, fieldInputStyle, linkButtonStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 import type { StatementLine } from './types'
 
-type CreateBody = { typeName: string | null; groupName: string | null; supplier: string | null }
+type CreateBody = { description: string | null; typeName: string | null; groupName: string | null; supplier: string | null }
 
 type Props = {
   line: StatementLine
@@ -16,11 +16,14 @@ type Props = {
   onIgnore: () => Promise<void>
   onSettlement: () => Promise<void>
   onReset: () => Promise<void>
+  onDeleteExpense: () => Promise<void>
 }
 
 // One statement line and what can be done with it. Money out only becomes an expense by a tap here.
-export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgnore, onSettlement, onReset }: Props) {
+export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgnore, onSettlement, onReset, onDeleteExpense }: Props) {
   const [creating, setCreating] = useState(false)
+  // The bank's own words may be missing or cryptic, so the name of the expense is hers to write.
+  const [description, setDescription] = useState(line.description === 'ללא תיאור' ? '' : line.description)
   const [typeName, setTypeName] = useState('')
   const [groupName, setGroupName] = useState('')
   const [supplier, setSupplier] = useState('')
@@ -108,6 +111,7 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
 
       {pending && creating && (
         <div style={{ marginTop: 8 }}>
+          <input placeholder="שם ההוצאה" value={description} onChange={(e) => setDescription(e.target.value)} style={{ ...smallField, marginBottom: 8 }} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <select value={typeName} onChange={(e) => setTypeName(e.target.value)} style={smallField}>
               <option value="">קטגוריה</option>
@@ -131,7 +135,7 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
             <button
               type="button"
               disabled={disabled}
-              onClick={() => void run(() => onCreate({ typeName: typeName || null, groupName: groupName || null, supplier: supplier.trim() || null }))}
+              onClick={() => void run(() => onCreate({ description: description.trim() || null, typeName: typeName || null, groupName: groupName || null, supplier: supplier.trim() || null }))}
               style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, flex: 1 }}
             >
               {busy ? 'שומר...' : 'שמירה'}
@@ -144,9 +148,23 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
       )}
 
       {!pending && !locked && (
-        <button type="button" disabled={busy} onClick={() => void run(onReset)} style={{ ...linkButtonStyle, marginTop: 4 }}>
-          החזרה לממתינות
-        </button>
+        <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+          <button type="button" disabled={busy} onClick={() => void run(onReset)} style={linkButtonStyle}>
+            החזרה לממתינות
+          </button>
+          {line.status === 'CREATED' && line.expenseId && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm('למחוק את ההוצאה? השורה תחזור לממתינות.')) void run(onDeleteExpense)
+              }}
+              style={{ ...linkButtonStyle, color: 'var(--danger)' }}
+            >
+              מחיקת ההוצאה
+            </button>
+          )}
+        </div>
       )}
 
       {error && <p style={{ ...errorTextStyle, margin: '6px 0 0' }}>{error}</p>}
