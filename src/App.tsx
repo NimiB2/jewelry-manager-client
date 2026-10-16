@@ -14,6 +14,7 @@ import { ProductCalculator } from './products/ProductCalculator'
 import { ProductsPage } from './products/ProductsPage'
 import { SettingsPage } from './settings/SettingsPage'
 import { ShopifyImportPage } from './shopify/ShopifyImportPage'
+import { StatementsPage } from './statements/StatementsPage'
 import { TasksPage } from './tasks/TasksPage'
 import './App.css'
 
@@ -49,6 +50,7 @@ function App() {
       {route.page === 'finances' && route.view === 'invoices' && <InvoicesPage />}
       {route.page === 'finances' && route.view === 'analysis' && <AnalysisPage />}
       {route.page === 'finances' && route.view === 'receipts' && <ReceiptsImportPage />}
+      {route.page === 'finances' && route.view === 'statements' && <StatementsPage />}
       {route.page === 'finances' && route.view === 'all' && <FinancesPage />}
       {route.page === 'tasks' && <TasksPage />}
       {route.page === 'shopify' && <ShopifyImportPage />}

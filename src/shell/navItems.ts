@@ -16,6 +16,7 @@ export function subItemsOf(parent: 'finances' | 'products', route: Route): SubIt
     return [
       { label: 'תנועות', href: '#/finances', active: view === 'all' },
       { label: 'חשבוניות', href: '#/finances/invoices', active: view === 'invoices' },
+      { label: 'דפי בנק', href: '#/finances/statements', active: view === 'statements' },
       { label: 'ניתוח', href: '#/finances/analysis', active: view === 'analysis' },
     ]
   }
