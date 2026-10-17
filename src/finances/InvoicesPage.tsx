@@ -9,6 +9,7 @@ import { Modal } from '../shell/Modal'
 import { SkeletonCards } from '../shell/Skeleton'
 import { subItemsOf } from '../shell/navItems'
 import { SubNav } from '../shell/SubNav'
+import { CleanupWithoutReceipt } from './CleanupWithoutReceipt'
 import { InvoiceSection } from './InvoiceSection'
 import { attachInvoice, downloadFile } from './invoiceApi'
 import { smallPillStyle } from './styles'
@@ -164,6 +165,8 @@ export function InvoicesPage() {
           </button>
         </div>
       </div>
+
+      <CleanupWithoutReceipt range={range} onDeleted={load} />
 
       <FilterTabs
         items={[
