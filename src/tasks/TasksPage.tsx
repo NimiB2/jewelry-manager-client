@@ -5,19 +5,13 @@ import { cardStyle, errorTextStyle, mutedTextStyle, primaryButtonStyle } from '.
 import { Toast } from '../orders/Toast'
 import { Modal } from '../shell/Modal'
 import { ConfirmInline } from '../orders/ConfirmInline'
-import { STATUS_LABELS, statusPillStyle } from '../orders/status'
+import { STATUS_LABELS } from '../orders/status'
 import type { OrderStatus } from '../orders/types'
 import { FilterTabs } from '../shell/FilterTabs'
 import { SkeletonCards } from '../shell/Skeleton'
 import { navigate } from '../shell/useRoute'
 import { TaskForm } from './TaskForm'
-import {
-  NEXT_TASK_STATUS,
-  TASK_STATUS_LABELS,
-  taskPillStyle,
-  type Task,
-  type TaskStatus,
-} from './types'
+import { NEXT_TASK_STATUS, TASK_STATUS_LABELS, type Task, type TaskStatus } from './types'
 
 type Filter = 'open' | 'all' | TaskStatus
 
@@ -104,9 +98,10 @@ export function TasksPage() {
       )}
 
       {visible.length > 0 && (
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 90 }}>
+        // Columns wrap to the next line instead of scrolling sideways.
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, alignItems: 'start', paddingBottom: 90 }}>
           {groupTasks(visible).map((group) => (
-            <TaskBlock key={group.key} title={group.title} color={group.color} count={group.tasks.length}>
+            <TaskColumn key={group.key} title={group.title} color={group.color} count={group.tasks.length}>
               {group.tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -116,7 +111,7 @@ export function TasksPage() {
                   onChanged={load}
                 />
               ))}
-            </TaskBlock>
+            </TaskColumn>
           ))}
         </div>
       )}
@@ -130,7 +125,11 @@ export function TasksPage() {
 
 type TaskGroup = { key: string; title: string; color: string; tasks: Task[] }
 
-// Order tasks get their own block; general tasks are grouped by category, with uncategorized ones last.
+// Muted tones, kept away from the order purple so every category stays distinguishable from orders.
+const CATEGORY_COLORS = ['#3b6e8f', '#4d7c5a', '#a0643a', '#9a4f4f', '#3d7a7a']
+const ORDER_TASK_COLOR = '#6b5b95'
+
+// Order tasks get their own column; general tasks are grouped by category, with uncategorized ones last.
 function groupTasks(list: Task[]): TaskGroup[] {
   const orderTasks = list.filter((t) => t.isAutomatic && t.orderId !== null)
   const generalTasks = list.filter((t) => !(t.isAutomatic && t.orderId !== null))
@@ -148,22 +147,22 @@ function groupTasks(list: Task[]): TaskGroup[] {
 
   const groups: TaskGroup[] = []
   if (orderTasks.length > 0) groups.push({ key: 'orders', title: 'הזמנות', color: ORDER_TASK_COLOR, tasks: orderTasks })
-  for (const category of categories) {
+  categories.forEach((category, index) => {
     groups.push({
       key: `category-${category}`,
       title: category || 'ללא קטגוריה',
-      color: 'var(--accent)',
+      color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
       tasks: byCategory.get(category) ?? [],
     })
-  }
+  })
   return groups
 }
 
-function TaskBlock({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
+function TaskColumn({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
   return (
-    <section style={{ ...cardStyle, flex: '0 0 200px', padding: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid var(--border)' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: `2px solid ${color}` }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color }}>{title}</span>
+    <section style={{ minWidth: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, padding: '8px 10px', borderTop: `3px solid ${color}` }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflowWrap: 'anywhere' }}>{title}</span>
         <span style={mutedTextStyle}>{count}</span>
       </header>
       {children}
@@ -173,9 +172,9 @@ function TaskBlock({ title, color, count, children }: { title: string; color: st
 
 // The next step of an order, as on the order card.
 const NEXT_ORDER_STATUS: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> = {
-  NEW: { status: 'IN_PROGRESS', label: 'התחלת הכנה ←' },
-  IN_PROGRESS: { status: 'READY', label: 'סימון כמוכנה ←' },
-  READY: { status: 'COMPLETED', label: 'סיום ההזמנה ✓' },
+  NEW: { status: 'IN_PROGRESS', label: 'התחלת הכנה' },
+  IN_PROGRESS: { status: 'READY', label: 'סימון כמוכנה' },
+  READY: { status: 'COMPLETED', label: 'סיום ההזמנה' },
 }
 
 function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void; onChanged: () => void }) {
@@ -215,40 +214,31 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
     else void setOrderStatus(next.status as OrderStatus)
   }
 
+  const statusText = fromOrder ? STATUS_LABELS[orderStatus] : TASK_STATUS_LABELS[task.status]
+
   return (
-    // Rows sit inside a block, so each one only needs a divider line above it.
-    <article style={{ padding: '5px 8px', borderTop: '1px solid var(--border)' }}>
+    <article style={{ padding: '8px 10px', borderTop: '1px solid var(--border)' }}>
       <button type="button" onClick={onOpen} style={openStyle} aria-label={fromOrder ? `פתיחת ${task.title}` : `עריכת המשימה ${task.title}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: done ? 'var(--text-muted)' : 'var(--text)',
-              textDecoration: done ? 'line-through' : 'none',
-            }}
-          >
-            {task.title}
-          </span>
-          {fromOrder ? (
-            <span style={{ ...statusPillStyle(orderStatus), flexShrink: 0 }}>{STATUS_LABELS[orderStatus]}</span>
-          ) : (
-            <span style={{ ...taskPillStyle(task.status), flexShrink: 0 }}>{TASK_STATUS_LABELS[task.status]}</span>
-          )}
-        </div>
+        <span
+          style={{
+            display: 'block',
+            fontSize: 14,
+            fontWeight: 500,
+            color: done ? 'var(--text-muted)' : 'var(--text)',
+            textDecoration: done ? 'line-through' : 'none',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {task.title}
+        </span>
+        <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{statusText}</span>
         {task.content && !fromOrder && <p style={contentStyle}>{task.content}</p>}
       </button>
 
-      {fromOrder ? (
-        <button type="button" onClick={onOpen} style={{ ...orderLinkStyle, color: ORDER_TASK_COLOR }}>
-          הזמנה #{task.orderNumber} ←
+      {!fromOrder && task.orderId && (
+        <button type="button" onClick={() => navigate(`/orders/${task.orderId}`)} style={orderLinkStyle}>
+          הזמנה #{task.orderNumber} · {task.orderCustomer ?? 'ללא שם'} ←
         </button>
-      ) : (
-        task.orderId && (
-          <button type="button" onClick={() => navigate(`/orders/${task.orderId}`)} style={orderLinkStyle}>
-            הזמנה #{task.orderNumber} · {task.orderCustomer ?? 'ללא שם'} ←
-          </button>
-        )
       )}
 
       {confirmingComplete && (
@@ -281,9 +271,6 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
   )
 }
 
-// Order tasks are purple, so the orders block stands apart from the general-task blocks.
-const ORDER_TASK_COLOR = '#8b5cf6'
-
 const openStyle: React.CSSProperties = {
   display: 'block',
   width: '100%',
@@ -296,9 +283,9 @@ const openStyle: React.CSSProperties = {
   color: 'inherit',
 }
 
-// Two short lines at most, so a long note can't blow up the card; the full text is in the edit form.
+// One line only; the full text is in the edit form.
 const contentStyle: React.CSSProperties = {
-  margin: '1px 0 0',
+  margin: '2px 0 0',
   fontSize: 12,
   color: 'var(--text-muted)',
   display: '-webkit-box',
@@ -309,25 +296,25 @@ const contentStyle: React.CSSProperties = {
 }
 
 const orderLinkStyle: React.CSSProperties = {
+  display: 'block',
   border: 'none',
   background: 'transparent',
-  padding: '2px 0 0',
+  padding: '4px 0 0',
   fontSize: 11,
-  color: 'var(--accent)',
+  color: 'var(--text-muted)',
   cursor: 'pointer',
 }
 
 const nextButtonStyle: React.CSSProperties = {
   width: '100%',
   minHeight: 28,
-  marginTop: 4,
-  padding: '0 12px',
-  border: '1px solid var(--accent)',
-  borderRadius: 8,
-  background: 'var(--accent-bg)',
-  color: 'var(--accent)',
-  fontSize: 13,
-  fontWeight: 600,
+  marginTop: 6,
+  padding: '0 10px',
+  border: '1px solid var(--border)',
+  borderRadius: 4,
+  background: 'transparent',
+  color: 'var(--text)',
+  fontSize: 12,
   cursor: 'pointer',
 }
 
@@ -335,7 +322,7 @@ const reopenStyle: React.CSSProperties = {
   border: 'none',
   background: 'transparent',
   padding: '6px 0 0',
-  fontSize: 13,
+  fontSize: 12,
   color: 'var(--text-muted)',
   cursor: 'pointer',
 }
