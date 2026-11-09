@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 export const fieldLabelStyle: CSSProperties = {
   display: 'block',
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
   marginBottom: 4,
 }
@@ -64,6 +64,6 @@ export const errorTextStyle: CSSProperties = {
 }
 
 export const mutedTextStyle: CSSProperties = {
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
 }

@@ -116,7 +116,7 @@ export function CleanupWithoutReceipt({ range, onDeleted }: Props) {
           setScope(e.target.value as Scope)
           setPreview(null)
         }}
-        style={{ ...fieldInputStyle, minHeight: 40, fontSize: 14 }}
+        style={{ ...fieldInputStyle, minHeight: 44, fontSize: 14 }}
         aria-label="תקופה למחיקה"
       >
         <option value="all">כל התקופות</option>
@@ -138,7 +138,7 @@ export function CleanupWithoutReceipt({ range, onDeleted }: Props) {
         כולל הוצאות חוזרות (ההוצאה החוזרת עצמה תמשיך להיווצר)
       </label>
 
-      <button type="button" disabled={busy} onClick={() => void show()} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+      <button type="button" disabled={busy} onClick={() => void show()} style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14 }}>
         {busy && !preview ? 'טוען...' : 'הצגת הרשימה'}
       </button>
 
@@ -169,14 +169,14 @@ export function CleanupWithoutReceipt({ range, onDeleted }: Props) {
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => downloadCsv(preview.items)} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+            <button type="button" onClick={() => downloadCsv(preview.items)} style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14 }}>
               הורדת הרשימה
             </button>
             <button
               type="button"
               disabled={busy || preview.items.length === 0}
               onClick={() => void remove()}
-              style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14, color: 'var(--danger)', borderColor: 'var(--danger)', opacity: preview.items.length === 0 ? 0.5 : 1 }}
+              style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14, color: 'var(--danger)', borderColor: 'var(--danger)', opacity: preview.items.length === 0 ? 0.5 : 1 }}
             >
               {busy ? 'מוחק...' : `מחיקת ${preview.items.length} הוצאות`}
             </button>

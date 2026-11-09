@@ -120,7 +120,7 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
                   onCreate({ description: learned.description, typeName: learned.typeName, groupName: learned.groupName, supplier: learned.supplier, repeatEveryMonths: null }),
                 )
               }
-              style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, flex: 1 }}
+              style={{ ...primaryButtonStyle, minHeight: 44, fontSize: 14, flex: 1 }}
             >
               {busy ? 'שומר...' : 'הוספה כמו קודם'}
             </button>
@@ -129,15 +129,15 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
             type="button"
             disabled={disabled}
             onClick={() => setCreating(true)}
-            style={{ ...(learned ? secondaryButtonStyle : primaryButtonStyle), minHeight: 40, fontSize: 14, flex: learned ? undefined : 1 }}
+            style={{ ...(learned ? secondaryButtonStyle : primaryButtonStyle), minHeight: 44, fontSize: 14, flex: learned ? undefined : 1 }}
           >
             {learned ? 'עריכה' : 'הוספה כהוצאה'}
           </button>
-          <button type="button" disabled={disabled} onClick={() => void run(onIgnore)} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+          <button type="button" disabled={disabled} onClick={() => void run(onIgnore)} style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14 }}>
             לא הוצאה
           </button>
           {line.source === 'BANK' && (
-            <button type="button" disabled={disabled} onClick={() => void run(onSettlement)} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+            <button type="button" disabled={disabled} onClick={() => void run(onSettlement)} style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14 }}>
               חיוב אשראי
             </button>
           )}
@@ -175,11 +175,11 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
               type="button"
               disabled={disabled}
               onClick={() => void run(() => onCreate({ description: description.trim() || null, typeName: typeName || null, groupName: groupName || null, supplier: supplier.trim() || null, repeatEveryMonths: repeat ? 1 : null }))}
-              style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, flex: 1 }}
+              style={{ ...primaryButtonStyle, minHeight: 44, fontSize: 14, flex: 1 }}
             >
               {busy ? 'שומר...' : 'שמירה'}
             </button>
-            <button type="button" disabled={busy} onClick={() => setCreating(false)} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+            <button type="button" disabled={busy} onClick={() => setCreating(false)} style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14 }}>
               ביטול
             </button>
           </div>
@@ -211,7 +211,7 @@ export function LineCard({ line, types, groups, locked, onMatch, onCreate, onIgn
   )
 }
 
-const smallField: CSSProperties = { ...fieldInputStyle, minHeight: 40, fontSize: 14, minWidth: 0 }
+const smallField: CSSProperties = { ...fieldInputStyle, minHeight: 44, fontSize: 14, minWidth: 0 }
 
 const suggestionStyle: CSSProperties = {
   display: 'flex',

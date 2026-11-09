@@ -47,7 +47,7 @@ export function PricingFormulaDisplay() {
             </span>
             <span
               style={{
-                fontSize: 12,
+                fontSize: 13,
                 color: 'var(--text-muted)',
                 fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
               }}

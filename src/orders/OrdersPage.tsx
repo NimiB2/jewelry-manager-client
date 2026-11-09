@@ -107,7 +107,7 @@ export function OrdersPage() {
         <h1 style={{ margin: 0 }}>הזמנות</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <SearchButton />
-          <button type="button" onClick={() => navigate('/orders/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+          <button type="button" onClick={() => navigate('/orders/new')} style={{ ...primaryButtonStyle, minHeight: 44 }}>
             + הזמנה חדשה
           </button>
         </div>
@@ -188,7 +188,7 @@ export function OrdersPage() {
       )}
 
       {data && data.orders.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
+        <div className="cards-grid" style={{ paddingBottom: 90 }}>
           {data.orders.map((order) => (
             <OrderCard
               key={order.id}
@@ -223,13 +223,13 @@ const searchIconStyle: React.CSSProperties = {
 
 const selectStyle: React.CSSProperties = {
   ...fieldInputStyle,
-  minHeight: 40,
+  minHeight: 44,
   padding: '4px 8px',
   fontSize: 14,
 }
 
 const thisMonthStyle: React.CSSProperties = {
-  minHeight: 40,
+  minHeight: 44,
   padding: '0 8px',
   border: 'none',
   background: 'transparent',

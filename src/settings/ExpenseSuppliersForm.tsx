@@ -162,7 +162,7 @@ export function ExpenseSuppliersForm({ initialSuppliers }: ExpenseSuppliersFormP
             onChange={(e) => setTarget(e.target.value)}
             aria-label="השם שיישאר"
             disabled={checked.length === 0}
-            style={{ width: '100%', minHeight: 40, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', padding: '0 8px' }}
+            style={{ width: '100%', minHeight: 44, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', padding: '0 8px' }}
           >
             {checked.length === 0 && <option value="">בחרי ספקים מהרשימה</option>}
             {checked.map((n) => (

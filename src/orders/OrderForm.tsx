@@ -363,7 +363,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
         </button>
         <h1 style={{ flex: 1, margin: 0 }}>
           {order ? `הזמנה #${order.number}` : 'הזמנה חדשה'}
-          {order?.isTest && <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}> (הזמנת דמו)</span>}
+          {order?.isTest && <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-muted)' }}> (הזמנת דמו)</span>}
         </h1>
         {order && <SourceBadge source={order.source} />}
         {!isNew && <ConfirmDeleteButton onConfirm={remove} ariaLabel="מחיקת ההזמנה" />}
@@ -413,7 +413,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 600 }}>{line.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                       {line.material}
                       {line.lineId ? ' · נשמר בהזמנה' : ''}
                     </div>
@@ -578,7 +578,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
             </div>
 
             {!order.receiptSent && !order.isCompleted && (
-              <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--danger)' }}>יש לסמן שנשלחה קבלה כדי לסיים את ההזמנה.</p>
+              <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--danger)' }}>יש לסמן שנשלחה קבלה כדי לסיים את ההזמנה.</p>
             )}
 
             {confirmingComplete && (
@@ -627,7 +627,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
           <span style={{ fontSize: 24, fontWeight: 700 }}>{formatMoney(totals.final)}</span>
         </div>
         {order && order.salary !== undefined && (
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
             משכורת: {formatMoney(order.salary)}
             {order.laborHourRate
               ? ` · ${order.items.reduce((sum, i) => sum + i.workHours * i.quantity, 0)} שעות × ${formatMoney(order.laborHourRate)}`
@@ -671,7 +671,7 @@ export function OrderForm({ orderId, addProductId, restoreDraft }: OrderFormProp
 
 const deleteOrderStyle: React.CSSProperties = {
   width: '100%',
-  minHeight: 40,
+  minHeight: 44,
   marginTop: 6,
   border: '1px solid var(--danger)',
   borderRadius: 10,
@@ -698,7 +698,7 @@ function modeStyle(active: boolean): React.CSSProperties {
 function statusButtonStyle(status: OrderStatus, active: boolean): React.CSSProperties {
   const colors = statusColors(status)
   return {
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: 8,
     border: `1px solid ${active ? colors.color : 'var(--border)'}`,
     background: active ? colors.background : 'var(--surface)',
@@ -740,7 +740,7 @@ const lineStyle: React.CSSProperties = {
 
 const smallInputStyle: React.CSSProperties = {
   ...fieldInputStyle,
-  minHeight: 40,
+  minHeight: 44,
   padding: '4px 8px',
   fontSize: 15,
   textAlign: 'center',

@@ -151,7 +151,7 @@ export function MaterialsForm({ initialMaterials }: MaterialsFormProps) {
 const gridColumns = 'minmax(0,1.3fr) minmax(0,0.8fr) minmax(0,0.8fr) minmax(0,0.8fr) 32px'
 
 const headerStyle: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   color: 'var(--text-muted)',
   textAlign: 'center',
   paddingBottom: 4,

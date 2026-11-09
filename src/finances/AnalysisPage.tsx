@@ -227,7 +227,7 @@ export function AnalysisPage() {
                             </span>
                             <b style={{ fontWeight: 500 }}>{whole(g.amount)}</b>
                             <span style={percentStyle}>{g.percent}%</span>
-                            <span aria-hidden style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+                            <span aria-hidden style={{ color: 'var(--text-muted)', fontSize: 12 }}>
                               {open ? '▲' : '▼'}
                             </span>
                           </button>
@@ -390,9 +390,9 @@ function Kpi({
   return (
     <div style={{ textAlign: 'center', minWidth: 0 }}>
       <div style={{ fontSize: 17, fontWeight: 600, color: color ?? 'var(--text)', whiteSpace: 'nowrap' }}>{value}</div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{label}</div>
       {change !== null && change !== undefined && change !== 0 && (
-        <div style={{ fontSize: 11, color: better ? 'var(--success)' : 'var(--danger)' }}>
+        <div style={{ fontSize: 12, color: better ? 'var(--success)' : 'var(--danger)' }}>
           {change > 0 ? '▲' : '▼'} {Math.abs(change)}%
         </div>
       )}
@@ -458,7 +458,7 @@ function TrendChart({ points }: { points: Analysis['trend'] }) {
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
         {points.map((p) => (
-          <span key={`${p.year}-${p.month}`} style={{ flex: 1, textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
+          <span key={`${p.year}-${p.month}`} style={{ flex: 1, textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
             {monthName(p.month).slice(0, 3)}
           </span>
         ))}
@@ -540,7 +540,7 @@ function CategoryRow({ slice, month }: { slice: Slice; month: number | null }) {
       </span>
       <b style={{ fontWeight: 500 }}>{whole(slice.amount)}</b>
       <span
-        style={{ fontSize: 11, textAlign: 'left', color: diff > 0 ? 'var(--danger)' : 'var(--success)' }}
+        style={{ fontSize: 12, textAlign: 'left', color: diff > 0 ? 'var(--danger)' : 'var(--success)' }}
         title={hasPrevious ? `לעומת ${month === null ? 'השנה שעברה' : 'החודש הקודם'}` : undefined}
       >
         {hasPrevious ? `${diff > 0 ? '▲' : '▼'} ${whole(Math.abs(diff))}` : ''}
@@ -579,9 +579,9 @@ const cardStyle: CSSProperties = {
   marginBottom: 10,
 }
 
-const cardTitleStyle: CSSProperties = { fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }
+const cardTitleStyle: CSSProperties = { fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }
 
-const smallMutedStyle: CSSProperties = { fontSize: 12, color: 'var(--text-muted)' }
+const smallMutedStyle: CSSProperties = { fontSize: 13, color: 'var(--text-muted)' }
 
 const kpiGridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 4 }
 
@@ -604,7 +604,7 @@ const noteStyle: CSSProperties = {
   padding: '6px 8px',
   borderRadius: 8,
   background: 'var(--warning-bg)',
-  fontSize: 12,
+  fontSize: 13,
 }
 
 const linkButtonStyle: CSSProperties = {
@@ -700,7 +700,7 @@ const hintLinkStyle: CSSProperties = {
 
 const dotStyle: CSSProperties = { width: 10, height: 10, borderRadius: '50%', display: 'inline-block' }
 
-const percentStyle: CSSProperties = { fontSize: 12, color: 'var(--text-muted)', textAlign: 'left' }
+const percentStyle: CSSProperties = { fontSize: 13, color: 'var(--text-muted)', textAlign: 'left' }
 
 const salaryRowStyle: CSSProperties = {
   display: 'grid',

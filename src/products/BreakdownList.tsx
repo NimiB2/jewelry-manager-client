@@ -109,7 +109,7 @@ const rowStyle: React.CSSProperties = {
 }
 
 const formulaStyle: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   lineHeight: 1.35,
   color: 'var(--text-muted)',
 }

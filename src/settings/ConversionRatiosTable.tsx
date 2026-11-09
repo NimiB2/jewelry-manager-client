@@ -27,7 +27,7 @@ function RatioRow({ label, value, isLast }: { label: string; value: string; isLa
 export function ConversionRatiosTable() {
   return (
     <Section title="יחסי המרה">
-      <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 2 }}>טוהר</p>
+      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 2 }}>טוהר</p>
       <div>
         {PURITY_ROWS.map((row, i) => (
           <RatioRow key={row.label} {...row} isLast={i === PURITY_ROWS.length - 1} />

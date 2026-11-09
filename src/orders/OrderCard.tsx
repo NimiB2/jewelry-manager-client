@@ -277,7 +277,7 @@ export function OrderCard({ order, stages, onOpen, onChanged, onCompleted }: Ord
       )}
 
       {error && (
-        <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>
+        <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 13 }}>{error}</p>
       )}
     </article>
   )
@@ -290,7 +290,7 @@ const storeAlertTagStyle = (minor: boolean): React.CSSProperties => ({
   borderRadius: 8,
   background: minor ? 'var(--warning-bg)' : 'var(--danger-bg)',
   color: minor ? 'var(--warning)' : 'var(--danger)',
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 600,
 })
 
@@ -325,7 +325,7 @@ const itemNoteStyle: React.CSSProperties = {
   borderRadius: 6,
   background: 'var(--border)',
   color: 'var(--text)',
-  fontSize: 12,
+  fontSize: 13,
 }
 
 const itemsListStyle: React.CSSProperties = {
@@ -343,7 +343,7 @@ const itemsListStyle: React.CSSProperties = {
 // Notes stay to two short lines so a long note can't blow up the card; the full text is in the order.
 const notesStyle: React.CSSProperties = {
   margin: '6px 0 0',
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
   display: '-webkit-box',
   WebkitLineClamp: 2,
@@ -380,7 +380,7 @@ const noteLinesStyle: React.CSSProperties = {
   listStyle: 'none',
   margin: '6px 0 0',
   padding: 0,
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
 }
 
@@ -404,7 +404,7 @@ const receiptBlockingStyle: React.CSSProperties = {
 
 // Small and gray on purpose: a note, not a label.
 const demoNoteStyle: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 400,
   color: 'var(--text-muted)',
 }

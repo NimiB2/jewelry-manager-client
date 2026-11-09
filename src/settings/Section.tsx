@@ -49,7 +49,7 @@ export function Section({ title, count, action, children }: SectionProps) {
       <button type="button" onClick={() => accordion.toggle(title)} aria-expanded={open} style={rowButtonStyle}>
         <span style={{ fontSize: 15, fontWeight: 500 }}>{title}</span>
         {count !== undefined && <span style={countStyle}>{count}</span>}
-        <span aria-hidden style={{ marginInlineStart: 'auto', color: 'var(--text-muted)', fontSize: 12 }}>
+        <span aria-hidden style={{ marginInlineStart: 'auto', color: 'var(--text-muted)', fontSize: 13 }}>
           {open ? '▲' : '▼'}
         </span>
       </button>
@@ -64,7 +64,7 @@ export function Section({ title, count, action, children }: SectionProps) {
 
 const groupTitleStyle: React.CSSProperties = {
   margin: '18px 4px 6px',
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 600,
   color: 'var(--text-muted)',
 }
@@ -97,7 +97,7 @@ const countStyle: React.CSSProperties = {
   borderRadius: 10,
   background: 'var(--border)',
   color: 'var(--text-muted)',
-  fontSize: 12,
+  fontSize: 13,
   textAlign: 'center',
 }
 

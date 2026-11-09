@@ -163,7 +163,7 @@ function Row({ title, detail, value, onClick }: { title: string; detail: string;
     <button type="button" onClick={onClick} style={rowStyle}>
       <span style={{ minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: 15, fontWeight: 600 }}>{title}</span>
-        <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)' }}>{detail}</span>
+        <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)' }}>{detail}</span>
       </span>
       <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{value}</span>
     </button>

@@ -50,7 +50,7 @@ export function tabStyle(active: boolean, warn = false): CSSProperties {
   const activeColor = warn ? 'var(--danger)' : 'var(--text)'
   return {
     flex: '0 0 auto',
-    minHeight: 40,
+    minHeight: 44,
     padding: '0 14px',
     border: 'none',
     borderBottom: `2px solid ${active ? activeColor : 'transparent'}`,

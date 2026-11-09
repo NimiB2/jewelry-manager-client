@@ -93,7 +93,7 @@ export function ExpenseTypesForm({ initialTypes, initialGroups, groups }: Expens
                 minHeight: 32,
                 width: '100%',
                 padding: '0 4px',
-                fontSize: 12,
+                fontSize: 13,
                 borderRadius: 6,
                 border: `1px solid ${row.group || !row.name.trim() ? 'var(--border)' : 'var(--warning)'}`,
                 background: 'var(--surface)',

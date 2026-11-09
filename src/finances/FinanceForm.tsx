@@ -351,7 +351,7 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
                     <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>
                       {look.emoji}
                     </span>
-                    <span style={{ fontSize: 11, lineHeight: 1.15, overflowWrap: 'anywhere' }}>{look.label}</span>
+                    <span style={{ fontSize: 12, lineHeight: 1.15, overflowWrap: 'anywhere' }}>{look.label}</span>
                   </button>
                 )
               })}
@@ -539,7 +539,7 @@ export function FinanceForm({ item, onSaved, onCancel }: FinanceFormProps) {
       {/* Always in view at the bottom of the window, so saving never needs a scroll. */}
       <div style={saveBarStyle}>
         {missing.length > 0 && (
-          <p style={{ margin: '0 0 6px', fontSize: 12, color: attempted ? 'var(--danger)' : 'var(--text-muted)' }}>
+          <p style={{ margin: '0 0 6px', fontSize: 13, color: attempted ? 'var(--danger)' : 'var(--text-muted)' }}>
             חסר: {missing.join(', ')}
           </p>
         )}
@@ -647,13 +647,13 @@ function purposeButtonStyle(active: boolean): React.CSSProperties {
 
 const hintStyle: React.CSSProperties = {
   margin: '8px 0 0',
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
 }
 
 const tinyLabelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: 11,
+  fontSize: 12,
   color: 'var(--text-muted)',
 }
 
@@ -716,7 +716,7 @@ function stripItemStyle(active: boolean): React.CSSProperties {
 
 const subTitleStyle: React.CSSProperties = {
   margin: '10px 2px 0',
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 600,
   color: 'var(--text-muted)',
 }
@@ -766,7 +766,7 @@ const detailRowStyle: React.CSSProperties = {
 const detailLabelStyle: React.CSSProperties = {
   width: 34,
   flexShrink: 0,
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
 }
 

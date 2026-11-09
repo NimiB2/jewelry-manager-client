@@ -161,7 +161,7 @@ export function PendingOrders({ onChanged }: PendingOrdersProps) {
                             type="button"
                             disabled={busy}
                             onClick={() => void link(order.id, line.id, conflict.productId, true)}
-                            style={{ ...primaryButtonStyle, minHeight: 40 }}
+                            style={{ ...primaryButtonStyle, minHeight: 44 }}
                           >
                             כן, להחליף
                           </button>

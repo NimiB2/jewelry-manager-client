@@ -69,7 +69,7 @@ export const addRowButtonStyle: CSSProperties = {
 }
 
 export const statusTextStyle: CSSProperties = {
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
   marginTop: 8,
 }

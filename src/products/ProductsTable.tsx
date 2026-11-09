@@ -109,7 +109,7 @@ function Row({
             <div style={{ ...priceButtonStyle, cursor: 'default' }} title="כדי לערוך מחיר, יש לכבות את סימולטור ההנחה">
               {formatMoney(Math.round(shownPrice))}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               <s>{formatMoney(product.sitePrice)}</s> · הנחה {discountPercent}%
             </div>
           </>
@@ -123,18 +123,18 @@ function Row({
               render={(value) => (value === 0 ? <span style={missingBadgeStyle}>חסר מחיר</span> : formatMoney(value))}
               buttonStyle={priceButtonStyle}
             />
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               {product.price ? `מומלץ ${formatMoney(Math.round(product.price.recommendedPrice))}` : 'מומלץ —'}
             </div>
           </>
         )}
       </div>
 
-      <div style={{ textAlign: 'left', fontSize: 12, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>
+      <div style={{ textAlign: 'left', fontSize: 13, color: belowFloor ? 'var(--danger)' : 'var(--text)' }}>
         {profit ? (
           <>
             {formatMoney(Math.round(profit.amount))}
-            <div style={{ fontSize: 11, color: belowFloor ? 'var(--danger)' : 'var(--text-muted)' }}>{formatPercent(profit.rate)}</div>
+            <div style={{ fontSize: 12, color: belowFloor ? 'var(--danger)' : 'var(--text-muted)' }}>{formatPercent(profit.rate)}</div>
           </>
         ) : (
           <span style={{ color: 'var(--text-muted)' }}>—</span>
@@ -275,7 +275,7 @@ function EditableNumber({ value, label, width, render, buttonStyle, onSave }: Ed
           }}
           style={{ ...inputStyle, width }}
         />
-        {error && <span style={{ display: 'block', fontSize: 11, color: 'var(--danger)' }}>{error}</span>}
+        {error && <span style={{ display: 'block', fontSize: 12, color: 'var(--danger)' }}>{error}</span>}
       </span>
     )
   }
@@ -307,7 +307,7 @@ const rowStyle: CSSProperties = {
 }
 
 const headStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 600,
   color: 'var(--text-muted)',
 }
@@ -333,7 +333,7 @@ const subLineStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 4,
-  fontSize: 11,
+  fontSize: 12,
   color: 'var(--text-muted)',
   whiteSpace: 'nowrap',
 }
@@ -361,7 +361,7 @@ const smallButtonStyle: CSSProperties = {
   background: 'transparent',
   padding: 0,
   font: 'inherit',
-  fontSize: 11,
+  fontSize: 12,
   color: 'var(--text-muted)',
   cursor: 'text',
 }

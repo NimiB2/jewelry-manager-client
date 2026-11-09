@@ -22,7 +22,7 @@ const newEmployeeInputStyle = {
   textAlign: 'right' as const,
   border: '1px solid var(--border)',
   padding: '8px 10px',
-  minHeight: 40,
+  minHeight: 44,
 }
 
 export function EmployeesTable() {
@@ -108,9 +108,9 @@ export function EmployeesTable() {
           >
             <div>
               <p style={{ fontSize: 14, color: 'var(--text)' }}>{employee.name ?? 'ללא שם'}</p>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{employee.email}</p>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>{employee.email}</p>
               {employee.phone && (
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{employee.phone}</p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 1 }}>{employee.phone}</p>
               )}
             </div>
             <span style={{ fontSize: 13, color: 'var(--accent)' }}>{ROLE_LABELS[employee.role]}</span>
@@ -163,7 +163,7 @@ export function EmployeesTable() {
               disabled={busy || !email.trim()}
               style={{
                 flex: 1,
-                minHeight: 40,
+                minHeight: 44,
                 border: 'none',
                 borderRadius: 8,
                 background: 'var(--accent)',
@@ -179,7 +179,7 @@ export function EmployeesTable() {
               type="button"
               onClick={() => setShowAddForm(false)}
               style={{
-                minHeight: 40,
+                minHeight: 44,
                 padding: '0 16px',
                 border: '1px solid var(--border)',
                 borderRadius: 8,

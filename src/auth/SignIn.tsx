@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { primaryButtonStyle, secondaryButtonStyle } from '../products/productStyles'
 
 type SignInProps = {
   onSignIn: () => Promise<unknown>
@@ -39,23 +40,24 @@ export function SignIn({ onSignIn }: SignInProps) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '4rem 24px 0', textAlign: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '20vh 24px 0', textAlign: 'center' }}>
       {inApp && (
         <div role="alert" style={{ maxWidth: 420, padding: 14, borderRadius: 10, background: '#fff7e0', border: '1px solid #e8c964', fontSize: 15 }}>
           <strong>הקישור נפתח בתוך אפליקציה (למשל וואטסאפ).</strong>
           <p style={{ margin: '8px 0 12px' }}>ההתחברות עם Google לא עובדת כאן. יש לפתוח את הקישור בדפדפן רגיל: Chrome או Safari.</p>
-          <button type="button" onClick={() => void copyLink()}>
+          <button type="button" onClick={() => void copyLink()} style={secondaryButtonStyle}>
             {copied ? 'הקישור הועתק' : 'העתקת הקישור'}
           </button>
         </div>
       )}
 
-      <button type="button" onClick={() => void signIn()}>
+      <h1 style={{ margin: 0, color: 'var(--accent)' }}>ניהול תכשיטים</h1>
+      <button type="button" onClick={() => void signIn()} style={{ ...primaryButtonStyle, minWidth: 220 }}>
         התחבר עם Google
       </button>
 
       {error && (
-        <p role="alert" style={{ margin: 0, maxWidth: 420, color: '#c0392b', fontSize: 14 }}>
+        <p role="alert" style={{ margin: 0, maxWidth: 420, color: 'var(--danger)', fontSize: 14 }}>
           {error}
         </p>
       )}

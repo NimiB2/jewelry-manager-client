@@ -104,7 +104,7 @@ export function StoreAlertNotice({ order, onChanged }: StoreAlertNoticeProps) {
           </button>
         </div>
       )}
-      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
+      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 13 }}>{error}</p>}
     </div>
   )
 }

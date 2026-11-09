@@ -128,11 +128,11 @@ export function InvoicesPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
             <label>
               <span style={mutedTextStyle}>מחודש</span>
-              <input type="month" value={fromMonth} max={toMonth} onChange={(e) => setFromMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 40 }} />
+              <input type="month" value={fromMonth} max={toMonth} onChange={(e) => setFromMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 44 }} />
             </label>
             <label>
               <span style={mutedTextStyle}>עד חודש</span>
-              <input type="month" value={toMonth} min={fromMonth} onChange={(e) => setToMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 40 }} />
+              <input type="month" value={toMonth} min={fromMonth} onChange={(e) => setToMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 44 }} />
             </label>
           </div>
         )}

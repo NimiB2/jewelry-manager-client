@@ -42,7 +42,7 @@ export function ConfirmDeleteButton({ onConfirm, ariaLabel, triggerStyle, disabl
       </button>
       {armed && (
         <div style={popoverStyle}>
-          <span style={{ fontSize: 12, color: 'var(--text)', whiteSpace: 'nowrap' }}>למחוק?</span>
+          <span style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap' }}>למחוק?</span>
           <button
             type="button"
             onClick={() => {
@@ -86,7 +86,7 @@ const confirmButtonStyle: CSSProperties = {
   borderRadius: 6,
   background: 'var(--danger)',
   color: 'var(--accent-contrast)',
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 600,
   cursor: 'pointer',
 }
@@ -98,6 +98,6 @@ const cancelButtonStyle: CSSProperties = {
   borderRadius: 6,
   background: 'transparent',
   color: 'var(--text-muted)',
-  fontSize: 12,
+  fontSize: 13,
   cursor: 'pointer',
 }

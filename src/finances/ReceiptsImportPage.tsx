@@ -337,7 +337,7 @@ export function ReceiptsImportPage() {
         <>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>קבוצה לכולן</span>
-            <select value={bulkGroup} onChange={(e) => applyBulkGroup(e.target.value)} style={{ ...fieldInputStyle, minHeight: 40, fontSize: 14 }}>
+            <select value={bulkGroup} onChange={(e) => applyBulkGroup(e.target.value)} style={{ ...fieldInputStyle, minHeight: 44, fontSize: 14 }}>
               <option value="">ללא קבוצה</option>
               {groups.map((g) => (
                 <option key={g} value={g}>
@@ -501,4 +501,4 @@ const STATUS_LABEL: Record<RowStatus, string> = {
   failed: 'נכשלה',
 }
 
-const smallField: CSSProperties = { ...fieldInputStyle, minHeight: 40, fontSize: 14, minWidth: 0 }
+const smallField: CSSProperties = { ...fieldInputStyle, minHeight: 44, fontSize: 14, minWidth: 0 }

@@ -136,14 +136,14 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
           <span style={tileLabelStyle}>משכורת החודש</span>
           <span style={tileValueStyle}>{data?.salary == null ? <Skeleton width={90} height={26} /> : formatMoney(Math.round(data.salary))}</span>
           {data?.workHours != null && (
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{Math.round(data.workHours * 10) / 10} שעות עבודה</span>
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{Math.round(data.workHours * 10) / 10} שעות עבודה</span>
           )}
         </button>
         <button type="button" onClick={() => navigate('/finances/analysis')} style={{ ...cardStyle, ...tileStyle }}>
           <span style={tileLabelStyle}>אפשר למשוך</span>
           <span style={tileValueStyle}>{withdrawable === null ? <Skeleton width={90} height={26} /> : formatMoney(Math.round(withdrawable))}</span>
           {data?.salary != null && withdrawable !== null && (
-            <span style={{ fontSize: 12, color: withdrawable < data.salary ? 'var(--warning)' : 'var(--text-muted)' }}>
+            <span style={{ fontSize: 13, color: withdrawable < data.salary ? 'var(--warning)' : 'var(--text-muted)' }}>
               {data.salary <= 0 ? 'אין משכורת החודש' : withdrawable >= data.salary ? 'כל המשכורת' : `מתוך ${formatMoney(Math.round(data.salary))}`}
             </span>
           )}
@@ -155,7 +155,7 @@ export function HomePage({ userEmail, onSignOut }: HomePageProps) {
           <span style={tileLabelStyle}>הזמנות פעילות</span>
           <span style={tileValueStyle}>{activeCount === null ? <Skeleton width={36} height={26} /> : activeCount}</span>
           {data && data.notStarted !== null && (
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
               {data.inProgress} בהכנה · {data.ready} מוכנות
             </span>
           )}

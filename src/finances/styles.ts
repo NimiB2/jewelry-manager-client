@@ -18,7 +18,7 @@ export function chipStyle(active: boolean): CSSProperties {
 
 export const selectStyle: CSSProperties = {
   ...fieldInputStyle,
-  minHeight: 40,
+  minHeight: 44,
   padding: '4px 8px',
   fontSize: 14,
 }
@@ -27,6 +27,6 @@ export const smallPillStyle: CSSProperties = {
   display: 'inline-block',
   padding: '1px 8px',
   borderRadius: 10,
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 600,
 }

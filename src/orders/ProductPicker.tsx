@@ -63,7 +63,7 @@ export function ProductPicker({ onPick, onClose }: ProductPickerProps) {
             <button key={product.id} type="button" onClick={() => onPick(product)} style={rowStyle}>
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'right' }}>
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{product.name}</span>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                   {product.type} · {product.material}
                 </span>
               </span>

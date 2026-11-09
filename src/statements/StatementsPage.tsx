@@ -222,8 +222,8 @@ export function StatementsPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
         <span style={{ fontSize: 14 }}>חודש</span>
-        <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 40, fontSize: 14, width: 'auto' }} />
-        <button type="button" onClick={() => void syncFromRiseUp()} disabled={syncing} style={{ ...secondaryButtonStyle, minHeight: 40, opacity: syncing ? 0.6 : 1 }}>
+        <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 44, fontSize: 14, width: 'auto' }} />
+        <button type="button" onClick={() => void syncFromRiseUp()} disabled={syncing} style={{ ...secondaryButtonStyle, minHeight: 44, opacity: syncing ? 0.6 : 1 }}>
           {syncing ? 'מושך...' : 'משיכה מ-RiseUp'}
         </button>
       </div>
@@ -248,7 +248,7 @@ export function StatementsPage() {
             type="button"
             disabled={!check.isClosed && !check.canClose}
             onClick={() => void toggleClose()}
-            style={{ ...(check.isClosed ? secondaryButtonStyle : primaryButtonStyle), minHeight: 40, fontSize: 14, marginTop: 8, opacity: !check.isClosed && !check.canClose ? 0.5 : 1 }}
+            style={{ ...(check.isClosed ? secondaryButtonStyle : primaryButtonStyle), minHeight: 44, fontSize: 14, marginTop: 8, opacity: !check.isClosed && !check.canClose ? 0.5 : 1 }}
           >
             {check.isClosed ? 'פתיחה מחדש' : 'סגירת החודש'}
           </button>
@@ -257,11 +257,11 @@ export function StatementsPage() {
 
       {todo.some((l) => l.status === 'PENDING') && !locked && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-          <button type="button" onClick={() => void autoMatch()} style={{ ...secondaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+          <button type="button" onClick={() => void autoMatch()} style={{ ...secondaryButtonStyle, minHeight: 44, fontSize: 14 }}>
             חיפוש התאמות אוטומטי
           </button>
           {knownCount > 0 && (
-            <button type="button" onClick={() => void addKnown(knownCount)} style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14 }}>
+            <button type="button" onClick={() => void addKnown(knownCount)} style={{ ...primaryButtonStyle, minHeight: 44, fontSize: 14 }}>
               הוספת {knownCount} הוצאות מוכרות
             </button>
           )}
@@ -350,7 +350,7 @@ export function StatementsPage() {
           <div style={{ ...cardStyle, marginTop: 6 }}>
             <p style={{ ...mutedTextStyle, margin: '0 0 6px' }}>שורה בדף הבנק שמכילה אחת מהמילים נחשבת חיוב כרטיס ולא הוצאה. מופרדות בפסיק.</p>
             <textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} rows={3} style={{ ...fieldInputStyle, fontSize: 14 }} />
-            <button type="button" onClick={() => void saveKeywords()} style={{ ...primaryButtonStyle, minHeight: 40, fontSize: 14, marginTop: 8 }}>
+            <button type="button" onClick={() => void saveKeywords()} style={{ ...primaryButtonStyle, minHeight: 44, fontSize: 14, marginTop: 8 }}>
               שמירה
             </button>
           </div>

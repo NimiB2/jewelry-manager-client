@@ -82,7 +82,7 @@ export function ProductAdditionsForm({ initialTypes }: ProductAdditionsFormProps
               aria-label="שם התוספת"
               style={nameInputStyle}
             />
-            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)' }}>
               <input type="checkbox" checked={type.allowsCustomName} onChange={() => toggleCustom(index)} />
               שם חופשי
             </label>

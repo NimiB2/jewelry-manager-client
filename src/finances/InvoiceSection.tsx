@@ -74,7 +74,7 @@ export function InvoiceSection({ expenseId, hasFile, pendingFile, onPick, onRemo
           <span className="invoice-reading-spinner" aria-hidden="true" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>קורא את החשבונית...</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>הפרטים ימולאו לבד בעוד כמה שניות</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>הפרטים ימולאו לבד בעוד כמה שניות</div>
             <div className="invoice-reading-bar" aria-hidden="true" />
           </div>
         </div>
@@ -117,12 +117,12 @@ export function InvoiceSection({ expenseId, hasFile, pendingFile, onPick, onRemo
             <>
               <PaperclipIcon />
               <span>{title ?? 'הוספת חשבונית'}</span>
-              <small style={{ marginInlineStart: 'auto', fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>{subtitle ?? 'תמונה או PDF'}</small>
+              <small style={{ marginInlineStart: 'auto', fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>{subtitle ?? 'תמונה או PDF'}</small>
             </>
           ) : prominent ? (
             <>
               <span style={{ display: 'block' }}>{title ?? 'צילום או צירוף חשבונית'}</span>
-              {subtitle && <span style={{ display: 'block', fontSize: 12, fontWeight: 400, marginTop: 2 }}>{subtitle}</span>}
+              {subtitle && <span style={{ display: 'block', fontSize: 13, fontWeight: 400, marginTop: 2 }}>{subtitle}</span>}
             </>
           ) : (
             '+ חשבונית'

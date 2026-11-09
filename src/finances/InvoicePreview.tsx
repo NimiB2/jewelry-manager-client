@@ -44,7 +44,7 @@ export function InvoicePreview({ file }: InvoicePreviewProps) {
         {isImage ? (
           <img src={url} alt="" onError={() => setUndrawable(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <span style={{ fontSize: 12, fontWeight: 600 }}>{file.type === 'application/pdf' ? 'PDF' : 'צפייה'}</span>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>{file.type === 'application/pdf' ? 'PDF' : 'צפייה'}</span>
         )}
       </button>
 

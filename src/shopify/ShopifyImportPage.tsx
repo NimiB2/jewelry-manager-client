@@ -276,7 +276,7 @@ export function ShopifyImportPage() {
                         type="button"
                         disabled={busy}
                         onClick={() => void link(conflict.externalId, conflict.productId, true)}
-                        style={{ ...primaryButtonStyle, minHeight: 40 }}
+                        style={{ ...primaryButtonStyle, minHeight: 44 }}
                       >
                         כן, להחליף את הקישור
                       </button>
@@ -310,7 +310,7 @@ function ConfirmRow({ text, busy, onYes, onNo }: { text: string; busy: boolean; 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <span style={{ fontSize: 14 }}>{text}</span>
-      <button type="button" disabled={busy} onClick={onYes} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+      <button type="button" disabled={busy} onClick={onYes} style={{ ...primaryButtonStyle, minHeight: 44 }}>
         {busy ? 'עובד...' : 'כן'}
       </button>
       <button type="button" disabled={busy} onClick={onNo} style={secondaryButtonStyle}>

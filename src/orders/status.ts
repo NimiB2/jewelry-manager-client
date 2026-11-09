@@ -26,7 +26,7 @@ export function statusPillStyle(status: OrderStatus): CSSProperties {
     display: 'inline-block',
     padding: '1px 10px',
     borderRadius: 10,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 600,
   }
 }

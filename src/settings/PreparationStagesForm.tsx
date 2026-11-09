@@ -61,7 +61,7 @@ export function PreparationStagesForm({ initialStages }: PreparationStagesFormPr
           >
             <span
               style={{
-                fontSize: 12,
+                fontSize: 13,
                 color: 'var(--text-muted)',
                 textAlign: 'center',
                 marginTop: 8,

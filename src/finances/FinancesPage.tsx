@@ -171,7 +171,7 @@ export function FinancesPage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              minHeight: 40,
+              minHeight: 44,
               padding: '0 12px',
               border: '1px solid var(--border)',
               borderRadius: 10,
@@ -184,7 +184,7 @@ export function FinancesPage() {
           >
             ייבוא קבלות
           </a>
-          <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+          <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 44 }}>
             + הוספה
           </button>
         </div>
@@ -490,7 +490,7 @@ const periodLinkStyle: React.CSSProperties = {
   background: 'transparent',
   padding: '4px 2px',
   color: 'var(--accent)',
-  fontSize: 12,
+  fontSize: 13,
   cursor: 'pointer',
 }
 
@@ -512,7 +512,7 @@ const summaryDividerStyle: React.CSSProperties = {
 function Figure({ label, value, color, strong }: { label: string; value: string; color: string; strong?: boolean }) {
   return (
     <div style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{label}</div>
       <div dir="ltr" style={{ fontSize: strong ? 20 : 17, fontWeight: strong ? 800 : 600, color, whiteSpace: 'nowrap' }}>
         {value}
       </div>

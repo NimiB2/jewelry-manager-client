@@ -31,7 +31,7 @@ function linkStyle(active: boolean): React.CSSProperties {
     flex: '0 0 auto',
     display: 'flex',
     alignItems: 'center',
-    minHeight: 40,
+    minHeight: 44,
     padding: '0 14px',
     marginBottom: -1,
     fontSize: 15,

@@ -1,31 +1,29 @@
 :root {
-  /* Apple's stock iOS "Settings" light palette, as given: grouped-table
-     background/card/text/separator tokens. Deliberately light-only for now —
-     no dark variant was specified, and guessing one caused the last mismatch. */
-  --canvas: #f0eee6;
-  --bg: #f2f2f7;
+  /* Ink-blue work-tool palette: one deep accent on a cool, quiet neutral. */
+  --canvas: #f3f4f7;
+  --bg: #f3f4f7;
   --surface: #ffffff;
-  --text: #000000;
-  /* Darker than before so dates, numbers and descriptions are readable in daylight (contrast about 6:1). */
-  --text-muted: #5f5f64;
-  --chevron: rgba(60, 60, 67, 0.3);
-  --border: rgba(60, 60, 67, 0.12);
-  --nav-icon: #404040;
-  --accent: #007aff;
-  --accent-hover: #0062cc;
+  --text: #14172b;
+  --text-muted: #5a5e6b;
+  --chevron: rgba(20, 23, 43, 0.3);
+  --border: rgba(20, 23, 43, 0.12);
+  --nav-icon: #3a3f52;
+  --accent: #23346b;
+  --accent-hover: #1a2750;
   --accent-contrast: #ffffff;
-  --accent-bg: rgba(0, 122, 255, 0.1);
-  --success: #248a3d;
+  --accent-bg: rgba(35, 52, 107, 0.1);
+  --success: #1e7a38;
   --success-bg: rgba(52, 199, 89, 0.15);
   --ready: #5856d6;
   --ready-bg: rgba(88, 86, 214, 0.14);
   --warning: #9a5b00;
   --warning-bg: rgba(255, 149, 0, 0.16);
-  --danger: #ff3b30;
-  --danger-bg: rgba(255, 59, 48, 0.08);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --danger: #d92d20;
+  --danger-bg: rgba(217, 45, 32, 0.08);
+  --shadow: 0 1px 2px rgba(20, 23, 43, 0.06);
+  --focus-ring: 0 0 0 3px rgba(35, 52, 107, 0.35);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Assistant', system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/1.5 var(--sans);
   color-scheme: light;
@@ -44,6 +42,68 @@
 body {
   margin: 0;
   background: var(--canvas);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  touch-action: manipulation;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* One visible focus treatment for keyboard users, everywhere. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+/* Hover and press feedback that works on top of the inline backgrounds. */
+button:not(:disabled) {
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+
+button:not(:disabled):hover {
+  filter: brightness(0.94);
+}
+
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+select {
+  color: var(--text);
+  background-color: var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
 }
 
 h1,
@@ -53,7 +113,8 @@ h2 {
 }
 
 h1 {
-  font-size: 24px;
+  text-wrap: balance;
+  font-size: 26px;
   margin: 0 0 16px;
 }
 
@@ -75,6 +136,13 @@ p {
   padding: 1rem;
   background: var(--bg);
   min-height: 100dvh;
+}
+
+@media (min-width: 900px) {
+  .settings-page {
+    max-width: 760px;
+    padding: 24px 32px;
+  }
 }
 
 .settings-section {

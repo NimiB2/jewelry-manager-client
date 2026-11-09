@@ -83,13 +83,13 @@ export function ProductCard({ product, meta, discountPercent, onEdit, onUpdated 
             </div>
           )}
           {product.priceError && !product.needsDetails && (
-            <div style={{ ...errorTextStyle, fontSize: 12, marginTop: 2 }}>{product.priceError}</div>
+            <div style={{ ...errorTextStyle, fontSize: 13, marginTop: 2 }}>{product.priceError}</div>
           )}
         </div>
 
         {/* The site price is the main number; the recommended price is a small tag under it. */}
         <div style={{ textAlign: 'left', flexShrink: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>מחיר באתר</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>מחיר באתר</div>
           <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>
             {formatMoney(shownPrice)}
           </div>
@@ -173,7 +173,7 @@ const recommendedTagStyle: React.CSSProperties = {
   borderRadius: 10,
   background: 'var(--accent-bg)',
   color: 'var(--accent)',
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 600,
 }
 
@@ -197,7 +197,7 @@ const actionButtonStyle: React.CSSProperties = {
 const editInputStyle: React.CSSProperties = {
   flex: 1,
   minWidth: 0,
-  minHeight: 40,
+  minHeight: 44,
   padding: '6px 10px',
   fontSize: 16,
   border: '1px solid var(--border)',
@@ -207,7 +207,7 @@ const editInputStyle: React.CSSProperties = {
 }
 
 const saveButtonStyle: React.CSSProperties = {
-  minHeight: 40,
+  minHeight: 44,
   padding: '0 14px',
   border: 'none',
   borderRadius: 8,
@@ -218,7 +218,7 @@ const saveButtonStyle: React.CSSProperties = {
 }
 
 const cancelButtonStyle: React.CSSProperties = {
-  minHeight: 40,
+  minHeight: 44,
   padding: '0 10px',
   border: 'none',
   background: 'transparent',
@@ -234,7 +234,7 @@ const needsDetailsBadgeStyle: React.CSSProperties = {
   background: '#fff7e0',
   border: '1px solid #e8c964',
   color: '#5c4a00',
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 600,
   verticalAlign: 'middle',
 }

@@ -58,7 +58,7 @@ export function TasksPage() {
     <div className="screen">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>משימות</h1>
-        <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+        <button type="button" onClick={() => openForm(null)} style={{ ...primaryButtonStyle, minHeight: 44 }}>
           + משימה חדשה
         </button>
       </div>
@@ -231,7 +231,7 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
         >
           {task.title}
         </span>
-        <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{statusText}</span>
+        <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>{statusText}</span>
         {task.content && !fromOrder && <p style={contentStyle}>{task.content}</p>}
       </button>
 
@@ -266,7 +266,7 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
         </button>
       )}
 
-      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
+      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 13 }}>{error}</p>}
     </article>
   )
 }
@@ -286,7 +286,7 @@ const openStyle: React.CSSProperties = {
 // One line only; the full text is in the edit form.
 const contentStyle: React.CSSProperties = {
   margin: '2px 0 0',
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
   display: '-webkit-box',
   WebkitLineClamp: 1,
@@ -300,7 +300,7 @@ const orderLinkStyle: React.CSSProperties = {
   border: 'none',
   background: 'transparent',
   padding: '4px 0 0',
-  fontSize: 11,
+  fontSize: 12,
   color: 'var(--text-muted)',
   cursor: 'pointer',
 }
@@ -314,7 +314,7 @@ const nextButtonStyle: React.CSSProperties = {
   borderRadius: 4,
   background: 'transparent',
   color: 'var(--text)',
-  fontSize: 12,
+  fontSize: 13,
   cursor: 'pointer',
 }
 
@@ -322,7 +322,7 @@ const reopenStyle: React.CSSProperties = {
   border: 'none',
   background: 'transparent',
   padding: '6px 0 0',
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-muted)',
   cursor: 'pointer',
 }

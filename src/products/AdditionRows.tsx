@@ -44,7 +44,7 @@ export function AdditionRows({ rows, types, onChange }: AdditionRowsProps) {
                   onChange={(e) => update(row.key, { customName: e.target.value })}
                   placeholder={row.typeName}
                   aria-label={`שם התוספת (${row.typeName})`}
-                  style={{ ...fieldInputStyle, minHeight: 40, padding: '4px 10px', fontSize: 15 }}
+                  style={{ ...fieldInputStyle, minHeight: 44, padding: '4px 10px', fontSize: 15 }}
                 />
               ) : (
                 <span style={{ fontSize: 15, color: row.unknownType ? 'var(--danger)' : 'var(--text)' }}>
@@ -59,7 +59,7 @@ export function AdditionRows({ rows, types, onChange }: AdditionRowsProps) {
                 onChange={(e) => update(row.key, { price: e.target.value })}
                 placeholder="מחיר"
                 aria-label={`מחיר ${row.typeName}`}
-                style={{ ...fieldInputStyle, minHeight: 40, padding: '4px 8px', fontSize: 15, textAlign: 'center' }}
+                style={{ ...fieldInputStyle, minHeight: 44, padding: '4px 8px', fontSize: 15, textAlign: 'center' }}
               />
               <input
                 type="number"
@@ -69,12 +69,12 @@ export function AdditionRows({ rows, types, onChange }: AdditionRowsProps) {
                 value={row.quantity}
                 onChange={(e) => update(row.key, { quantity: e.target.value })}
                 aria-label={`כמות ${row.typeName}`}
-                style={{ ...fieldInputStyle, minHeight: 40, padding: '4px 6px', fontSize: 15, textAlign: 'center' }}
+                style={{ ...fieldInputStyle, minHeight: 44, padding: '4px 6px', fontSize: 15, textAlign: 'center' }}
               />
             </div>
 
             {row.unknownType && (
-              <p style={{ fontSize: 12, color: 'var(--danger)', margin: '2px 0' }}>
+              <p style={{ fontSize: 13, color: 'var(--danger)', margin: '2px 0' }}>
                 התוספת הזו כבר לא קיימת בהגדרות.{' '}
                 <button type="button" onClick={() => remove(row.key)} style={linkButtonStyle}>
                   הסרה

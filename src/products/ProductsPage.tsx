@@ -151,7 +151,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
           <button type="button" onClick={() => navigate('/shopify')} style={importButtonStyle}>
             ייבוא מהחנות
           </button>
-          <button type="button" onClick={() => navigate('/products/new')} style={{ ...primaryButtonStyle, minHeight: 40 }}>
+          <button type="button" onClick={() => navigate('/products/new')} style={{ ...primaryButtonStyle, minHeight: 44 }}>
             + הוספת מוצר
           </button>
         </div>
@@ -306,7 +306,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
           />
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 90 }}>
+        <div className="cards-grid" style={{ paddingBottom: 90 }}>
           {visible.map((product) => (
             <ProductCard
               key={product.id}
@@ -353,14 +353,14 @@ const searchIconStyle: React.CSSProperties = {
 
 const filterStyle: React.CSSProperties = {
   ...fieldInputStyle,
-  minHeight: 40,
+  minHeight: 44,
   padding: '4px 8px',
   fontSize: 14,
 }
 
 // A rarely needed tool, so it is a quiet text link and not a button next to the main action.
 const importButtonStyle: React.CSSProperties = {
-  minHeight: 40,
+  minHeight: 44,
   padding: '0 6px',
   border: 'none',
   background: 'transparent',

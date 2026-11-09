@@ -33,7 +33,7 @@ const boxStyle: React.CSSProperties = {
 
 const confirmStyle: React.CSSProperties = {
   flex: 1,
-  minHeight: 40,
+  minHeight: 44,
   border: 'none',
   borderRadius: 8,
   background: 'var(--accent)',
@@ -45,7 +45,7 @@ const confirmStyle: React.CSSProperties = {
 
 const cancelStyle: React.CSSProperties = {
   flex: 1,
-  minHeight: 40,
+  minHeight: 44,
   border: '1px solid var(--border)',
   borderRadius: 8,
   background: 'var(--surface)',

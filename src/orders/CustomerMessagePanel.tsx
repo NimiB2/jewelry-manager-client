@@ -146,7 +146,7 @@ export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
         )}
         <button
           type="button"
-          style={{ ...secondaryButtonStyle, minHeight: 40 }}
+          style={{ ...secondaryButtonStyle, minHeight: 44 }}
           onClick={() => void copy('message', message)}
         >
           {copied === 'message' ? 'הועתק ✓' : 'העתקת ההודעה'}
@@ -154,7 +154,7 @@ export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
         {order.customerPhone && (
           <button
             type="button"
-            style={{ ...secondaryButtonStyle, minHeight: 40 }}
+            style={{ ...secondaryButtonStyle, minHeight: 44 }}
             onClick={() => void copy('phone', order.customerPhone ?? '')}
           >
             {copied === 'phone' ? 'הועתק ✓' : 'העתקת המספר'}
@@ -166,12 +166,12 @@ export function CustomerMessageBody({ order, onChanged, onDone }: BodyProps) {
         type="button"
         disabled={busy}
         onClick={() => void markSent(!sent)}
-        style={{ ...secondaryButtonStyle, minHeight: 40, width: '100%', marginTop: 8 }}
+        style={{ ...secondaryButtonStyle, minHeight: 44, width: '100%', marginTop: 8 }}
       >
         {sent ? 'ביטול הסימון "נשלח"' : 'סימון: ההודעה נשלחה ללקוחה (המספר יימחק)'}
       </button>
 
-      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 12 }}>{error}</p>}
+      {error && <p style={{ ...errorTextStyle, marginTop: 6, fontSize: 13 }}>{error}</p>}
     </div>
   )
 }
@@ -234,7 +234,7 @@ const messageStyle: React.CSSProperties = {
 const whatsappStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  minHeight: 40,
+  minHeight: 44,
   padding: '0 14px',
   borderRadius: 10,
   background: '#25d366',

@@ -152,7 +152,7 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>מחיר בסיס:</label>
+              <label style={{ fontSize: 13, color: 'var(--text-muted)' }}>מחיר בסיס:</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -164,7 +164,7 @@ export function PricingAdditionsForm({ initialAdditions }: PricingAdditionsFormP
                 aria-label="מחיר בסיס לקטגוריה"
                 style={{ ...cellInputStyle, width: 70 }}
               />
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 'auto' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)', marginRight: 'auto' }}>
                 סה"כ קטגוריה: <span style={{ color: 'var(--accent)' }}>{categoryTotal(category).toFixed(2)} ₪</span>
               </span>
             </div>
