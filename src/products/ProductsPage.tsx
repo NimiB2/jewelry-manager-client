@@ -10,6 +10,7 @@ import { FilterTabs } from '../shell/FilterTabs'
 import { ProductCard } from './ProductCard'
 import { ProductsTable } from './ProductsTable'
 import { cardStyle, errorTextStyle, fieldInputStyle, mutedTextStyle, primaryButtonStyle } from './productStyles'
+import { discountedPrice, isBelowProfitFloor } from './discount'
 import type { Collection, Product, ProductsList } from './types'
 
 const CUSTOM_ORDER_KEY = 'customOrder'
@@ -45,6 +46,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
   const [materialFilter, setMaterialFilter] = useState('')
   const [collectionFilter, setCollectionFilter] = useState('')
   const [discount, setDiscount] = useState('')
+  const [lowProfitOnly, setLowProfitOnly] = useState(false)
   const [view, setView] = useState<ViewMode>(readView)
 
   function changeView(next: ViewMode) {
@@ -83,11 +85,23 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
 
   const customOrderId = collections.find((c) => c.key === CUSTOM_ORDER_KEY)?.id
 
+  const discountPercent = Math.min(100, Math.max(0, Number(discount) || 0))
+
+  // Below the profit floor at the price it would sell for now (the simulated discount included).
+  const lowProfitIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const p of data?.products ?? []) {
+      if (isBelowProfitFloor(p, data?.pricing ?? null, discountedPrice(p.sitePrice, discountPercent))) ids.add(p.id)
+    }
+    return ids
+  }, [data, discountPercent])
+
   const visible = useMemo(() => {
     if (!data) return []
     const query = search.trim().toLowerCase()
 
     return data.products.filter((p) => {
+      if (lowProfitOnly && !lowProfitIds.has(p.id)) return false
       // The catalog hides one-off "custom order" items unless that collection is picked explicitly.
       const onlyCustomOrder = customOrderId !== undefined && p.collectionIds.every((id) => id === customOrderId)
       if (onlyCustomOrder && collectionFilter !== customOrderId) return false
@@ -100,7 +114,7 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
       if (collectionFilter && !p.collectionIds.includes(collectionFilter)) return false
       return true
     })
-  }, [data, search, typeFilter, materialFilter, collectionFilter, customOrderId])
+  }, [data, search, typeFilter, materialFilter, collectionFilter, customOrderId, lowProfitOnly, lowProfitIds])
 
   const types = useMemo(() => [...new Set((data?.products ?? []).map((p) => p.type))].sort(), [data])
   const materials = useMemo(() => [...new Set((data?.products ?? []).map((p) => p.material))].sort(), [data])
@@ -110,8 +124,6 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
       prev ? { ...prev, products: prev.products.map((p) => (p.id === updated.id ? updated : p)) } : prev,
     )
   }
-
-  const discountPercent = Math.min(100, Math.max(0, Number(discount) || 0))
 
   if (error) {
     return (
@@ -210,6 +222,15 @@ export function ProductsPage({ collectionName = null }: ProductsPageProps) {
           ))}
         </select>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setLowProfitOnly((on) => !on)}
+        aria-pressed={lowProfitOnly}
+        style={{ ...chipStyle(lowProfitOnly), marginBottom: 10 }}
+      >
+        רווח נמוך ({lowProfitIds.size})
+      </button>
 
       <FilterTabs
         items={[
