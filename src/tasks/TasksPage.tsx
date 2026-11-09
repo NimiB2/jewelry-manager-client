@@ -104,15 +104,19 @@ export function TasksPage() {
       )}
 
       {visible.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 90 }}>
-          {visible.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              // A task made from an order is the order itself: tapping it opens the order, not a task form.
-              onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
-              onChanged={load}
-            />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 90 }}>
+          {groupTasks(visible).map((group) => (
+            <TaskBlock key={group.key} title={group.title} color={group.color} count={group.tasks.length}>
+              {group.tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  // A task made from an order is the order itself: tapping it opens the order, not a task form.
+                  onOpen={() => (task.isAutomatic && task.orderId ? navigate(`/orders/${task.orderId}`) : openForm(task))}
+                  onChanged={load}
+                />
+              ))}
+            </TaskBlock>
           ))}
         </div>
       )}
@@ -121,6 +125,49 @@ export function TasksPage() {
         <PlusIcon />
       </button>
     </div>
+  )
+}
+
+type TaskGroup = { key: string; title: string; color: string; tasks: Task[] }
+
+// Order tasks get their own block; general tasks are grouped by category, with uncategorized ones last.
+function groupTasks(list: Task[]): TaskGroup[] {
+  const orderTasks = list.filter((t) => t.isAutomatic && t.orderId !== null)
+  const generalTasks = list.filter((t) => !(t.isAutomatic && t.orderId !== null))
+
+  const byCategory = new Map<string, Task[]>()
+  for (const task of generalTasks) {
+    const category = task.category ?? ''
+    byCategory.set(category, [...(byCategory.get(category) ?? []), task])
+  }
+  const categories = [...byCategory.keys()].sort((a, b) => {
+    if (a === '') return 1
+    if (b === '') return -1
+    return a.localeCompare(b, 'he')
+  })
+
+  const groups: TaskGroup[] = []
+  if (orderTasks.length > 0) groups.push({ key: 'orders', title: 'הזמנות', color: ORDER_TASK_COLOR, tasks: orderTasks })
+  for (const category of categories) {
+    groups.push({
+      key: `category-${category}`,
+      title: category || 'ללא קטגוריה',
+      color: 'var(--accent)',
+      tasks: byCategory.get(category) ?? [],
+    })
+  }
+  return groups
+}
+
+function TaskBlock({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
+  return (
+    <section style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderInlineStart: `4px solid ${color}` }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color }}>{title}</span>
+        <span style={mutedTextStyle}>{count}</span>
+      </header>
+      {children}
+    </section>
   )
 }
 
@@ -169,15 +216,8 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
   }
 
   return (
-    <article
-      style={{
-        ...cardStyle,
-        padding: '8px 10px',
-        borderInlineStart: `4px solid ${
-          fromOrder ? ORDER_TASK_COLOR : done ? 'var(--success)' : task.status === 'IN_PROGRESS' ? 'var(--accent)' : 'var(--warning)'
-        }`,
-      }}
-    >
+    // Rows sit inside a block, so each one only needs a divider line above it.
+    <article style={{ padding: '8px 12px', borderTop: '1px solid var(--border)' }}>
       <button type="button" onClick={onOpen} style={openStyle} aria-label={fromOrder ? `פתיחת ${task.title}` : `עריכת המשימה ${task.title}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <span
@@ -196,7 +236,6 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
             <span style={{ ...taskPillStyle(task.status), flexShrink: 0 }}>{TASK_STATUS_LABELS[task.status]}</span>
           )}
         </div>
-        {task.category && !fromOrder && <span style={categoryTagStyle}>{task.category}</span>}
         {task.content && <p style={contentStyle}>{task.content}</p>}
       </button>
 
@@ -242,18 +281,8 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
   )
 }
 
-// Order tasks are purple, so they stand apart from general tasks, which are coloured by their status.
+// Order tasks are purple, so the orders block stands apart from the general-task blocks.
 const ORDER_TASK_COLOR = '#8b5cf6'
-
-const categoryTagStyle: React.CSSProperties = {
-  display: 'inline-block',
-  marginTop: 4,
-  padding: '1px 8px',
-  borderRadius: 8,
-  background: 'var(--border)',
-  color: 'var(--text)',
-  fontSize: 12,
-}
 
 const openStyle: React.CSSProperties = {
   display: 'block',
@@ -269,7 +298,7 @@ const openStyle: React.CSSProperties = {
 
 // Two short lines at most, so a long note can't blow up the card; the full text is in the edit form.
 const contentStyle: React.CSSProperties = {
-  margin: '2px 0 0',
+  margin: '1px 0 0',
   fontSize: 12,
   color: 'var(--text-muted)',
   display: '-webkit-box',
