@@ -42,8 +42,8 @@ export const cellInputStyle: CSSProperties = {
 }
 
 export const iconButtonStyle: CSSProperties = {
-  width: 36,
-  height: 36,
+  width: 40,
+  height: 40,
   border: 'none',
   borderRadius: 8,
   background: 'var(--danger-bg)',
@@ -54,7 +54,7 @@ export const iconButtonStyle: CSSProperties = {
   cursor: 'pointer',
 }
 
-export const rowDeleteButtonStyle: CSSProperties = { ...iconButtonStyle, width: 28, height: 28 }
+export const rowDeleteButtonStyle: CSSProperties = { ...iconButtonStyle, width: 36, height: 36 }
 
 export const addRowButtonStyle: CSSProperties = {
   minHeight: 44,
