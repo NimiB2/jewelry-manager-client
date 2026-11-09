@@ -1,5 +1,5 @@
 import { apiFetch, apiJson } from '../api'
-import type { MonthCheck, StatementFile, StatementLine, UploadResult } from './types'
+import type { MonthCheck, RiseUpSyncResult, StatementFile, StatementLine, UploadResult } from './types'
 
 export async function uploadStatement(file: File, source: 'Bank' | 'Card'): Promise<UploadResult> {
   const body = new FormData()
@@ -36,6 +36,8 @@ export const resetLine = (id: string) => apiJson<void>(`/statements/lines/${id}/
 export const getKeywords = () => apiJson<string[]>('/statements/settlement-keywords')
 export const saveKeywords = (keywords: string[]) =>
   apiJson<string[]>('/statements/settlement-keywords', { method: 'PUT', body: JSON.stringify({ keywords }) })
+
+export const syncRiseUp = (month: string) => apiJson<RiseUpSyncResult>(`/riseup/sync?month=${month}`, { method: 'POST' })
 
 export const clearOpenLines = (month: string) => apiJson<{ deleted: number }>(`/statements/months/${month}/clear-open`, { method: 'POST' })
 // Deleting the expense sends its statement line back to pending.

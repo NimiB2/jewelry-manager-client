@@ -50,6 +50,14 @@ export type UploadResult = {
   autoMatched: number
 }
 
+export type RiseUpSyncResult = {
+  added: number
+  alreadyKnown: number
+  autoIgnored: number
+  pending: number
+  autoMatched: number
+}
+
 export type MonthCheck = {
   month: string
   isClosed: boolean

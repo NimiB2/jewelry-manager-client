@@ -31,6 +31,7 @@ export function StatementsPage() {
   const [groups, setGroups] = useState<string[]>([])
   const [source, setSource] = useState<'Bank' | 'Card'>('Card')
   const [uploading, setUploading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showMissing, setShowMissing] = useState(false)
@@ -81,6 +82,26 @@ export function StatementsPage() {
       setError(err instanceof Error ? err.message : 'ההעלאה נכשלה')
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function syncFromRiseUp() {
+    setSyncing(true)
+    setNotice(null)
+    setError(null)
+    try {
+      const r = await api.syncRiseUp(month)
+      const parts = [`נמשכו ${r.added} תנועות חדשות`]
+      if (r.alreadyKnown > 0) parts.push(`${r.alreadyKnown} כבר היו`)
+      if (r.autoMatched > 0) parts.push(`${r.autoMatched} הותאמו לבד להוצאות שכבר הוזנו`)
+      if (r.autoIgnored > 0) parts.push(`${r.autoIgnored} לא הוצאה`)
+      parts.push(`${r.pending} ממתינות להחלטה`)
+      setNotice(parts.join(' · '))
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'המשיכה מ-RiseUp נכשלה')
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -202,6 +223,9 @@ export function StatementsPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
         <span style={{ fontSize: 14 }}>חודש</span>
         <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} style={{ ...fieldInputStyle, minHeight: 40, fontSize: 14, width: 'auto' }} />
+        <button type="button" onClick={() => void syncFromRiseUp()} disabled={syncing} style={{ ...secondaryButtonStyle, minHeight: 40, opacity: syncing ? 0.6 : 1 }}>
+          {syncing ? 'מושך...' : 'משיכה מ-RiseUp'}
+        </button>
       </div>
 
       {check && (
