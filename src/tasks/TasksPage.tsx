@@ -104,7 +104,7 @@ export function TasksPage() {
       )}
 
       {visible.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12, alignItems: 'start', paddingBottom: 90 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 90 }}>
           {groupTasks(visible).map((group) => (
             <TaskBlock key={group.key} title={group.title} color={group.color} count={group.tasks.length}>
               {group.tasks.map((task) => (
@@ -161,9 +161,9 @@ function groupTasks(list: Task[]): TaskGroup[] {
 
 function TaskBlock({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
   return (
-    <section style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderInlineStart: `3px solid ${color}` }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color }}>{title}</span>
+    <section style={{ ...cardStyle, flex: '0 0 200px', padding: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid var(--border)' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: `2px solid ${color}` }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color }}>{title}</span>
         <span style={mutedTextStyle}>{count}</span>
       </header>
       {children}
@@ -217,12 +217,12 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
 
   return (
     // Rows sit inside a block, so each one only needs a divider line above it.
-    <article style={{ padding: '6px 10px', borderTop: '1px solid var(--border)' }}>
+    <article style={{ padding: '5px 8px', borderTop: '1px solid var(--border)' }}>
       <button type="button" onClick={onOpen} style={openStyle} aria-label={fromOrder ? `פתיחת ${task.title}` : `עריכת המשימה ${task.title}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <span
             style={{
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 600,
               color: done ? 'var(--text-muted)' : 'var(--text)',
               textDecoration: done ? 'line-through' : 'none',
@@ -236,7 +236,7 @@ function TaskCard({ task, onOpen, onChanged }: { task: Task; onOpen: () => void;
             <span style={{ ...taskPillStyle(task.status), flexShrink: 0 }}>{TASK_STATUS_LABELS[task.status]}</span>
           )}
         </div>
-        {task.content && <p style={contentStyle}>{task.content}</p>}
+        {task.content && !fromOrder && <p style={contentStyle}>{task.content}</p>}
       </button>
 
       {fromOrder ? (
@@ -312,7 +312,7 @@ const orderLinkStyle: React.CSSProperties = {
   border: 'none',
   background: 'transparent',
   padding: '2px 0 0',
-  fontSize: 12,
+  fontSize: 11,
   color: 'var(--accent)',
   cursor: 'pointer',
 }
